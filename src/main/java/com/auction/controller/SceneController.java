@@ -35,7 +35,7 @@ public class SceneController  {
         if(alert.showAndWait().get() == ButtonType.OK) {
 
             System.out.println("You have left");
-            FXMLLoader loader =  new FXMLLoader(getClass().getResource("Scene2.fxml"));
+            FXMLLoader loader =  new FXMLLoader(getClass().getResource("/controller/example/demo10/Scene2.fxml"));
             root = loader.load();
 
             MenuController menuController = loader.getController();
