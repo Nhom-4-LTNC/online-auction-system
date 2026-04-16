@@ -1,4 +1,9 @@
 package com.auction.model;
 
-public class Seller {
+import java.util.ArrayList;
+import java.util.List;
+
+public class Seller extends User {
+    List<Item> itemslist = new ArrayList<>();
+    public Seller()
 }
