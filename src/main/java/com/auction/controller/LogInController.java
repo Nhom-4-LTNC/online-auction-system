@@ -36,7 +36,7 @@ public class LogInController implements Initializable {
         String username = nameTextField.getText();
         String pass = hiddenPassword.getText();
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/SignInScreen.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/HomeScreen.fxml"));
         root = loader.load();
 
         MenuController scene2Controller = loader.getController();
@@ -50,7 +50,7 @@ public class LogInController implements Initializable {
     }
 
     public void BackToHome(ActionEvent event) throws IOException{
-        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/Home.fxml"));
+        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/PreLogInScreen.fxml"));
         scene = new Scene((root));
         stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
         stage.setScene(scene);
