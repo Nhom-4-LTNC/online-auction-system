@@ -5,12 +5,11 @@ import java.io.Serializable;
 public abstract class Entity implements Serializable {
     private static final long serialVersionUID = -3691692181672595753L;
 
-    protected Integer id;
-
-    // CONSTRUCTORS
+    protected Integer id = null;
     public Entity() {
-        id = null;
+        this.id = null;
     }
+    // CONSTRUCTORS
     public Entity(int id) {
         this.id = id;
     }
