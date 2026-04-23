@@ -11,6 +11,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.PortUnreachableException;
+
+import static com.auction.controller.CheckName.checkName;
+import static com.auction.controller.CheckPass.checkPass;
 
 public class MenuController {
     @FXML
@@ -50,73 +54,44 @@ public class MenuController {
         stage.show();
     }
 
-    public void displayName(String username){
+    public void displayName(String username) {
 
         UserData.username = username;
 
-        String name = username.trim().replaceAll("\\s++", "");
-        int lim = name.length();
-        if(name.equals(username)){
-            if(3<= lim && lim <=20){
-                nameLabel.setText("Hello: " + username);
-            }
-            else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Input Error");
-                alert.setHeaderText(null);
-                alert.setContentText("Invalid character length. Please re-enter!");
-
-                if (alert.showAndWait().get() == ButtonType.OK) {
-                    stage = (Stage) scenePane.getScene().getWindow();
-                    System.out.println("Loi");
-                }
-            }
-        }
-        else {
+        if (checkName(username)) {
+            nameLabel.setText("Hello: " + username);
+        } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Input Error");
             alert.setHeaderText(null);
-            alert.setContentText("Usernames cannot contain spaces. Please re-enter!");
+            alert.setContentText("Invalid character. Please re-enter!");
 
             if (alert.showAndWait().get() == ButtonType.OK) {
                 stage = (Stage) scenePane.getScene().getWindow();
                 System.out.println("Loi");
+                stage.close();
             }
         }
     }
 
 
-    public void displayPass(String pass){
+    public void displayPass(String pass) {
 
         UserData.password = pass;
-
-        if(pass.isEmpty()){
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("PassWord Error");
-            alert.setHeaderText(null);
-            alert.setContentText("The password cannot be left blank. Please re-enter!");
-
-            if (alert.showAndWait().get() == ButtonType.OK) {
-                stage = (Stage) scenePane.getScene().getWindow();
-                System.out.println("Loi");
-                stage.close();
-            }
-        }
-        else if (pass.length() <8 || pass.length()>23){
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("PassWord Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Invalid password length. Please re-enter!");
-
-            if (alert.showAndWait().get() == ButtonType.OK) {
-                stage = (Stage) scenePane.getScene().getWindow();
-                System.out.println("Loi");
-                stage.close();
-            }
-        }
-        else{
+        if (checkPass(pass)) {
             String hiddenPass = "*".repeat(pass.length());
             passLabel.setText("Pass: " + hiddenPass);
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Input Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Invalid password. Please re-enter!");
+
+            if (alert.showAndWait().get() == ButtonType.OK) {
+                stage = (Stage) scenePane.getScene().getWindow();
+                System.out.println("Loi");
+                stage.close();
+            }
         }
     }
 
