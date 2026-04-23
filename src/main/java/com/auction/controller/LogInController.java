@@ -7,7 +7,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -24,8 +23,6 @@ public class LogInController implements Initializable {
     TextField visiblePassword;
     @FXML
     PasswordField hiddenPassword;
-    @FXML
-    Button HomeButton;
 
     private Stage stage;
     private Scene scene;
@@ -36,23 +33,15 @@ public class LogInController implements Initializable {
         String username = nameTextField.getText();
         String pass = hiddenPassword.getText();
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/HomeScreen.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/HomeScreen.fxml"));
         root = loader.load();
 
-        MenuController scene2Controller = loader.getController();
+        HomeController scene2Controller = loader.getController();
         scene2Controller.displayName(username);
         scene2Controller.displayPass(pass);
 
         stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
-    }
-
-    public void BackToHome(ActionEvent event) throws IOException{
-        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/PreLogInScreen.fxml"));
-        scene = new Scene((root));
-        stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
         stage.setScene(scene);
         stage.show();
     }

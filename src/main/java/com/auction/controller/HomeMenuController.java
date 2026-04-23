@@ -14,12 +14,12 @@ import java.io.IOException;
 public class HomeMenuController extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("/controller/example/demo10/PreLogInScreen.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/controller/example/demo10/fxml/LogInScreen.fxml"));
         Scene scene = new Scene(root);
         stage.setScene(scene);
 
         stage.setTitle("Năm anh em siêu nhân");
-        Image image = new Image(getClass().getResource("/controller/example/demo10/nhom4.png").toExternalForm());
+        Image image = new Image(getClass().getResource("/controller/example/demo10/picture/nhom4.png").toExternalForm());
         stage.getIcons().add(image);
         stage.show();
 
