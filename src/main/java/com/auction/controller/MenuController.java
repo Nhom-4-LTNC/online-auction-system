@@ -32,7 +32,7 @@ public class MenuController {
         if(alert.showAndWait().get() == ButtonType.OK){
 
             System.out.println("You logout successful");
-            root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/Home.fxml"));
+            root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/PreLogInScreen.fxml"));
             scene = new Scene((root));
             stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
             stage.setScene(scene);
@@ -43,7 +43,7 @@ public class MenuController {
     Label nameLabel, passLabel;
 
     public void ThamGia(ActionEvent event) throws IOException{
-        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/Scene3.fxml"));
+        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/AuctionHomeScreen.fxml"));
         scene = new Scene((root));
         stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
         stage.setScene(scene);
