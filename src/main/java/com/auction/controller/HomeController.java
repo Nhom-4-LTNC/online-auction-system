@@ -26,7 +26,7 @@ public class HomeController {
     AnchorPane scenePane;
 
     public void SignIn(ActionEvent event) throws IOException{
-        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/Scene1.fxml"));
+        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/LogIn.fxml"));
         scene = new Scene((root));
         stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
         stage.setScene(scene);

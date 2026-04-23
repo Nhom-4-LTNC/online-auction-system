@@ -43,7 +43,7 @@ public class MenuController {
     Label nameLabel, passLabel;
 
     public void ThamGia(ActionEvent event) throws IOException{
-        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/Scene3.fxml"));
+        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/Menu.fxml"));
         scene = new Scene((root));
         stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
         stage.setScene(scene);
