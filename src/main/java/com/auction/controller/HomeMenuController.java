@@ -1,7 +1,6 @@
-package org.example.demo10;
+package com.auction.controller;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,15 +11,15 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class Main extends Application {
+public class HomeMenuController extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("Scene1.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/controller/example/demo10/Home.fxml"));
         Scene scene = new Scene(root);
         stage.setScene(scene);
 
-        stage.setTitle("Đấu giá của Bin Dat");
-        Image image = new Image(getClass().getResource("nhom4.png").toExternalForm());
+        stage.setTitle("Năm anh em siêu nhân");
+        Image image = new Image(getClass().getResource("/controller/example/demo10/nhom4.png").toExternalForm());
         stage.getIcons().add(image);
         stage.show();
 
@@ -33,8 +32,8 @@ public class Main extends Application {
     public void logout(Stage stage){
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Logout");
-        alert.setHeaderText("You're about to logout");
+        alert.setTitle("Exit");
+        alert.setHeaderText("You're exiting");
         alert.setContentText("Do you want to save before exiting?: ");
 
         if(alert.showAndWait().get() == ButtonType.OK){

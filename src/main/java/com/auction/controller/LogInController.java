@@ -36,7 +36,7 @@ public class LogInController implements Initializable {
         String username = nameTextField.getText();
         String pass = hiddenPassword.getText();
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/Scene2.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/SignInScreen.fxml"));
         root = loader.load();
 
         MenuController scene2Controller = loader.getController();
@@ -47,12 +47,6 @@ public class LogInController implements Initializable {
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
-    }
-
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        visiblePassword.textProperty().bindBidirectional(hiddenPassword.textProperty());
-        visiblePassword.setVisible(false);
-        hiddenPassword.setVisible(true);
     }
 
     public void BackToHome(ActionEvent event) throws IOException{
@@ -76,5 +70,11 @@ public class LogInController implements Initializable {
         }
     }
 
+    // HomeMenuController
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        visiblePassword.textProperty().bindBidirectional(hiddenPassword.textProperty());
+        visiblePassword.setVisible(false);
+        hiddenPassword.setVisible(true);
+    }
 
 }

@@ -11,8 +11,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import com.auction.controller.MenuController;
-import com.auction.controller.UserData;
 
 import java.io.IOException;
 
@@ -35,7 +33,7 @@ public class SceneController  {
         if(alert.showAndWait().get() == ButtonType.OK) {
 
             System.out.println("You have left");
-            FXMLLoader loader =  new FXMLLoader(getClass().getResource("/controller/example/demo10/Scene2.fxml"));
+            FXMLLoader loader =  new FXMLLoader(getClass().getResource("/controller/example/demo10/SignInScreen.fxml"));
             root = loader.load();
 
             MenuController menuController = loader.getController();
