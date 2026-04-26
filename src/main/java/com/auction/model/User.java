@@ -45,5 +45,5 @@ public abstract class User extends Entity {
                "password=" + pwd + "\n" +
                "email=" + email + "\n}";
     }
-    abstract void displayInfo();
+    public abstract void displayInfo();
 }
