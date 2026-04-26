@@ -1,9 +1,11 @@
 package com.auction.model;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Bidder extends User {
+    @Serial
     private static final long serialVersionUID = -972067732547664039L;
     private double balance;
     private List<Item> bidList = new ArrayList<>();
@@ -27,8 +29,11 @@ public class Bidder extends User {
     }
 
     @Override
-    void displayInfo() {
-        System.out.println(this.toString());
+    public void displayInfo() {
+        System.out.println(this);
         System.out.println();
+    }
+    public List<Item> getBidList() {
+        return bidList;
     }
 }

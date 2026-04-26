@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
+
 public class Client {
     private Socket socket;
     private DataOutputStream out;
