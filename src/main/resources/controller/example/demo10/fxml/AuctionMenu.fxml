@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.AuctionMenuController">
+   <children>
+      <Button fx:id="vase" layoutX="39.0" layoutY="113.0" mnemonicParsing="false" onAction="#JoinToiPhone" prefHeight="148.0" prefWidth="157.0" text="Button" />
+      <Button fx:id="diamond" layoutX="232.0" layoutY="113.0" mnemonicParsing="false" onAction="#JoinToDiamond" prefHeight="148.0" prefWidth="158.0" text="Button" />
+      <ImageView fitHeight="122.0" fitWidth="134.0" layoutX="245.0" layoutY="126.0" pickOnBounds="true">
+         <image>
+            <Image url="@../picture/PinkDiamond.jpg" />
+         </image>
+      </ImageView>
+      <Button fx:id="art" layoutX="417.0" layoutY="113.0" mnemonicParsing="false" onAction="#JoinToArt" prefHeight="148.0" prefWidth="158.0" text="Button" />
+      <ImageView fitHeight="122.0" fitWidth="122.0" layoutX="435.0" layoutY="146.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../picture/DongHoArt.jpg" />
+         </image>
+      </ImageView>
+      <Label layoutX="68.0" layoutY="275.0" text="iPhone 17 Pro Max">
+         <font>
+            <Font name="Cambria" size="13.0" />
+         </font>
+      </Label>
+      <Label layoutX="414.0" layoutY="275.0" text=" Vietnamese Art - Dong Ho Art">
+         <font>
+            <Font name="Cambria" size="13.0" />
+         </font>
+      </Label>
+      <Label layoutX="272.0" layoutY="275.0" text="Pink Diamond ">
+         <font>
+            <Font name="Cambria" size="13.0" />
+         </font>
+      </Label>
+      <ImageView fitHeight="99.0" fitWidth="134.0" layoutX="51.0" layoutY="149.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../picture/Iphone.jpg" />
+         </image>
+      </ImageView>
+      <Label layoutX="69.0" layoutY="305.0" text="starting bid : $2530" />
+   </children>
+</AnchorPane>
