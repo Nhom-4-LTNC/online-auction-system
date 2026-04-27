@@ -25,21 +25,25 @@ public abstract class Item extends Entity {
         this.owner = owner;
     }
     public String getName() { return name; }
+    public boolean isValid() {
+        return name != null && !name.isEmpty() && startPrice > 0;
+    }
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description;}
-    public Integer getOwnerId() { return owner.getId(); }
+    public Integer getOwnerId() {
+        return (owner != null) ? owner.getId() : -1;
+    }
     public double getStartPrice() { return startPrice; }
     public void setStartPrice(double startPrice) {
         if (startPrice > 0) this.startPrice = startPrice;
         else System.out.println("Error! Starting price must be greater than zero!");
     }
+    @Override
     public String toString() {
-        return "Item{" +
-                "name=" + name + "\n" +
-                "description=" + description + "\n" +
-                "startPrice= " + startPrice + "\n" +
-                "owner=" + owner.getUsername()+ "}";
+        String ownerName = (owner != null) ? owner.getUsername() : "None";
+        return String.format("Item: %s | Starting price: %.2f | Seller: %s",
+                name, startPrice, ownerName);
     }
     abstract void displayDetails();
 }
