@@ -31,7 +31,7 @@ public abstract class User extends Entity {
     public String getPwd() { return pwd; }
     public String getEmail() { return email; }
     public void setPwd(String pwd) { this.pwd = pwd; }
-    public void setEmail() { this.email = email; }
+    public void setEmail(String email) { this.email = email; }
 
     public long getBanStartTime() {return banStartTime;}
     public long getBanEndTime() {return banEndTime;}
@@ -46,4 +46,8 @@ public abstract class User extends Entity {
                "email=" + email + "\n}";
     }
     public abstract void displayInfo();
+    public abstract void updateRole();
+    public Role getRole() {
+        return this.role;
+    }
 }

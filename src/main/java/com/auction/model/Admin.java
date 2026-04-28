@@ -20,6 +20,10 @@ public class Admin extends User {
     }
 
     @Override
+    public void updateRole() {
+        role = Role.ADMIN;
+    }
+    @Override
     public void displayInfo() {
         System.out.println("placeholder");
     }

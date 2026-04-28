@@ -1,25 +1,38 @@
 package com.auction.model;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Seller extends User {
+    @Serial
+    private static final long serialVersionUID = -5303235272624046213L;
     List<Item> itemslist = new ArrayList<>();
     public Seller(String username, String pwd, String email) {
         super(username, pwd, email);
+        updateRole();
     }
     public Seller(int id, String username, String pwd, String email) {
         super(id, username, pwd, email);
-    }
-    public Seller(Seller other) {
-        super(other.getId(), other.getUsername(), other.getPwd(), other.getEmail());
+        updateRole();
     }
     public void addItem(Item item) {
-        itemslist.add(item);
+        if (item != null)
+            itemslist.add(item);
+    }
+
+    public List<Item> getItemslist() {
+        return new ArrayList<>(itemslist);
+    }
+
+    @Override
+    public void updateRole() {
+        this.role = Role.SELLER;
     }
 
     @Override
     public void displayInfo() {
-        //TODO
+        System.out.println(toString());
+        System.out.println("Role: " + role);
     }
 }
