@@ -1,8 +1,10 @@
 package com.auction.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public abstract class Entity implements Serializable {
+    @Serial
     private static final long serialVersionUID = -3691692181672595753L;
 
     protected Integer id = null;

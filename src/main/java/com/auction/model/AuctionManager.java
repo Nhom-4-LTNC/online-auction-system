@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AuctionManager {
     private static AuctionManager instance;
-    private Map <Integer, Auction> auctions;
+    private final Map <Integer, Auction> auctions;
 
     private AuctionManager() {
         /*

@@ -8,7 +8,7 @@ public class Bidder extends User {
     @Serial
     private static final long serialVersionUID = -972067732547664039L;
     private double balance;
-    private List<Item> bidList = new ArrayList<>();
+    private final List<Item> bidList = new ArrayList<>();
 
     public Bidder(String username, String pwd, String email) {
         super(username, pwd, email);

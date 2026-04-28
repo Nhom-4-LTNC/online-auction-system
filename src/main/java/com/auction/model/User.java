@@ -1,6 +1,9 @@
 package com.auction.model;
 
+import java.io.Serial;
+
 public abstract class User extends Entity {
+    @Serial
     private static final long serialVersionUID = 2214371618402864005L;
 
     // BASIC ATTRIBUTES

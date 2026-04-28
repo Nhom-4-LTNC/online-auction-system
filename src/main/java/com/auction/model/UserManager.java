@@ -9,7 +9,7 @@ import java.util.*;
     * Cung cấp dữ liệu: Mọi thành phần khác muốn tương tác với User đều phải lấy từ đây
  */
 public class UserManager {
-    private Map <Integer, User> onlineUsers;
+    private final Map <Integer, User> onlineUsers;
     private static UserManager instance;
     private UserManager() {
         onlineUsers = new HashMap<>();
