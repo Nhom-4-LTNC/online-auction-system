@@ -14,6 +14,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 
 public class LogInController implements Initializable {
@@ -29,21 +30,29 @@ public class LogInController implements Initializable {
     private Parent root;
 
     public void login(ActionEvent event) throws IOException {
-
-        String username = nameTextField.getText();
+        HashMap<String, String> map = UserData.users;
+        String email = nameTextField.getText();
         String pass = hiddenPassword.getText();
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/HomeScreen.fxml"));
-        root = loader.load();
+        if(map.containsKey(email)){
+            if (map.get(email).equals(pass)){
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/HomeScreen.fxml"));
+                root = loader.load();
 
-        HomeController scene2Controller = loader.getController();
-        scene2Controller.displayName(username);
-        scene2Controller.displayPass(pass);
+                HomeController homeController = loader.getController();
+                homeController.displayName(email);
+                homeController.displayPass(pass);
 
-        stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                scene = new Scene(root);
+                stage.setScene(scene);
+                stage.show();
+            }else{
+                System.out.println("Nhập sai mật khẩu");
+            }
+        }else{
+            System.out.println("Không tồn tại tài khoản");
+        }
     }
 
     @FXML
@@ -64,6 +73,15 @@ public class LogInController implements Initializable {
         visiblePassword.textProperty().bindBidirectional(hiddenPassword.textProperty());
         visiblePassword.setVisible(false);
         hiddenPassword.setVisible(true);
+    }
+
+    public void CreateAccount(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/createAccount.fxml"));
+        root = loader.load();
+        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
     }
 
 }

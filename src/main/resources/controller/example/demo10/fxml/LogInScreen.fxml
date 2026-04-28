@@ -26,12 +26,12 @@
             <Reflection />
          </effect>
       </Button>
-      <Label layoutX="14.0" layoutY="171.0" text="Username:" textFill="#1e1d1d">
+      <Label layoutX="25.0" layoutY="171.0" text="Email: " textFill="#1e1d1d">
          <font>
             <Font size="18.0" />
          </font>
       </Label>
-      <TextField fx:id="nameTextField" layoutX="98.0" layoutY="172.0" promptText="input name" />
+      <TextField fx:id="nameTextField" layoutX="98.0" layoutY="172.0" prefHeight="26.0" prefWidth="160.0" promptText="ex: nguyen123@gmail.com" />
       <TextField fx:id="visiblePassword" layoutX="98.0" layoutY="223.0" promptText="input password" />
       <Label layoutX="31.0" layoutY="222.0" text="Pass:" textFill="#181818">
          <font>
@@ -50,5 +50,6 @@
             <Font size="36.0" />
          </font>
       </Label>
+      <Button layoutX="486.0" layoutY="13.0" mnemonicParsing="false" onAction="#CreateAccount" prefHeight="26.0" prefWidth="139.0" text="Create Account" />
    </children>
 </AnchorPane>

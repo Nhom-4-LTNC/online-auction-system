@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.CreateAccountController">
+   <children>
+      <Label layoutX="22.0" layoutY="97.0" text="User name: ">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <Label layoutX="26.0" layoutY="199.0" text="Password: ">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <Label layoutX="39.0" layoutY="150.0" text="Email: ">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextField fx:id="nameTextField" layoutX="115.0" layoutY="94.0" prefHeight="26.0" prefWidth="164.0" />
+      <TextField fx:id="emailTextField" layoutX="115.0" layoutY="147.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: nguyenvanA@gmail.com" />
+      <TextField fx:id="passTextField" layoutX="116.0" layoutY="196.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: 12345aA@" />
+      <Button fx:id="Create" layoutX="164.0" layoutY="258.0" mnemonicParsing="false" onAction="#Create" text="Create" />
+   </children>
+</AnchorPane>

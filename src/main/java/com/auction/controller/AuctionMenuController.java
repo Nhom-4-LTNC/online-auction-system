@@ -47,4 +47,19 @@ public class AuctionMenuController {
         stage.setScene(scene);
         stage.show();
     }
+
+    public void BacktoHome(ActionEvent event) throws IOException {
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/HomeScreen.fxml"));
+        root = loader.load();
+
+        HomeController homeController = loader.getController();
+        homeController.displayName(UserData.email);
+        homeController.displayPass(UserData.password);
+
+        scene = new Scene(root);
+        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.setScene(scene);
+        stage.show();
+    }
 }
