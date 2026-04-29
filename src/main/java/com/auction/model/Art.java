@@ -7,19 +7,13 @@ public class Art extends Item{
     private static final long serialVersionUID = -1593174092660038685L;
     private String artist;
     private int yearCreated;
-    public Art(int id, String name, String description, Seller owner, double startPrice,
+    public Art(int id, String name, String description, User owner, double startPrice,
                String artist, int yearCreated) {
         super(id, name, description, owner, startPrice);
         this.artist = artist;
         this.yearCreated = yearCreated;
     }
 
-    @Override
-    void displayDetails() {
-        System.out.println(toString());
-        System.out.println("Art: " + getName() + " - Artis: " + getArtist() +
-                " - Created year: " + getYearCreated());
-    }
     public String getArtist() {
         return artist;
     }
@@ -29,7 +23,11 @@ public class Art extends Item{
     public int getYearCreated() {
         return yearCreated;
     }
-    public void setYearCreated(int yearCreated) {
-        this.yearCreated = yearCreated;
+    public boolean setYearCreated(int yearCreated) {
+        if (yearCreated > 0) {
+            this.yearCreated = yearCreated;
+            return true;
+        }
+        return false;
     }
 }

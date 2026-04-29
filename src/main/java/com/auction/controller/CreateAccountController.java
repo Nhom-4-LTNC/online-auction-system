@@ -1,6 +1,6 @@
 package com.auction.controller;
 
-import com.auction.model.Bidder;
+import com.auction.model.BidderProfile;
 import com.auction.model.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,6 +13,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.io.Serial;
 
 public class CreateAccountController {
     @FXML
@@ -32,7 +33,7 @@ public class CreateAccountController {
         String email = emailTextField.getText();
         String pass = passTextField.getText();
         String username = nameTextField.getText();
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/HomeScreen.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
         root = loader.load();
         HomeController homeController = loader.getController();
         homeController.displayName(email);
@@ -40,8 +41,8 @@ public class CreateAccountController {
 
         System.out.println("Tạo tài khoản thành công");
 
-        User bidder = new Bidder(username, pass, email);
-        UserData.users.put(bidder.getEmail(), bidder.getPwd());
+        User user = new User(username, pass, email);
+        UserData.users.put(user.getEmail(), user.getPwd());
 
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);

@@ -1,20 +1,24 @@
 package com.auction.model;
 
 import java.io.Serial;
+import java.util.Set;
 
-public abstract class User extends Entity {
+public class User extends Entity {
     @Serial
     private static final long serialVersionUID = 2214371618402864005L;
 
     // BASIC ATTRIBUTES
-    protected String username;
-    protected String pwd;
-    protected String email;
+    private final String username;
+    private String pwd;
+    private String email;
     // BAN ATTRIBUTES
-    protected long banStartTime = 0L; // in millis
-    protected long banEndTime = 0L;
+    private long banStartTime = 0L; // in millis
+    private long banEndTime = 0L;
     // ENUMS
-    protected Role role;
+    private Set <Role> roles;
+
+    private BidderProfile bidderProfile;
+    private SellerProfile sellerProfile;
 
     // CONSTRUCTORS
     public User (String username, String pwd, String email) {
@@ -29,7 +33,18 @@ public abstract class User extends Entity {
         this.pwd = pwd;
         this.email = email;
     }
-
+    public void addRole(Role role) {
+        roles.add(role);
+        if (role == Role.BIDDER && bidderProfile == null) {
+            bidderProfile = new BidderProfile();
+        }
+        if (role == Role.SELLER && sellerProfile == null) {
+            sellerProfile = new SellerProfile();
+        }
+    }
+    public boolean hasRole(Role role) { return roles.contains(role); }
+    public BidderProfile getBidderProfile() { return bidderProfile; }
+    public SellerProfile getSellerProfile() { return sellerProfile; }
     public String getUsername() { return username; }
     public String getPwd() { return pwd; }
     public String getEmail() { return email; }
@@ -45,12 +60,6 @@ public abstract class User extends Entity {
     public String toString() {
        return "User{" +
                "username=" + username + "\n" +
-               "password=" + pwd + "\n" +
                "email=" + email + "\n}";
-    }
-    public abstract void displayInfo();
-    public abstract void updateRole();
-    public Role getRole() {
-        return this.role;
     }
 }

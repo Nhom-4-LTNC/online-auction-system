@@ -1,47 +1,53 @@
 package com.auction.model;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public class Auction extends Entity {
     @Serial
     private static final long serialVersionUID = 6720930536578062003L;
-    private int auctionId;
     private Item item;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private double startPrice;
     private double currentPrice;
-    private Bidder lastBidder;
+    private User lastBidder;
     private final double bidStep;
     private AuctionStatus status;
     public Auction(int id, Item item, double bidStep, LocalDateTime startTime, LocalDateTime endTime) {
         super(id);
         this.item = item;
         this.startPrice = item.getStartPrice();
+        this.currentPrice = startPrice;
         this.bidStep = bidStep;
         this.startTime = startTime;
         this.endTime = endTime;
     }
-    public synchronized boolean placeBid(Bidder bidder, double amount) {
+    public synchronized boolean placeBid(User user, double amount) {
         LocalDateTime now = LocalDateTime.now();
-        if (status == AuctionStatus.OPENED && now.isBefore(endTime) && amount >= currentPrice + bidStep) {
-            currentPrice = amount;
-            lastBidder = bidder;
-            return true;
-        }
-        return false;
+        if (status == AuctionStatus.CLOSED || now.isAfter(endTime)) return false;
+        if (!user.hasRole(Role.BIDDER) || user.getBidderProfile() == null) return false;
+        if (amount < currentPrice + bidStep) return false;
+
+        BidderProfile profile = user.getBidderProfile();
+
+        if (!profile.canAfford(amount)) return false;
+
+        this.currentPrice = amount;
+        this.lastBidder = user;
+        profile.addBidItem(this.item);
+
+        return true;
     }
     //STATUS UPDATE
-    public void updateStatus() {
+    public AuctionStatus getStatus() {
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(startTime)) status = AuctionStatus.INITIALIZED;
-        else if (now.isAfter(endTime)) status = AuctionStatus.CLOSED;
-        else status = AuctionStatus.OPENED;
+        if (now.isBefore(startTime)) return AuctionStatus.INITIALIZED;
+        else if (now.isAfter(endTime)) return AuctionStatus.CLOSED;
+        return AuctionStatus.OPENED;
     }
     //GET WINNER
-    public Bidder getWinner() {
+    public User getWinner() {
         if (LocalDateTime.now().isAfter(endTime)) {
             this.status = AuctionStatus.CLOSED;
             return lastBidder;
@@ -50,14 +56,10 @@ public class Auction extends Entity {
     }
 
     //GETTER, SETTER
-    public Bidder getHighestBidder() {
+    public User getHighestBidder() {
         return lastBidder;
     }
-
-    public void setLastBidder(Bidder lastBidder) {
-        this.lastBidder = lastBidder;
-    }
-
+    public void setLastBidder(User user) { lastBidder = user; }
     public double getStartPrice() {
         return startPrice;
     }
@@ -90,5 +92,4 @@ public class Auction extends Entity {
         this.item = item;
     }
 
-    public AuctionStatus getStatus() { return status; }
 }

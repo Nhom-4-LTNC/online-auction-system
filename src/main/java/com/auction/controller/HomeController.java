@@ -11,6 +11,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class HomeController {
     @FXML
@@ -23,7 +24,8 @@ public class HomeController {
     Parent root;
 
     public void ThamGia(ActionEvent event) throws IOException{
-        root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/fxml/AuctionMenu.fxml"));
+        new FXMLLoader();
+        root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/AuctionMenu.fxml")));
         scene = new Scene((root));
         stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
         stage.setScene(scene);
@@ -40,7 +42,8 @@ public class HomeController {
         if(alert.showAndWait().get() == ButtonType.OK){
 
             System.out.println("You logout successful");
-            root = new FXMLLoader().load(getClass().getResource("/controller/example/demo10/fxml/LogInScreen.fxml"));
+            new FXMLLoader();
+            root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/LogInScreen.fxml")));
             scene = new Scene((root));
             stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
             stage.setScene(scene);

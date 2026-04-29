@@ -1,6 +1,5 @@
 package com.auction.model;
 
-import javax.xml.stream.events.StartDocument;
 import java.io.Serial;
 
 public abstract class Item extends Entity {
@@ -9,15 +8,15 @@ public abstract class Item extends Entity {
     private double startPrice;
     private String name;
     private String description;
-    private Seller owner;
-    public Item(String name, String description,Seller owner, double startPrice) {
+    private User owner;
+    public Item(String name, String description,User owner, double startPrice) {
         super();
         this.name = name;
         this.description = description;
         if (startPrice > 0) this.startPrice = startPrice;
         this.owner = owner;
     }
-    public Item(int id, String name, String description, Seller owner, double startPrice) {
+    public Item(int id, String name, String description, User owner, double startPrice) {
         super(id);
         this.name = name;
         this.description = description;
@@ -35,9 +34,12 @@ public abstract class Item extends Entity {
         return (owner != null) ? owner.getId() : -1;
     }
     public double getStartPrice() { return startPrice; }
-    public void setStartPrice(double startPrice) {
-        if (startPrice > 0) this.startPrice = startPrice;
-        else System.out.println("Error! Starting price must be greater than zero!");
+    public boolean setStartPrice(double startPrice) {
+        if (startPrice > 0) {
+            this.startPrice = startPrice;
+            return true;
+        }
+        return false;
     }
     @Override
     public String toString() {
@@ -45,5 +47,4 @@ public abstract class Item extends Entity {
         return String.format("Item: %s | Starting price: %.2f | Seller: %s",
                 name, startPrice, ownerName);
     }
-    abstract void displayDetails();
 }

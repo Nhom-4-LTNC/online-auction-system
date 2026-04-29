@@ -1,4 +1,4 @@
-package net.Socket.src; // This line fixes the error
+package com.auction.network; // This line fixes the error
 
 import java.io.DataOutputStream;
 import java.io.IOException;

@@ -24,7 +24,7 @@ public class AuctionMenuController {
     Parent root;
 
     public void JoinToiPhone(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/iPhone.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/iPhone.fxml"));
         root = loader.load();
         scene = new Scene(root);
         stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
@@ -32,7 +32,7 @@ public class AuctionMenuController {
         stage.show();
     }
     public void JoinToArt(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/Art.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Art.fxml"));
         root = loader.load();
         scene = new Scene(root);
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -40,7 +40,7 @@ public class AuctionMenuController {
         stage.show();
     }
     public void JoinToDiamond(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/Diamond.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Diamond.fxml"));
         root = loader.load();
         scene = new Scene(root);
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -50,7 +50,7 @@ public class AuctionMenuController {
 
     public void BacktoHome(ActionEvent event) throws IOException {
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/HomeScreen.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
         root = loader.load();
 
         HomeController homeController = loader.getController();

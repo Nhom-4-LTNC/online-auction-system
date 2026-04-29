@@ -33,13 +33,11 @@ public class AuctionManager {
         return new ArrayList<>(auctions.values());
     }
 
-    public boolean processBid(int auctionId, Bidder bidder, double amount) {
+    public boolean processBid(int auctionId, User user, double amount) {
         Auction auction = auctions.get(auctionId);
         if (auction != null) {
-            return auction.placeBid(bidder, amount);
+            return auction.placeBid(user, amount);
         }
         return false;
     }
-
-
 }

@@ -56,7 +56,7 @@ public class iPhoneBid implements Initializable {
     @FXML
     Button out;
     public void OutBid(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/AuctionMenu.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AuctionMenu.fxml"));
         root = loader.load();
         scene = new Scene(root);
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

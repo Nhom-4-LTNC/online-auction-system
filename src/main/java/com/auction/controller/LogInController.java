@@ -36,7 +36,7 @@ public class LogInController implements Initializable {
 
         if(map.containsKey(email)){
             if (map.get(email).equals(pass)){
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/HomeScreen.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
                 root = loader.load();
 
                 HomeController homeController = loader.getController();
@@ -76,7 +76,7 @@ public class LogInController implements Initializable {
     }
 
     public void CreateAccount(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/controller/example/demo10/fxml/createAccount.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/createAccount.fxml"));
         root = loader.load();
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);

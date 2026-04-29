@@ -9,10 +9,10 @@ import java.util.*;
     * Cung cấp dữ liệu: Mọi thành phần khác muốn tương tác với User đều phải lấy từ đây
  */
 public class UserManager {
-    private final Map <Integer, User> onlineUsers;
+    private final Map <Integer, User> users;
     private static UserManager instance;
     private UserManager() {
-        onlineUsers = new HashMap<>();
+        users = new HashMap<>();
     }
 
     public static synchronized UserManager getInstance() {
@@ -21,15 +21,16 @@ public class UserManager {
     }
 
     public void addUser(User user) {
-        onlineUsers.put(user.getId(), user);
+        users.put(user.getId(), user);
     }
 
     public User getUserById(int id) {
-        return onlineUsers.get(id);
+        return users.get(id);
     }
-    public Seller getSellerById(int id) {
-        User u = onlineUsers.get(id);
-        if (u instanceof Seller) return (Seller) u;
+
+    public User getSellerById(int id) {
+        User user = users.get(id);
+        if (user != null && user.hasRole(Role.SELLER)) return user;
         return null;
     }
 }

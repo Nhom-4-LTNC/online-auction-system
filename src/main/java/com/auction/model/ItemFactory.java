@@ -15,8 +15,8 @@ public class ItemFactory {
             double price = Double.parseDouble(data.get("price").toString());
 
             String desc = (String) data.get("desc");
-            Seller owner = (Seller) data.get("owner");
-
+            User owner = (User) data.get("owner");
+            if (owner.getSellerProfile() == null) return null;
             return switch (type) {
                 case ELECTRONICS -> new Electronics(id, name, desc, owner, price,
                         (String) data.get("brand"),
@@ -30,7 +30,6 @@ public class ItemFactory {
                         (String) data.get("brand"),
                         (String) data.get("vin"),
                         (int) data.get("mileage"));
-
                 default -> throw new IllegalArgumentException("Unknown ItemType");
             };
         } catch (Exception e) {

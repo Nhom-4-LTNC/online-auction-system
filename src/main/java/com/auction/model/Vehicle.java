@@ -8,8 +8,8 @@ public class Vehicle extends Item {
     private String brand;
     private String vin;
     private int mileage;
-    public Vehicle(int id, String name, String description, Seller owner, double startPrice,
-                    String brand, String vin, int mileage) {
+    public Vehicle(int id, String name, String description, User owner, double startPrice,
+                   String brand, String vin, int mileage) {
         super(id, name, description, owner, startPrice);
         this.brand = brand;
         this.vin = vin;
@@ -28,15 +28,12 @@ public class Vehicle extends Item {
         return mileage;
     }
 
-    public void setMileage(int mileage) {
-        this.mileage = mileage;
-    }
-
-    @Override
-    void displayDetails() {
-        System.out.println(toString());
-        System.out.println("Vehicle: " + getName() + " - Brand: " + getBrand() +
-                " - Identical Number: " + getVin() + " - Travelled: " + getMileage());
+    public boolean setMileage(int mileage) {
+        if (mileage > 0) {
+            this.mileage = mileage;
+            return true;
+        }
+        return false;
     }
 
     public String getBrand() {

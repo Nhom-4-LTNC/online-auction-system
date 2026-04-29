@@ -7,7 +7,7 @@ public class Electronics extends Item{
     private static final long serialVersionUID = 7901984111386685182L;
     private String brand;
     private int warrantyMonths;
-    public Electronics(int id, String name, String description, Seller owner, double startPrice,
+    public Electronics(int id, String name, String description, User owner, double startPrice,
                        String brand, int warrantyMonths) {
         super(id, name, description, owner, startPrice);
         this.brand = brand;
@@ -26,14 +26,12 @@ public class Electronics extends Item{
         return warrantyMonths;
     }
 
-    public void setWarrantyMonths(int warrantyMonths) {
-        this.warrantyMonths = warrantyMonths;
+    public boolean setWarrantyMonths(int warrantyMonths) {
+        if (warrantyMonths > 0) {
+            this.warrantyMonths = warrantyMonths;
+            return true;
+        }
+        return false;
     }
 
-    @Override
-    void displayDetails() {
-        System.out.println(toString());
-        System.out.println("Electronic: " + getName() + " - Brand: " + getBrand() +
-                " - Warranty remained: " + getWarrantyMonths() + " months");
-    }
 }
