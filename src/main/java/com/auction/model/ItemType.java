@@ -1,5 +1,7 @@
 package com.auction.model;
 
-public enum ItemType {
+import java.io.Serializable;
+
+public enum ItemType implements Serializable {
     ELECTRONICS, ART, VEHICLE
 }

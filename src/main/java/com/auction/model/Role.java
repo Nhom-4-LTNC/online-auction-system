@@ -1,6 +1,8 @@
 package com.auction.model;
 
-public enum Role {
+import java.io.Serializable;
+
+public enum Role implements Serializable {
     BIDDER,
     SELLER,
     ADMIN

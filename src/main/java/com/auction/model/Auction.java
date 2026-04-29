@@ -13,7 +13,6 @@ public class Auction extends Entity {
     private double currentPrice;
     private User lastBidder;
     private final double bidStep;
-    private AuctionStatus status;
     public Auction(int id, Item item, double bidStep, LocalDateTime startTime, LocalDateTime endTime) {
         super(id);
         this.item = item;
@@ -25,7 +24,7 @@ public class Auction extends Entity {
     }
     public synchronized boolean placeBid(User user, double amount) {
         LocalDateTime now = LocalDateTime.now();
-        if (status == AuctionStatus.CLOSED || now.isAfter(endTime)) return false;
+        if (getStatus() == AuctionStatus.CLOSED || now.isAfter(endTime)) return false;
         if (!user.hasRole(Role.BIDDER) || user.getBidderProfile() == null) return false;
         if (amount < currentPrice + bidStep) return false;
 
@@ -48,8 +47,7 @@ public class Auction extends Entity {
     }
     //GET WINNER
     public User getWinner() {
-        if (LocalDateTime.now().isAfter(endTime)) {
-            this.status = AuctionStatus.CLOSED;
+        if (LocalDateTime.now().isAfter(endTime) || getStatus() == AuctionStatus.CLOSED) {
             return lastBidder;
         }
         return null;

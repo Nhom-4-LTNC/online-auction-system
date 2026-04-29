@@ -1,6 +1,7 @@
 package com.auction.model;
 
 import java.io.Serial;
+import java.util.HashSet;
 import java.util.Set;
 
 public class User extends Entity {
@@ -15,7 +16,7 @@ public class User extends Entity {
     private long banStartTime = 0L; // in millis
     private long banEndTime = 0L;
     // ENUMS
-    private Set <Role> roles;
+    private final Set <Role> roles = new HashSet<>();
 
     private BidderProfile bidderProfile;
     private SellerProfile sellerProfile;

@@ -1,5 +1,7 @@
 package com.auction.model;
 
-public enum AuctionStatus {
+import java.io.Serializable;
+
+public enum AuctionStatus implements Serializable {
     INITIALIZED, OPENED, CLOSED
 }
