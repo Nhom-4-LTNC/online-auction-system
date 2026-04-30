@@ -11,11 +11,7 @@ public class BidderProfile implements Serializable {
     @Serial
     private static final long serialVersionUID = 7652995670457990055L;
     private double balance;
-    private final List<Item> bidList = new ArrayList<>();
-    public void addBidItem(Item item) {
-        if (!bidList.contains(item) && item != null)
-            bidList.add(item);
-    }
+
     public synchronized boolean deposit(double amount) {
         if (amount > 0) {
             balance += amount;
@@ -36,7 +32,5 @@ public class BidderProfile implements Serializable {
     public double getBalance() {
         return balance;
     }
-    public List<Item> getBidList() {
-        return new ArrayList<>(bidList);
-    }
+
 }

@@ -9,6 +9,12 @@ public class Art extends Item {
     private static final long serialVersionUID = -1593174092660038685L;
     private String artist;
     private int yearCreated;
+    public Art(String name, String description, User owner, double startPrice,
+               String artist, int yearCreated) {
+        super(name, description, owner, startPrice);
+        this.artist = artist;
+        this.yearCreated = yearCreated;
+    }
     public Art(int id, String name, String description, User owner, double startPrice,
                String artist, int yearCreated) {
         super(id, name, description, owner, startPrice);
