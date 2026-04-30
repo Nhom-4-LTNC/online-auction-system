@@ -1,4 +1,4 @@
-package com.auction.model;
+package com.auction.model.auction;
 
 import java.io.Serializable;
 

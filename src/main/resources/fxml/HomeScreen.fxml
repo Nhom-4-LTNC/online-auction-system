@@ -13,12 +13,12 @@
             <Font size="20.0" />
          </font>
       </Label>
-      <Label layoutX="175.0" layoutY="165.0" text="Tham gia đấu giá">
+      <Label layoutX="52.0" layoutY="150.0" text="Tham gia đấu giá">
          <font>
             <Font size="30.0" />
          </font>
       </Label>
-      <Button fx:id="thamgiaBUtton" layoutX="257.0" layoutY="253.0" mnemonicParsing="false" onAction="#ThamGia" text="Tham gia" />
+      <Button fx:id="bidButton" layoutX="52.0" layoutY="196.0" mnemonicParsing="false" onAction="#joinBid" text="Tham gia" />
       <Button fx:id="logoutButton" layoutX="481.0" layoutY="27.0" mnemonicParsing="false" onAction="#logout" text="Logout" />
       <Label fx:id="passLabel" layoutX="52.0" layoutY="88.0" text="Pass:">
          <font>
@@ -26,5 +26,11 @@
          </font>
       </Label>
       <CheckBox fx:id="checkBox" layoutX="339.0" layoutY="94.0" mnemonicParsing="false" onAction="#change" text="Show" />
+      <Label layoutX="52.0" layoutY="231.0" text="Tạo sản phẩm">
+         <font>
+            <Font size="30.0" />
+         </font>
+      </Label>
+      <Button fx:id="createButton" layoutX="52.0" layoutY="277.0" mnemonicParsing="false" onAction="#createItem" text="Tạo" />
    </children>
 </AnchorPane>

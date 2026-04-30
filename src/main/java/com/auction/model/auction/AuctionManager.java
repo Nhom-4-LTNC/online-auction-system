@@ -1,4 +1,6 @@
-package com.auction.model;
+package com.auction.model.auction;
+
+import com.auction.model.user.User;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

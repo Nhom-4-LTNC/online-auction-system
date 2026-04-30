@@ -1,4 +1,6 @@
-package com.auction.model;
+package com.auction.model.item;
+
+import com.auction.model.user.User;
 
 import java.util.*;
 /*
