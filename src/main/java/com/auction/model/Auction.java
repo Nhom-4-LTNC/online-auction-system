@@ -13,6 +13,14 @@ public class Auction extends Entity {
     private double currentPrice;
     private User lastBidder;
     private final double bidStep;
+    public Auction(Item item, double bidStep, LocalDateTime startTime, LocalDateTime endTime) {
+        super();
+        this.bidStep = bidStep;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.startPrice = item.getStartPrice();
+        this.currentPrice = startPrice;
+    }
     public Auction(int id, Item item, double bidStep, LocalDateTime startTime, LocalDateTime endTime) {
         super(id);
         this.item = item;

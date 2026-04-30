@@ -8,7 +8,7 @@ public abstract class Item extends Entity {
     private double startPrice;
     private String name;
     private String description;
-    private User owner;
+    private final User owner;
     public Item(String name, String description,User owner, double startPrice) {
         super();
         this.name = name;

@@ -7,6 +7,11 @@ public class Electronics extends Item{
     private static final long serialVersionUID = 7901984111386685182L;
     private String brand;
     private int warrantyMonths;
+    public Electronics(String name, String des, User owner, double startPrice, String brand, int warrantyMonths) {
+        super(name, des, owner, startPrice);
+        this.brand = brand;
+        this.warrantyMonths = warrantyMonths;
+    }
     public Electronics(int id, String name, String description, User owner, double startPrice,
                        String brand, int warrantyMonths) {
         super(id, name, description, owner, startPrice);
