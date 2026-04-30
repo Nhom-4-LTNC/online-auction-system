@@ -1,8 +1,10 @@
-package com.auction.model;
+package com.auction.model.item;
+
+import com.auction.model.user.User;
 
 import java.io.Serial;
 
-public class Art extends Item{
+public class Art extends Item {
     @Serial
     private static final long serialVersionUID = -1593174092660038685L;
     private String artist;

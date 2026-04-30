@@ -1,4 +1,6 @@
-package com.auction.model;
+package com.auction.model.user;
+
+import com.auction.model.Entity;
 
 import java.io.Serial;
 import java.util.HashSet;

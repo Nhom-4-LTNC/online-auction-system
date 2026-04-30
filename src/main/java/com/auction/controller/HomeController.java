@@ -15,7 +15,7 @@ import java.util.Objects;
 
 public class HomeController {
     @FXML
-    private Button logoutButton, thamgiaBUtton;
+    private Button logoutButton, bidButton, createButton;
     @FXML
     private AnchorPane scenePane;
 
@@ -23,7 +23,7 @@ public class HomeController {
     Scene scene;
     Parent root;
 
-    public void ThamGia(ActionEvent event) throws IOException{
+    public void joinBid(ActionEvent event) throws IOException{
         new FXMLLoader();
         root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/AuctionMenu.fxml")));
         scene = new Scene((root));
@@ -31,6 +31,17 @@ public class HomeController {
         stage.setScene(scene);
         stage.show();
     }
+
+    public void createItem(ActionEvent event) throws IOException{
+        new FXMLLoader();
+        root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fxml/ItemMenu.fxml")));
+        scene = new Scene((root));
+        stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
+        stage.setScene(scene);
+        stage.show();
+    }
+
+
 
     public void logout(ActionEvent event) throws IOException{
 

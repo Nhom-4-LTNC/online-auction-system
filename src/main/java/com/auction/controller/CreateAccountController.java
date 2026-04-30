@@ -1,7 +1,6 @@
 package com.auction.controller;
 
-import com.auction.model.BidderProfile;
-import com.auction.model.User;
+import com.auction.model.user.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,7 +12,6 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.io.Serial;
 
 public class CreateAccountController {
     @FXML
