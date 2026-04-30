@@ -1,5 +1,7 @@
 package com.auction.controller;
 
+import com.auction.model.item.Electronics;
+import com.auction.model.item.Item;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,15 +12,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Objects;
 
 public class AuctionItemMenuController {
-
 
     // generals
     @FXML
@@ -55,6 +56,7 @@ public class AuctionItemMenuController {
         double startingPrice = Double.parseDouble(startingPriceTF.getText());
         String description = descriptionTF.getText();
 
+
         if (currentType.equals("Electronics")) {
             String electronicBrand = electronicsBrandTF.getText();
             String warranty = warrantyTF.getText();
@@ -65,9 +67,13 @@ public class AuctionItemMenuController {
             String brand = vehicleBrandTF.getText();
             String vin = vinTF.getText();
             String mileage = mileageTF.getText();
+        } else {
+
         }
 
         // IMPORTANT: CREATE AUCTION HERE
+        // SOMEONE PLS HELP
+
     }
 
     public void back(ActionEvent event) throws IOException {
