@@ -1,51 +1,46 @@
-package com.auction.network; // This line fixes the error
+package com.auction.network;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
+// right now all this does is you can type stuff into the console and it'll send to the server
 
 public class Client {
-    private Socket socket;
-    private DataOutputStream out;
-    private Scanner in;
-
-    // Note: You will need to import your Server class if it's in a different package
-    // or define PORT here.
-    private static final int PORT = 1234;
-
-    public Client() {
-        try {
-            // Using a local PORT constant or Server.PORT if accessible
-            socket = new Socket("127.0.0.1", PORT);
-            out = new DataOutputStream(socket.getOutputStream());
-            in = new Scanner(System.in);
-            writeMessages();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void writeMessages() throws IOException {
-        String line = "";
-        // Logic Fix: Comparing a String to an int (Server.PORT) will always be false.
-        // Use a keyword like "exit" to stop the loop instead.
-        while (!line.equalsIgnoreCase("exit")) {
-            System.out.print("Enter message (type 'exit' to quit): ");
-            line = in.nextLine();
-            out.writeUTF(line);
-        }
-        close();
-    }
-
-    private void close() throws IOException {
-        socket.close();
-        out.close();
-        in.close();
-    }
+    public static int SERVER_PORT = Server.PORT;
 
     public static void main(String[] args) {
-        new Client();
+        try (Socket socket = new Socket("localhost", SERVER_PORT)) {
+            System.out.println("CLIENT - Connection found.");
+
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+
+            Scanner keyboard = new Scanner(System.in);
+
+            // 2. Start a listener thread to handle incoming OBJECTS
+            new Thread(() -> {
+                try {
+                    while (true) {
+                        Object received = in.readObject();
+                        System.out.println("Received from server: " + received);
+                    }
+                } catch (EOFException e) {
+                    System.out.println("Server closed connection.");
+                } catch (Exception e) {
+                    System.out.println("Listener error: " + e.getMessage());
+                }
+            }).start();
+
+            while (keyboard.hasNextLine()) {
+                String text = keyboard.nextLine();
+
+                out.writeObject(text);
+                out.flush();
+            }
+
+        } catch (IOException e) {
+            System.out.println("Client error: " + e.getMessage());
+        }
     }
 }

@@ -19,6 +19,8 @@ public class Auction extends Entity {
     private double currentPrice;
     private User lastBidder;
     private final double bidStep;
+
+    // CONSTRUCTORS
     public Auction(Item item, double bidStep, LocalDateTime startTime, LocalDateTime endTime) {
         super();
         this.bidStep = bidStep;
@@ -36,6 +38,8 @@ public class Auction extends Entity {
         this.startTime = startTime;
         this.endTime = endTime;
     }
+
+    // METHODS
     public synchronized boolean placeBid(User user, double amount) {
         LocalDateTime now = LocalDateTime.now();
         if (getStatus() != AuctionStatus.OPENED) return false;
@@ -54,9 +58,9 @@ public class Auction extends Entity {
     //STATUS UPDATE
     public AuctionStatus getStatus() {
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(startTime)) return AuctionStatus.INITIALIZED;
-        else if (now.isAfter(endTime)) return AuctionStatus.CLOSED;
-        return AuctionStatus.OPENED;
+        if (now.isBefore(startTime)) return AuctionStatus.INITIALIZED; // not opened yet
+        else if (now.isAfter(endTime)) return AuctionStatus.CLOSED; // past closing time
+        return AuctionStatus.OPENED; // is open right now
     }
     //GET WINNER
     public User getWinner() {
