@@ -10,13 +10,17 @@ import java.util.*;
  */
 public class UserManager {
     private final Map <Integer, User> users;
-    private static UserManager instance;
+    private static volatile UserManager instance;
     private UserManager() {
         users = new HashMap<>();
     }
 
-    public static synchronized UserManager getInstance() {
-        if (instance == null) instance = new UserManager();
+    public static  UserManager getInstance() {
+        if (instance == null) {
+            synchronized (UserManager.class) {
+                if (instance == null) instance = new UserManager();
+            }
+        }
         return instance;
     }
 
