@@ -24,7 +24,7 @@ public class Auction extends Entity {
     }
     public synchronized boolean placeBid(User user, double amount) {
         LocalDateTime now = LocalDateTime.now();
-        if (getStatus() == AuctionStatus.CLOSED || now.isAfter(endTime)) return false;
+        if (getStatus() != AuctionStatus.OPENED) return false;
         if (!user.hasRole(Role.BIDDER) || user.getBidderProfile() == null) return false;
         if (amount < currentPrice + bidStep) return false;
 
@@ -34,7 +34,6 @@ public class Auction extends Entity {
 
         this.currentPrice = amount;
         this.lastBidder = user;
-        profile.addBidItem(this.item);
 
         return true;
     }
