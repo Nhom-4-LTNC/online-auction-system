@@ -8,7 +8,7 @@ import java.util.List;
 public class SellerProfile implements Serializable {
     @Serial
     private static final long serialVersionUID = 8112310403512811443L;
-    List<Item> itemslist = new ArrayList<>();
+    private final List<Item> itemslist = new ArrayList<>();
     public void addItem(Item item) {
         if (item != null)
             itemslist.add(item);

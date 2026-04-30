@@ -20,7 +20,6 @@ public class User extends Entity {
 
     private BidderProfile bidderProfile;
     private SellerProfile sellerProfile;
-
     // CONSTRUCTORS
     public User (String username, String pwd, String email) {
         super();

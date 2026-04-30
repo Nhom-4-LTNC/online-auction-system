@@ -34,7 +34,9 @@ public class Auction extends Entity {
         LocalDateTime now = LocalDateTime.now();
         if (getStatus() != AuctionStatus.OPENED) return false;
         if (!user.hasRole(Role.BIDDER) || user.getBidderProfile() == null) return false;
-        if (amount < currentPrice + bidStep) return false;
+        if ((lastBidder == null && amount < startPrice) || (lastBidder != null && amount < currentPrice + bidStep)) {
+            return false;
+        }
 
         BidderProfile profile = user.getBidderProfile();
 
@@ -96,5 +98,4 @@ public class Auction extends Entity {
     public void setItem(Item item) {
         this.item = item;
     }
-
 }
