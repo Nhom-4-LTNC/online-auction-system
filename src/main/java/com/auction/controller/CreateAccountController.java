@@ -1,5 +1,7 @@
 package com.auction.controller;
 
+
+import com.auction.dao.UserData;
 import com.auction.model.user.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -33,14 +35,15 @@ public class CreateAccountController {
         String username = nameTextField.getText();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
         root = loader.load();
+
         HomeController homeController = loader.getController();
         homeController.displayName(email);
         homeController.displayPass(pass);
 
         System.out.println("Tạo tài khoản thành công");
 
-        User user = new User(username, pass, email);
-        UserData.users.put(user.getEmail(), user.getPwd());
+        User bidder = new User(username, pass, email);
+        UserData.users.put(bidder.getEmail(), bidder.getPwd());
 
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
