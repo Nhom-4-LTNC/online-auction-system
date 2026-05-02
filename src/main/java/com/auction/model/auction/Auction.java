@@ -1,5 +1,6 @@
 package com.auction.model.auction;
 
+import com.auction.exception.InvalidBidException;
 import com.auction.model.Entity;
 import com.auction.model.item.Item;
 import com.auction.model.user.BidderProfile;
@@ -40,22 +41,25 @@ public class Auction extends Entity {
     }
 
     // METHODS
-    public synchronized boolean placeBid(User user, double amount) {
-        LocalDateTime now = LocalDateTime.now();
-        if (getStatus() != AuctionStatus.OPENED) return false;
-        if (!user.hasRole(Role.BIDDER) || user.getBidderProfile() == null) return false;
-        if ((lastBidder == null && amount < startPrice) || (lastBidder != null && amount < currentPrice + bidStep)) {
-            return false;
+    public synchronized void placeBid(User user, double amount) throws InvalidBidException, Exception {
+        if (getStatus() != AuctionStatus.OPENED) {
+            throw new Exception("Phien dau gia da dong!");
         }
+        if (!user.hasRole(Role.BIDDER) || user.getBidderProfile() == null) {
+            throw new Exception("Khong du tham quyen");
+        }
+        if (amount < currentPrice + bidStep) {
+            throw new InvalidBidException("Gia dat thap hon gia hien tai");
+        };
 
         BidderProfile profile = user.getBidderProfile();
 
-        if (!profile.canAfford(amount)) return false;
+        if (!profile.canAfford(amount)) {
+            throw new Exception("So du trong tai khoan khong du!");
+        }
 
         this.currentPrice = amount;
         this.lastBidder = user;
-
-        return true;
     }
     //STATUS UPDATE
     public AuctionStatus getStatus() {
@@ -108,4 +112,5 @@ public class Auction extends Entity {
     public void setItem(Item item) {
         this.item = item;
     }
+
 }

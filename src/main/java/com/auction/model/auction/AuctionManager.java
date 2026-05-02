@@ -1,5 +1,6 @@
 package com.auction.model.auction;
 
+import com.auction.exception.InvalidBidException;
 import com.auction.model.user.User;
 
 import java.util.*;
@@ -35,11 +36,13 @@ public class AuctionManager {
         return new ArrayList<>(auctions.values());
     }
 
-    public boolean processBid(int auctionId, User user, double amount) {
+    public void processBid(int auctionId, User user, double amount) throws InvalidBidException, Exception {
         Auction auction = auctions.get(auctionId);
         if (auction != null) {
-            return auction.placeBid(user, amount);
+            auction.placeBid(user, amount);
+        } else {
+            throw new Exception("Khong tim thay phien dau gia");
         }
-        return false;
+        
     }
 }
