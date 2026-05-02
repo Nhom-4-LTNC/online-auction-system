@@ -1,46 +1,54 @@
 package com.auction.network;
 
 import java.io.*;
-import java.net.Socket;
-import java.util.Scanner;
-
-// right now all this does is you can type stuff into the console and it'll send to the server
+import java.net.*;
+import java.util.function.Consumer;
 
 public class Client {
-    public static int SERVER_PORT = Server.PORT;
+    private Socket socket;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
+    private Consumer<Object> onMessageReceived;
 
-    public static void main(String[] args) {
-        try (Socket socket = new Socket("localhost", SERVER_PORT)) {
-            System.out.println("CLIENT - Connection found.");
+    public Client(Consumer<Object> onMessageReceived) {
+        this.onMessageReceived = onMessageReceived;
+    }
 
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+    public void connect() {
+        try {
+            socket = new Socket(NetworkConfig.SERVER_IP, NetworkConfig.PORT);
+            out = new ObjectOutputStream(socket.getOutputStream());
+            out.flush();
+            in = new ObjectInputStream(socket.getInputStream());
+            System.out.println("Client da ket noi toi server thanh cong!");
+            Thread listenthread = new Thread(this::listenForData);
+            listenthread.setDaemon(true);
+            listenthread.start();
+        } catch (Exception e) {
+            System.out.println("Loi ket loi toi server "+e.getMessage());
+        }
+    }
 
-            Scanner keyboard = new Scanner(System.in);
-
-            // 2. Start a listener thread to handle incoming OBJECTS
-            new Thread(() -> {
-                try {
-                    while (true) {
-                        Object received = in.readObject();
-                        System.out.println("Received from server: " + received);
-                    }
-                } catch (EOFException e) {
-                    System.out.println("Server closed connection.");
-                } catch (Exception e) {
-                    System.out.println("Listener error: " + e.getMessage());
+    private void listenForData() {
+        try {
+            while (true) {
+                Object receivedData = in.readObject();
+                if (onMessageReceived != null) {
+                    onMessageReceived.accept(receivedData);
                 }
-            }).start();
-
-            while (keyboard.hasNextLine()) {
-                String text = keyboard.nextLine();
-
-                out.writeObject(text);
-                out.flush();
             }
-
-        } catch (IOException e) {
-            System.out.println("Client error: " + e.getMessage());
+        } catch (EOFException e) {
+            System.out.println("Server da dong ket noi");
+        } catch (Exception e) {
+            System.out.println("Server bi ngat ket noi khoi server");
+        }  finally {
+            try {
+                if (socket != null && !socket.isClosed()) {
+                    socket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

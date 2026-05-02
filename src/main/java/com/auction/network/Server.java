@@ -6,61 +6,34 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Server {
-    public static int PORT = 8000;
-
-    // Use ObjectOutputStream list for broadcasting objects
-    private static final List<ObjectOutputStream> allClients = new CopyOnWriteArrayList<>();
+    private static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
     public static void main(String[] args) {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("SERVER: Listening on port " + PORT);
+        try (ServerSocket serverSocket = new ServerSocket(NetworkConfig.PORT)) {
+            System.out.println("Server dang chay o: "+NetworkConfig.PORT);
 
             while (true) {
                 try {
-                    Socket clientSocket = serverSocket.accept();
-                    System.out.println("SERVER: Connection accepted!");
-                    new Thread(() -> handleClient(clientSocket)).start();
+                    Socket clienSocket = serverSocket.accept();
+                    System.out.println("Server: Client ket noi tu IP: "+clienSocket.getInetAddress());
+                    ClientHandler handler = new ClientHandler(clienSocket);
+                    clients.add(handler);
+                    new Thread(handler).start();
                 } catch (IOException e) {
-                    System.out.println("Accept failed: " + e.getMessage());
+                    System.out.println("loi "+e.getMessage());
                 }
             }
         } catch (IOException e) {
-            System.err.println("Could not listen on port " + PORT);
+            System.out.println("Loi khoi dong server");
+        }
+    }
+    public static void broadcast(Object data) {
+        for(ClientHandler client: clients) {
+            client.sendData(data);
         }
     }
 
-    private static void handleClient(Socket clientSocket) {
-        // We define the output stream outside try-with-resources to manage the list manually
-        ObjectOutputStream out = null;
-        try {
-            // 1. Create Output FIRST to match Client's Input
-            out = new ObjectOutputStream(clientSocket.getOutputStream());
-            out.flush();
-            allClients.add(out);
-
-            ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-
-            while (true) {
-                // 2. Read the object (This blocks until an object arrives)
-                Object receivedData = in.readObject();
-                System.out.println("SERVER received: " + receivedData);
-
-                // 3. BROADCAST to everyone
-                for (ObjectOutputStream clientOut : allClients) {
-                    clientOut.writeObject(receivedData);
-                    clientOut.flush();
-                }
-            }
-        } catch (EOFException e) {
-            System.out.println("Client disconnected normally.");
-        } catch (Exception e) {
-            System.out.println("Server handling error: " + e.getMessage());
-        } finally {
-            // 4. Cleanup
-            if (out != null) {
-                allClients.remove(out);
-            }
-            try { clientSocket.close(); } catch (IOException e) { e.printStackTrace(); }
-        }
+    public static void removeClient(ClientHandler client) {
+        clients.remove(client);
     }
 }
