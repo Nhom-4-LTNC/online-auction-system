@@ -50,7 +50,7 @@
       </AnchorPane>
       <TextField fx:id="startingPriceTF" layoutX="47.0" layoutY="290.0" promptText="Starting Price" />
       <TextField fx:id="descriptionTF" layoutX="47.0" layoutY="322.0" promptText="Description" />
-      <Label fx:id="itemTypeLabel" layoutX="281.0" layoutY="94.0" prefHeight="51.0" prefWidth="246.0" text="ITEM_NAME">
+      <Label fx:id="itemTypeLabel" layoutX="280.0" layoutY="94.0" prefHeight="51.0" prefWidth="246.0" text="ITEM_NAME">
          <font>
             <Font size="32.0" />
          </font>

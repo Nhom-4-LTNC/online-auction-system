@@ -1,6 +1,5 @@
-package com.auction.controller;
+package com.auction.dao;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Check {
