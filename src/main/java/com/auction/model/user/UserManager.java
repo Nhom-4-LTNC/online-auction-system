@@ -41,7 +41,6 @@ public class UserManager {
 
         return null;
     }
-
     public User getUserById(int id) {
         User user = users.get(id);
         if (user != null && user.hasRole(Role.SELLER)) return user;

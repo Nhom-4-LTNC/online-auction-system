@@ -2,6 +2,8 @@ package com.auction.model.auction;
 
 import com.auction.exception.InvalidBidException;
 import com.auction.model.BidTransaction;
+import com.auction.model.item.Item;
+import com.auction.model.item.ItemFactory;
 import com.auction.model.item.ItemType;
 import com.auction.model.user.SellerProfile;
 import com.auction.model.user.User;
@@ -9,6 +11,8 @@ import com.auction.model.user.User;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class AuctionManager {
@@ -17,6 +21,8 @@ public class AuctionManager {
 
     private final List <AuctionObserver> observers = new CopyOnWriteArrayList<>();
 
+    private final AtomicInteger auctionIdCounter = new AtomicInteger(1);
+    private final AtomicInteger itemIdCounter = new AtomicInteger(1);
     private AuctionManager() {
         /*
             ConcurrentHashMap an toàn trong môi trường đa luồng
@@ -43,8 +49,37 @@ public class AuctionManager {
 
     public synchronized Auction createAuction(User seller, ItemType type, Map <String, Object> itemData,
                                  double bidStep, long startTimeMillis, long endTimeMillis) throws Exception {
+        long currentTime = System.currentTimeMillis();
+        if (startTimeMillis <= 0) {
+            startTimeMillis = currentTime;
+        }
+        if (endTimeMillis <= startTimeMillis || endTimeMillis <= currentTime) {
+            throw new IllegalArgumentException("Lỗi: Thời gian kết thúc phải lớn hơn thời gian bắt đầu và thời gian hiện tại!");
+        }
+
+        if (bidStep <= 0) {
+            throw new IllegalArgumentException("Lỗi: Bước giá phải lớn hơn 0!");
+        }
+
         SellerProfile sellerProfile = seller.getSellerProfile();
 
+        itemData.put("owner", seller);
+        itemData.put("id", itemIdCounter.getAndIncrement());
+
+        Item newItem = ItemFactory.createItem(type, itemData);
+
+        if (newItem == null || !newItem.isValid()) {
+            throw new Exception("Lỗi: Thông tin sản phẩm không hợp lệ!");
+        }
+
+        int newAuctionId = auctionIdCounter.getAndIncrement();
+        Auction newAuction = new Auction(newAuctionId, newItem, bidStep, startTimeMillis, endTimeMillis);
+
+        sellerProfile.addItem(newItem);
+        this.auctions.put(newAuction.getId(), newAuction);
+
+
+        return newAuction;
     }
     public void addAuction(Auction auction) {
         auctions.put(auction.getId(), auction);
