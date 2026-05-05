@@ -9,9 +9,9 @@ public abstract class Entity implements Serializable {
     @Serial
     private static final long serialVersionUID = -3691692181672595753L;
     protected int id;
-    private final LocalDateTime createdAt;
+    private final long createdAt;
     public Entity() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = System.currentTimeMillis();
     }
     // CONSTRUCTORS
     public Entity(int id) {
@@ -23,15 +23,14 @@ public abstract class Entity implements Serializable {
     public Integer getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public LocalDateTime getCreatedAt() {
+    public long getCreatedAt() {
         return createdAt;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof Entity)) return false;
-        Entity entity = (Entity) obj;
+        if (!(obj instanceof Entity entity)) return false;
         return id != -1 && id == entity.id;
     }
 

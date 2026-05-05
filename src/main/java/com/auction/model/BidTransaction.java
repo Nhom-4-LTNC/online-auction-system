@@ -12,7 +12,7 @@ public class BidTransaction extends Entity {
     private final int bidderId;
     private final String bidderName;
     private final double amount;
-    private final LocalDateTime timestamp;
+    private final long timestamp;
 
     public BidTransaction(int auctionId, int bidderId, String bidderName, double amount) {
         super();
@@ -20,11 +20,11 @@ public class BidTransaction extends Entity {
         this.bidderId = bidderId;
         this.bidderName = bidderName;
         this.amount = amount;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = System.currentTimeMillis();
     }
 
     public BidTransaction(int id, int auctionId, int bidderId, String bidderName, double amount,
-                          LocalDateTime timestamp) {
+                          long timestamp) {
         super(id);
         this.auctionId = auctionId;
         this.bidderId = bidderId;
@@ -37,7 +37,7 @@ public class BidTransaction extends Entity {
     public int getBidderId() { return bidderId; }
     public String getBidderName() { return bidderName; }
     public double getAmount() { return amount; }
-    public LocalDateTime getTimestamp() { return timestamp; }
+    public long getTimestamp() { return timestamp; }
 
     @Override
     public String toString() {
