@@ -35,18 +35,24 @@ public class User extends Entity {
         this.pwd = pwd;
         this.email = email;
     }
-    public void addRole(Role role) {
-        roles.add(role);
-        if (role == Role.BIDDER && bidderProfile == null) {
-            bidderProfile = new BidderProfile();
-        }
-        if (role == Role.SELLER && sellerProfile == null) {
-            sellerProfile = new SellerProfile();
-        }
-    }
+    public void addRole(Role role) { roles.add(role);}
     public boolean hasRole(Role role) { return roles.contains(role); }
-    public BidderProfile getBidderProfile() { return bidderProfile; }
-    public SellerProfile getSellerProfile() { return sellerProfile; }
+
+    public synchronized BidderProfile getBidderProfile() {
+        if (this.bidderProfile == null) {
+            this.bidderProfile = new BidderProfile();
+            this.addRole(Role.BIDDER);
+        }
+        return this.bidderProfile;
+    }
+
+    public synchronized SellerProfile getSellerProfile() {
+        if (this.sellerProfile == null ) {
+            this.sellerProfile = new SellerProfile();
+            this.addRole(Role.SELLER);
+        }
+        return this.sellerProfile;
+    }
     public String getUsername() { return username; }
     public String getPwd() { return pwd; }
     public String getEmail() { return email; }

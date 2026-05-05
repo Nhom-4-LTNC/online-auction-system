@@ -15,7 +15,7 @@ public class UserManager {
         users = new HashMap<>();
     }
 
-    public static  UserManager getInstance() {
+    public static UserManager getInstance() {
         if (instance == null) {
             synchronized (UserManager.class) {
                 if (instance == null) instance = new UserManager();

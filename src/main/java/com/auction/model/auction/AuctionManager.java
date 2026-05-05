@@ -1,13 +1,16 @@
 package com.auction.model.auction;
 
 import com.auction.exception.InvalidBidException;
+import com.auction.model.item.ItemType;
+import com.auction.model.user.SellerProfile;
 import com.auction.model.user.User;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 public class AuctionManager {
-    private static AuctionManager instance;
+    private static volatile AuctionManager instance;
     private final Map <Integer, Auction> auctions;
 
     private AuctionManager() {
@@ -17,11 +20,20 @@ public class AuctionManager {
         auctions = new ConcurrentHashMap<>();
     }
 
-    public static synchronized AuctionManager getInstance() {
-        if (instance == null) instance = new AuctionManager();
+    public static AuctionManager getInstance() {
+        if (instance == null) {
+            synchronized (AuctionManager.class) {
+                if (instance == null) {
+                    instance = new AuctionManager();
+                }
+            }
+        }
         return instance;
     }
+    public Auction createAuction(User seller, ItemType type, Map <String, Object> itemData,
+                                 double bidStep, long startTimeMillis, long endTimeMillis) throws Exception {
 
+    }
     public void addAuction(Auction auction) {
         auctions.put(auction.getId(), auction);
     }
