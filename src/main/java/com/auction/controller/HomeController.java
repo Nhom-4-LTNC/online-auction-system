@@ -2,7 +2,7 @@ package com.auction.controller;
 
 import com.auction.dao.Check;
 import com.auction.dao.SceneUtils;
-import com.auction.dao.UserData;
+import com.auction.dao.UserDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -53,8 +53,6 @@ public class HomeController {
     Label nameLabel, passLabel;
 
     public void displayName(String email) {
-
-        UserData.email = email;
 
         if (Check.checkName(email)) {
             nameLabel.setText("Hello: " + email);

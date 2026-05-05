@@ -1,6 +1,6 @@
 package com.auction.controller;
 
-import com.auction.dao.UserData;
+import com.auction.dao.UserDAO;
 import com.auction.model.item.Electronics;
 import com.auction.model.item.Item;
 import javafx.event.ActionEvent;
@@ -81,8 +81,6 @@ public class AuctionItemMenuController {
         new FXMLLoader();
         FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/fxml/HomeScreen.fxml")));
         Parent root = loader.load();
-        HomeController homeController = loader.getController();
-        homeController.displayName(UserData.email);
         Scene scene = new Scene((root));
         Stage stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
         stage.setScene(scene);
