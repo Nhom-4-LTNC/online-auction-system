@@ -50,6 +50,9 @@ public class Auction extends Entity {
             throw new AuctionClosedException("Phiên đấu giá đã đóng hoặc chưa mở!");
         }
         BidderProfile profile = user.getBidderProfile();
+        if (user.getId() == item.getOwnerId()) {
+            throw new InvalidBidException("Lỗi: Không thể đấu giá cho sản phẩm của mình tạo ra!");
+        }
         if (lastBidder == null && amount < startPrice) {
             throw new InvalidBidException("Giá đặt phải lớn hơn hoặc bằng giá khởi đầu!");
         } else if (amount < currentPrice + bidStep) {
