@@ -1,18 +1,21 @@
 package com.auction.network;
 
 import com.auction.model.user.User;
+
+import java.io.Serial;
 import java.io.Serializable;
 
 public class BidMessage implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private int auctionId;
-    private User user;
+    private int userId;
     private double amount;
 
-    public BidMessage(int auctionId, User user, double amount) {
+    public BidMessage(int auctionId, int user, double amount) {
         this.auctionId = auctionId;
-        this.user = user;
+        this.userId = user;
         this.amount = amount;
     }
 
@@ -20,8 +23,8 @@ public class BidMessage implements Serializable {
         return auctionId;
     }
 
-    public User getUser() {
-        return user;
+    public int getUserId() {
+        return userId;
     }
 
     public double getAmount() {
