@@ -13,6 +13,8 @@ public abstract class Item extends Entity implements Serializable {
     private String name;
     private String description;
     private final User owner;
+    private byte[] imageBytes;
+
     public Item(String name, String description,User owner, double startPrice) {
         super();
         this.name = name;
@@ -27,6 +29,14 @@ public abstract class Item extends Entity implements Serializable {
         if (startPrice > 0) this.startPrice = startPrice;
         this.owner = owner;
     }
+
+    public byte[] getImageBytes() {
+        return imageBytes;
+    }
+    public void setImageBytes(byte[] imageBytes) {
+        this.imageBytes = imageBytes;
+    }
+
     public String getName() { return name; }
     public boolean isValid() {
         return name != null && !name.isEmpty() && startPrice > 0;

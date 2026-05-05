@@ -104,7 +104,7 @@ public class AuctionManager {
                 observer.onNewBidPlace(newTxn);
             }
         } else {
-            throw new Exception("Khong tim thay phien dau gia voi ID: " + auctionId);
+            throw new Exception("Không tìm thấy phiên đấu giá với ID: " + auctionId);
         }
     }
 }

@@ -19,7 +19,7 @@ public class ItemFactory {
             String desc = (String) data.get("desc");
             User owner = (User) data.get("owner");
             if (owner.getSellerProfile() == null) return null;
-            return switch (type) {
+            Item item = switch (type) {
                 case ELECTRONICS -> new Electronics(id, name, desc, owner, price,
                         (String) data.get("brand"),
                         (int) data.get("warranty"));
@@ -34,6 +34,12 @@ public class ItemFactory {
                         (int) data.get("mileage"));
                 default -> throw new IllegalArgumentException("Unknown ItemType");
             };
+
+            if (data.containsKey("imageBytes")) {
+                item.setImageBytes((byte[])data.get("imageBytes"));
+            }
+
+            return item;
         } catch (Exception e) {
             System.err.println("Create Item Error: " + e.getMessage());
             return null;

@@ -66,7 +66,7 @@ public class UserDAO {
 
         public User getUserById(int id) {
                 for (User user: users) {
-                        if (user.getId().equals(id)) {
+                        if (user.getId() == id) {
                                 return user;
                         }
                 }

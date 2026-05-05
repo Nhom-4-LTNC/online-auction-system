@@ -2,7 +2,6 @@ package com.auction.model;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 public abstract class Entity implements Serializable {

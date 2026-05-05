@@ -1,8 +1,6 @@
 package com.auction.model;
 
 import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 public class BidTransaction extends Entity {
     @Serial
