@@ -29,10 +29,20 @@ public class UserManager {
     }
 
     public User getUserByEmail(String email) {
-        return users.get(email);
+        if (email == null) {
+            return null;
+        }
+        String normalizedEmail = email.trim();
+        for (User user : users.values()) {
+            if (user.getEmail().equalsIgnoreCase(normalizedEmail)) {
+                return user;
+            }
+        }
+
+        return null;
     }
 
-    public User getSellerById(int id) {
+    public User getUserById(int id) {
         User user = users.get(id);
         if (user != null && user.hasRole(Role.SELLER)) return user;
         return null;

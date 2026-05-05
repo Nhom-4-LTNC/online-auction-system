@@ -7,7 +7,6 @@ import com.auction.model.BidTransaction;
 import com.auction.model.Entity;
 import com.auction.model.item.Item;
 import com.auction.model.user.BidderProfile;
-import com.auction.model.user.Role;
 import com.auction.model.user.User;
 
 import java.io.Serial;
@@ -117,4 +116,7 @@ public class Auction extends Entity {
         this.item = item;
     }
 
+    public List <BidTransaction> getBidHistory() {
+        return new ArrayList<>(bidHistory);
+    }
 }
