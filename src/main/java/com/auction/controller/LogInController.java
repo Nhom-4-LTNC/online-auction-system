@@ -2,7 +2,7 @@ package com.auction.controller;
 
 import com.auction.dao.Check;
 import com.auction.dao.SceneUtils;
-import com.auction.dao.UserData;
+import com.auction.dao.UserDAO;
 import com.auction.model.user.User;
 import com.auction.model.user.UserManager;
 import javafx.event.ActionEvent;

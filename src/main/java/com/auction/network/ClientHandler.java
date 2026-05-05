@@ -34,13 +34,7 @@ public class ClientHandler implements Runnable {
             System.out.println("Loi trong qua tinh xu li client "+e.getMessage());
         } finally {
             Server.removeClient(this);
-            try {
-                if (socket != null && !socket.isClosed()) {
-                    socket.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            closeConnections();
         }
     }
 
@@ -75,7 +69,24 @@ public class ClientHandler implements Runnable {
             out.flush();
             out.reset();
         } catch (Exception e) {
-            System.out.println("Loig trong qua trinh gui tin.");
+            System.out.println("Loi trong qua trinh gui tin.");
+        }
+    }
+
+    public void closeConnections() {
+        try {
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+            System.out.println("Da dong ket loi va giai phong tai nguyen cho Client.");
+        } catch (IOException e) {
+            System.out.println("Loi khi ngat ket noi: "+e.getMessage());
         }
     }
 }
