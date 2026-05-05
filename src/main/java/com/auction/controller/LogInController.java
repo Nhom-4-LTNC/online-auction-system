@@ -1,6 +1,10 @@
 package com.auction.controller;
 
+import com.auction.dao.Check;
+import com.auction.dao.SceneUtils;
 import com.auction.dao.UserData;
+import com.auction.model.user.User;
+import com.auction.model.user.UserManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,6 +12,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -31,28 +36,35 @@ public class LogInController implements Initializable {
     private Parent root;
 
     public void login(ActionEvent event) throws IOException {
-        HashMap<String, String> map = UserData.users;
+
         String email = nameTextField.getText();
         String pass = hiddenPassword.getText();
 
-        if(map.containsKey(email)){
-            if (map.get(email).equals(pass)){
+        if (email.isEmpty() || pass.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setContentText("Vui lòng nhập đầy đủ Email và Mật khẩu!");
+            alert.show();
+            return; // BLOCK
+        }
+        try {
+            User user = UserManager.getInstance().getUserByEmail(email);
+            if (user.getPwd().equals(pass)) {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
                 root = loader.load();
 
                 HomeController homeController = loader.getController();
                 homeController.displayName(email);
-                homeController.displayPass(pass);
+                Check.checkPass(pass);
 
                 stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 scene = new Scene(root);
                 stage.setScene(scene);
                 stage.show();
             }else{
-                System.out.println("Nhập sai mật khẩu");
+                System.out.println("Nhap sai mat khau: ");
             }
-        }else{
-            System.out.println("Không tồn tại tài khoản");
+        } catch (Exception e) {
+            System.out.println("Khong ton tai tai khoan");
         }
     }
 
@@ -77,12 +89,7 @@ public class LogInController implements Initializable {
     }
 
     public void CreateAccount(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/createAccount.fxml"));
-        root = loader.load();
-        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+        SceneUtils.switchScene(event, "/fxml/createAccount.fxml");
     }
 
 }

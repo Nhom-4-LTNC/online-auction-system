@@ -9,7 +9,7 @@ public class Check {
 
     public static boolean checkName(String username) {
         // 1. Handle null to prevent NullPointerException
-        if (username == null) {
+        if (username.isEmpty()) {
             System.out.println("Username cannot be null.");
             return false;
         }
@@ -33,7 +33,7 @@ public class Check {
 
     public static boolean checkPass(String password) {
         // 1. Check for null or empty to prevent errors
-        if (password == null || password.isEmpty()) {
+        if (password.isEmpty()) {
             System.out.println("Password cannot be empty.");
             return false;
         }

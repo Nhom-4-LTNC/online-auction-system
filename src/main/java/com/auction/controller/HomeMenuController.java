@@ -34,7 +34,7 @@ public class HomeMenuController extends Application {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Exit");
         alert.setHeaderText("You're exiting");
-        alert.setContentText("Do you want to save before exiting?: ");
+        alert.setContentText("Do you really want to exit?: ");
 
         if(alert.showAndWait().get() == ButtonType.OK){
             System.out.println("You logout successful");
