@@ -24,8 +24,8 @@ public class UserManager {
         users.put(user.getId(), user);
     }
 
-    public User getUserById(int id) {
-        return users.get(id);
+    public User getUserByEmail(String email) {
+        return users.get(email);
     }
 
     public User getSellerById(int id) {

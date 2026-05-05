@@ -1,6 +1,7 @@
 package com.auction.controller;
 
 import com.auction.dao.Check;
+import com.auction.dao.SceneUtils;
 import com.auction.dao.UserData;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -25,19 +26,11 @@ public class HomeController {
     Parent root;
 
     public void joinBid(ActionEvent event) throws IOException{
-        root = new FXMLLoader().load(getClass().getResource("/fxml/AuctionMenu.fxml"));
-        scene = new Scene((root));
-        stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
-        stage.setScene(scene);
-        stage.show();
+        SceneUtils.switchScene(event, "AC.fxml");
     }
 
     public void createItem(ActionEvent event) throws IOException {
-        root = new FXMLLoader().load(getClass().getResource("/fxml/ItemMenu.fxml"));
-        scene = new Scene((root));
-        stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
-        stage.setScene(scene);
-        stage.show();
+        SceneUtils.switchScene(event, "/fxml/ItemMenu.fxml");
     }
 
     public void logout(ActionEvent event) throws IOException{
@@ -45,19 +38,17 @@ public class HomeController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Logout");
         alert.setHeaderText("You're about to logout");
-        alert.setContentText("Do you want to save before exiting?: ");
+        alert.setContentText("Do you really want to exit?: ");
 
         if(alert.showAndWait().get() == ButtonType.OK){
 
             System.out.println("You logout successful");
-            root = new FXMLLoader().load(getClass().getResource("/fxml/LogInScreen.fxml"));
-            scene = new Scene((root));
-            stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
-            stage.setScene(scene);
-            stage.show();
+            SceneUtils.switchScene(event, "/fxml/LogInScreen.fxml");
+
         }
     }
 
+    // DISPLAY
     @FXML
     Label nameLabel, passLabel;
 
@@ -77,39 +68,6 @@ public class HomeController {
                 stage = (Stage) scenePane.getScene().getWindow();
                 System.out.println("Loi");
             }
-        }
-    }
-
-    public void displayPass(String pass) {
-
-        UserData.password = pass;
-
-        if (Check.checkPass(pass)) {
-            String hiddenPass = "*".repeat(UserData.password.length());
-            passLabel.setText("Pass: " +hiddenPass);
-        } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Input Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Invalid password. Please re-enter!");
-
-            if (alert.showAndWait().get() == ButtonType.OK) {
-                stage = (Stage) scenePane.getScene().getWindow();
-                System.out.println("Loi");
-            }
-        }
-    }
-
-    @FXML
-    CheckBox checkBox;
-
-    public void change(ActionEvent event) throws IOException{
-        if(checkBox.isSelected()){
-            passLabel.setText("Pass: " +UserData.password);
-        }
-        else{
-            String hiddenPass = "*".repeat(UserData.password.length());
-            passLabel.setText("Pass: " + hiddenPass);
         }
     }
 }
