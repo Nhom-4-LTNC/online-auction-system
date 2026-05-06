@@ -11,23 +11,22 @@ public class BidMessage implements Serializable {
 
     private int auctionId;
     private int userId;
+    private String username;
     private double amount;
 
-    public BidMessage(int auctionId, int user, double amount) {
+    public BidMessage(int auctionId, int userId, String username, double amount) {
         this.auctionId = auctionId;
-        this.userId = user;
+        this.userId = userId;
+        this.username = username;
         this.amount = amount;
     }
 
     public int getAuctionId() {
         return auctionId;
     }
-
-    public int getUserId() {
-        return userId;
-    }
-
+    public int getUserId() { return userId;}
     public double getAmount() {
         return amount;
     }
+    public String getUsername() { return username;}
 }

@@ -13,6 +13,6 @@ public class MessageData {
 
     @Override
     public String toString() {
-        return userName+" vừa đặt giá: "+bidAmount;
+        return userName+" vừa đặt giá: "+ bidAmount;
     }
 }

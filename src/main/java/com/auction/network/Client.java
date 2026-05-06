@@ -51,4 +51,19 @@ public class Client {
             }
         }
     }
+
+    public void sendMessage(NetworkMessage message) {
+        try {
+            if (out != null) {
+                out.writeObject(message);
+                out.flush();
+                out.reset();
+                System.out.println("Client đã gửi: " + message.getAction());
+            } else {
+                System.out.println("Lỗi: Luồng gửi dữ liệu chưa được khởi tạo!");
+            }
+        } catch (IOException e) {
+            System.out.println("Lỗi khi gửi tin nhẵn lên Server: " + e.getMessage())    ;
+        }
+    }
 }
