@@ -38,7 +38,7 @@
       <Label layoutX="342.0" layoutY="137.0" prefHeight="26.0" prefWidth="194.0" text="Must contain at least 1 uppercase" />
       <Label layoutX="342.0" layoutY="157.0" prefHeight="26.0" prefWidth="194.0" text="Must contain at least 1 lowercase" />
       <Label layoutX="342.0" layoutY="175.0" prefHeight="50.0" prefWidth="194.0" text="Must contain at least 1 special character" wrapText="true" />
-      <Label layoutX="342.0" layoutY="219.0" prefHeight="26.0" prefWidth="194.0" text="No whitespaces" wrapText="true" />
+      <Label layoutX="342.0" layoutY="219.0" prefHeight="26.0" prefWidth="207.0" text="Minimum length of 8, no whitespaces" wrapText="true" />
       <ImageView fx:id="pwdReqNumber" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="120.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../picture/invalidIcon.png" />
