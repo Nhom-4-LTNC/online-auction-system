@@ -1,7 +1,6 @@
 package com.auction.dao;
 
 import com.auction.model.user.User;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -50,12 +49,31 @@ public class UserDAO {
                 }
         }
 
-        public void addUser(User user) {
+        public synchronized void addUser(User user) {
                 users.add(user);
                 saveData();
         }
 
-        public User getUserByEmail(String email) {
+        public synchronized void updateUser(User updateUser) {
+                for (int i=0; i< users.size(); i++) {
+                        if (users.get(i).getId() == updateUser.getId()) {
+                                users.set(i, updateUser);
+                                saveData();
+                                return;
+                        }
+                }
+        }
+
+        public synchronized User login(String email, String pwd) {
+                for (User user: users) {
+                        if (user.getEmail().equals(email) && user.getPwd().equals(pwd)) {
+                                return user;
+                        }
+                }
+                return null;
+        }
+
+        public synchronized User getUserByEmail(String email) {
                 for (User user: users) {
                         if (user.getEmail().equals(email)) {
                                 return user;
@@ -64,7 +82,7 @@ public class UserDAO {
                 return null;
         }
 
-        public User getUserById(int id) {
+        public synchronized User getUserById(int id) {
                 for (User user: users) {
                         if (user.getId() == id) {
                                 return user;
@@ -73,16 +91,8 @@ public class UserDAO {
                 return null;
         }
 
-        public User getUserByPwd(String pwd) {
-                for (User user: users) {
-                        if (user.getPwd().equals(pwd)) {
-                                return user;
-                        }
-                }
-                return null;
-        }
 
-        public List<User> getAllUser() {
+        public synchronized List<User> getAllUser() {
                 return users;
         }
 }
