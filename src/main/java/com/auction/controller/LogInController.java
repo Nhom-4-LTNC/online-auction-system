@@ -54,12 +54,15 @@ public class LogInController implements Initializable {
 
                 HomeController homeController = loader.getController();
                 homeController.displayName(email);
-                Check.checkPass(pass);
 
-                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                scene = new Scene(root);
-                stage.setScene(scene);
-                stage.show();
+                boolean IsPasswordCorrect = Check.checkPass(pass);
+
+                if (IsPasswordCorrect) {
+                    stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                    scene = new Scene(root);
+                    stage.setScene(scene);
+                    stage.show();
+                }
             }else{
                 System.out.println("Nhap sai mat khau: ");
             }

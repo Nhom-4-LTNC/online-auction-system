@@ -4,6 +4,13 @@ import java.util.regex.Pattern;
 
 public class Check {
 
+    /*
+    Password requirements:
+    - At least 1 digit
+    - At least 1 lowercase AND uppercase letter
+    - At least 1 special character
+    - No whitespaces
+     */
     private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";
     private static final Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
 

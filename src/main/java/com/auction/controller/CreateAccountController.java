@@ -40,17 +40,19 @@ public class CreateAccountController {
 
         HomeController homeController = loader.getController();
         homeController.displayName(email);
-        Check.checkPass(pass);
+        boolean isPasswordCorrect = Check.checkPass(pass);
 
-        System.out.println("Tạo tài khoản thành công");
+        if (isPasswordCorrect) {
+            System.out.println("Tạo tài khoản thành công");
 
-        User user = new User(username, pass, email);
-        UserManager.getInstance().addUser(user);
+            User user = new User(username, pass, email);
+            UserManager.getInstance().addUser(user);
 
-        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+            stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
 
+        }
     }
 }
