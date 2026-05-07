@@ -64,5 +64,7 @@
             <Image url="@../picture/invalidIcon.png" />
          </image>
       </ImageView>
+      <Button fx:id="loginScreenButton" layoutX="241.0" layoutY="328.0" mnemonicParsing="false" onAction="#goToLoginScreen" text="Login" />
+      <Label layoutX="91.0" layoutY="332.0" text="Already have an account?" />
    </children>
 </AnchorPane>

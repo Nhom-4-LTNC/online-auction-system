@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class CreateAccountController implements Initializable {
     @FXML
-    Button Create;
+    Button Create, loginScreenButton;
     @FXML
     TextField passTextField;
     @FXML
@@ -49,6 +49,16 @@ public class CreateAccountController implements Initializable {
         } else {
             imgView.setImage(invalidIcon);
         }
+    }
+
+    public void goToLoginScreen(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LogInScreen.fxml"));
+        root = loader.load();
+        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+
     }
 
     public void Create(ActionEvent event) throws IOException {
