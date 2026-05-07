@@ -47,7 +47,7 @@ public class AuctionManager {
         observers.remove(observer);
     }
 
-    public synchronized Auction createAuction(User seller, ItemType type, Map <String, Object> itemData,
+    public Auction createAuction(User seller, ItemType type, Map <String, Object> itemData,
                                  double bidStep, long startTimeMillis, long endTimeMillis) throws Exception {
         long currentTime = System.currentTimeMillis();
         if (startTimeMillis <= 0) {
@@ -81,6 +81,7 @@ public class AuctionManager {
 
         return newAuction;
     }
+
     public void addAuction(Auction auction) {
         auctions.put(auction.getId(), auction);
     }

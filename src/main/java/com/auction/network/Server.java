@@ -35,7 +35,6 @@ public class Server {
             public void onNewBidPlace(BidTransaction transaction) {
                 NetworkMessage msg = new NetworkMessage(ActionType.NEW_BID_PLACED, transaction);
                 System.out.println("[BROADCAST] Phát sóng giao dịch mới: " + transaction.getAmount());
-
                 broadcast(msg);
             }
 
@@ -43,6 +42,7 @@ public class Server {
             public void onAuctionClosed(Auction auction) {
                 NetworkMessage msg = new NetworkMessage(ActionType.AUCTION_CLOSED, auction.getId());
                 System.out.println("[BROADCAST] Phiên đấu giá đã đóng: " + auction.getId());
+                broadcast(msg);
             }
         });
         try (ServerSocket serverSocket = new ServerSocket(NetworkConfig.PORT)) {
