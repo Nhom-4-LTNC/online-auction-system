@@ -16,6 +16,8 @@ public enum ActionType implements Serializable {
     REGISTER_FAILED,
     PLACED_BID_SUCCESS,
     PLACED_BID_FAILED,
+    CREATE_AUCTION_SUCCESS,
+    CREATE_AUCTION_FAILED,
     AUCTION_LIST_RESULT,
     //Broadcast
     NEW_BID_PLACED,

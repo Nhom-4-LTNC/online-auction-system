@@ -1,95 +1,111 @@
 package com.auction.controller;
 
-import com.auction.dao.Check;
 import com.auction.dao.SceneUtils;
-import com.auction.dao.UserDAO;
-import com.auction.model.user.User;
-import com.auction.model.user.UserManager;
+import com.auction.network.ActionType;
+import com.auction.network.Client;
+import com.auction.network.NetworkMessage;
+
+import javafx.application.Platform;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 public class LogInController implements Initializable {
-    @FXML
-    TextField nameTextField;
-    @FXML
-    TextField visiblePassword;
-    @FXML
-    PasswordField hiddenPassword;
+    @FXML private TextField nameTextField;
+    @FXML private PasswordField hiddenPassword;
+    @FXML private TextField visiblePassword;
+    @FXML private CheckBox Show;
 
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Đồng bộ ô ẩn/hiện mật khẩu
+        hiddenPassword.textProperty().bindBidirectional(visiblePassword.textProperty());
 
-    public void login(ActionEvent event) throws IOException {
+        // --- QUAN TRỌNG: KẾT NỐI SERVER KHI BẬT APP ---
+        Client.getInstance().connect();
+    }
 
+    @FXML
+    public void change(ActionEvent event) {
+        if (Show.isSelected()) {
+            visiblePassword.setVisible(true);
+            hiddenPassword.setVisible(false);
+            return;
+        }
+        visiblePassword.setVisible(false);
+        hiddenPassword.setVisible(true);
+    }
+
+    @FXML
+    public void CreateAccount(ActionEvent event) {
+        try {
+            SceneUtils.switchScene(event, "/fxml/createAccount.fxml");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
+    public void login(ActionEvent event) {
         String email = nameTextField.getText();
         String pass = hiddenPassword.getText();
 
         if (email.isEmpty() || pass.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setContentText("Vui lòng nhập đầy đủ Email và Mật khẩu!");
+            alert.setContentText("Vui lòng nhập Email và Mật khẩu!");
             alert.show();
-            return; // BLOCK
+            return;
         }
-        try {
-            User user = UserManager.getInstance().getUserByEmail(email);
-            if (user.getPwd().equals(pass)) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
-                root = loader.load();
 
-                HomeController homeController = loader.getController();
-                homeController.displayName(email);
-                Check.checkPass(pass);
+        // --- 1. LẮNG NGHE PHẢN HỒI TỪ SERVER ---
+        Client.getInstance().setListener(msg -> {
+            Platform.runLater(() -> {
+                switch (msg.getAction()) {
+                    case LOGIN_SUCCESS -> {
+                        System.out.println("Đăng nhập thành công!");
 
-                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                scene = new Scene(root);
-                stage.setScene(scene);
-                stage.show();
-            }else{
-                System.out.println("Nhap sai mat khau: ");
-            }
-        } catch (Exception e) {
-            System.out.println("Khong ton tai tai khoan");
-        }
+                        // Lấy thông tin User từ Server trả về (Payload)
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> userInfo = (Map<String, Object>) msg.getPayload();
+
+                        // Lưu thông tin người dùng hiện tại (Tùy anh thiết kế Session)
+                        // UserSession.getInstance().setCurrentUser(userInfo);
+
+                        // Chuyển sang màn hình Home
+                        try {
+                            SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    case LOGIN_FAILED -> {
+                        String errorMsg = (String) msg.getPayload();
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setContentText(errorMsg);
+                        alert.show();
+                    }
+                    default -> System.out.println("Nhận được gói tin không liên quan đến Login.");
+                }
+            });
+        });
+
+        // --- 2. GÓI DỮ LIỆU VÀ GỬI YÊU CẦU ĐĂNG NHẬP ---
+        Map<String, String> credentials = new HashMap<>();
+        credentials.put("email", email);
+        credentials.put("password", pass);
+
+        NetworkMessage request = new NetworkMessage(ActionType.LOGIN, credentials);
+        Client.getInstance().sendMessage(request);
     }
-
-    @FXML
-    CheckBox Show;
-    public void change(ActionEvent event){
-        if(Show.isSelected()){
-            visiblePassword.setVisible(true);
-            hiddenPassword.setVisible(false);
-        }
-        else{
-            visiblePassword.setVisible(false);
-            hiddenPassword.setVisible(true);
-        }
-    }
-
-    // HomeMenuController
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        visiblePassword.textProperty().bindBidirectional(hiddenPassword.textProperty());
-        visiblePassword.setVisible(false);
-        hiddenPassword.setVisible(true);
-    }
-
-    public void CreateAccount(ActionEvent event) throws IOException {
-        SceneUtils.switchScene(event, "/fxml/createAccount.fxml");
-    }
-
 }
