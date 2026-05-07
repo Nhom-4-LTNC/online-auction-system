@@ -3,12 +3,14 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.CreateAccountController">
    <children>
-      <Label layoutX="22.0" layoutY="97.0" text="User name: ">
+      <Label layoutX="22.0" layoutY="97.0" text="Username: ">
          <font>
             <Font size="14.0" />
          </font>
@@ -27,5 +29,40 @@
       <TextField fx:id="emailTextField" layoutX="115.0" layoutY="147.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: nguyenvanA@gmail.com" />
       <TextField fx:id="passTextField" layoutX="116.0" layoutY="196.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: 12345aA@" />
       <Button fx:id="Create" layoutX="164.0" layoutY="258.0" mnemonicParsing="false" onAction="#Create" text="Create" />
+      <Label layoutX="325.0" layoutY="78.0" text="Password requirements">
+         <font>
+            <Font size="21.0" />
+         </font>
+      </Label>
+      <Label layoutX="342.0" layoutY="117.0" prefHeight="26.0" prefWidth="194.0" text="Must contain at least 1 number" />
+      <Label layoutX="342.0" layoutY="137.0" prefHeight="26.0" prefWidth="194.0" text="Must contain at least 1 uppercase" />
+      <Label layoutX="342.0" layoutY="157.0" prefHeight="26.0" prefWidth="194.0" text="Must contain at least 1 lowercase" />
+      <Label layoutX="342.0" layoutY="175.0" prefHeight="50.0" prefWidth="194.0" text="Must contain at least 1 special character" wrapText="true" />
+      <Label layoutX="342.0" layoutY="219.0" prefHeight="26.0" prefWidth="194.0" text="No whitespaces" wrapText="true" />
+      <ImageView fx:id="pwdReqNumber" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="120.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../picture/invalidIcon.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="pwdReqUpper" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="140.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../picture/invalidIcon.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="pwdReqLower" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="160.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../picture/invalidIcon.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="pwdReqSpecialChar" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="180.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../picture/invalidIcon.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="pwdReqNoWhites" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="222.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../picture/invalidIcon.png" />
+         </image>
+      </ImageView>
    </children>
 </AnchorPane>

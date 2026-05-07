@@ -1,6 +1,10 @@
 package com.auction.dao;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class Check {
 
@@ -13,6 +17,12 @@ public class Check {
      */
     private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";
     private static final Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
+
+    private static final Pattern hasDigit = Pattern.compile("[0-9]");
+    private static final Pattern hasLower = Pattern.compile("[a-z]");
+    private static final Pattern hasUpper = Pattern.compile("[A-Z]");
+    private static final Pattern hasSpecial = Pattern.compile("[@#$%^&+=!]");
+    private static final Pattern isValidLengthNoWhites = Pattern.compile("^\\S{8,}$");
 
     public static boolean checkName(String username) {
         // 1. Handle null to prevent NullPointerException
@@ -37,7 +47,21 @@ public class Check {
             return false;
         }
     }
+    public static ArrayList<Boolean> checkPassRequirements(String password) {
+        boolean isDigitOk = hasDigit.matcher(password).find();
+        boolean isLowerOk = hasLower.matcher(password).find();
+        boolean isUpperOk = hasUpper.matcher(password).find();
+        boolean isSpecialOk = hasSpecial.matcher(password).find();
+        boolean isLengthOk = isValidLengthNoWhites.matcher(password).matches();
 
+        return new ArrayList<>(List.of(
+                isDigitOk,
+                isLowerOk,
+                isUpperOk,
+                isSpecialOk,
+                isLengthOk
+        ));
+    }
     public static boolean checkPass(String password) {
         // 1. Check for null or empty to prevent errors
         if (password.isEmpty()) {
@@ -45,10 +69,10 @@ public class Check {
             return false;
         }
 
-        // 2. Perform the match once
-        boolean isValid = pattern.matcher(password).matches();
 
-        // 3. Provide feedback if it fails
+        ArrayList<Boolean> result = checkPassRequirements(password);
+        boolean isValid = !result.contains(false);
+
         if (!isValid) {
             System.out.println("Password does not meet the security requirements.");
         }
