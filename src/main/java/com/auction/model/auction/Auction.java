@@ -46,6 +46,9 @@ public class Auction extends Entity {
 
     // METHODS
     public synchronized BidTransaction placeBid(User user, double amount) throws InvalidBidException, AuctionClosedException, InsufficientFundsException {
+
+        // THIS CREATES A NEW BidTransaction with AuctionID, UserID, amount
+
         if (getStatus() != AuctionStatus.OPENED) {
             throw new AuctionClosedException("Phiên đấu giá đã đóng hoặc chưa mở!");
         }

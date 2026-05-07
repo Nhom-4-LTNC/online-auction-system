@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 public class BidMessage implements Serializable {
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -2456446718323813115L;
 
     private int auctionId;
     private int userId;

@@ -6,7 +6,7 @@ import com.auction.model.user.User;
 import java.io.Serial;
 import java.io.Serializable;
 
-public abstract class Item extends Entity implements Serializable {
+public class Item extends Entity implements Serializable {
     @Serial
     private static final long serialVersionUID = 4801033207420599291L;
     private double startPrice;

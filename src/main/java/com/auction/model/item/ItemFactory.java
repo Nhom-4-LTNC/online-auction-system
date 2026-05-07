@@ -11,7 +11,9 @@ import java.util.*;
 public class ItemFactory {
     public static Item createItem(ItemType type, Map<String, Object> data) {
         try {
+            // id = 0 if cannot get id from data map
             int id = (data.get("id") != null) ? (Integer) data.get("id") : 0;
+
             String name = (String) data.get("name");
 
             double price = Double.parseDouble(data.get("price").toString());
@@ -32,6 +34,10 @@ public class ItemFactory {
                         (String) data.get("brand"),
                         (String) data.get("vin"),
                         (int) data.get("mileage"));
+
+                case OTHER -> new Item(id, name, desc, owner, price);
+
+
                 default -> throw new IllegalArgumentException("Unknown ItemType");
             };
 
