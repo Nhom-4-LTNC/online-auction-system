@@ -43,7 +43,7 @@ public class UserManager {
     }
     public User getUserById(int id) {
         User user = users.get(id);
-        if (user != null && user.hasRole(Role.SELLER)) return user;
+        if (user != null) return user;
         return null;
     }
 }

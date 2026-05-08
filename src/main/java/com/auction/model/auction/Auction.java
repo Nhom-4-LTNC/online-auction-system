@@ -97,6 +97,8 @@ public class Auction extends Entity {
     public void setStartPrice(double startPrice) {
         this.startPrice = startPrice;
     }
+    public double getCurrentPrice() {return this.currentPrice; }
+    public double getBidStep() { return bidStep; }
 
     public long getEndTime() {
         return endTime;

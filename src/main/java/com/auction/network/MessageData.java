@@ -1,8 +1,11 @@
 package com.auction.network;
 
+import java.io.Serial;
 import java.io.Serializable;
 
-public class MessageData {
+public class MessageData implements Serializable{
+    @Serial
+    private static final long serialVersionUID = 4988799950280796440L;
     private String userName;
     private double bidAmount;
 

@@ -1,11 +1,8 @@
 package com.auction.model.user;
 
-import com.auction.model.item.Item;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class BidderProfile implements Serializable {
     @Serial
