@@ -16,7 +16,7 @@ public class BidderProfile implements Serializable {
         }
         return false;
     }
-    public boolean canAfford(double amount) {
+    public synchronized boolean canAfford(double amount) {
         return this.balance >= amount;
     }
     public synchronized boolean withdraw(double amount) {

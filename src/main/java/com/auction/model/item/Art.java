@@ -22,6 +22,11 @@ public class Art extends Item {
         this.yearCreated = yearCreated;
     }
 
+    @Override
+    public String getCategory() {
+        return "Art";
+    }
+
     public String getArtist() {
         return artist;
     }

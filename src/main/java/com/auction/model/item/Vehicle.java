@@ -24,6 +24,11 @@ public class Vehicle extends Item {
         this.mileage = mileage;
     }
 
+    @Override
+    public String getCategory() {
+        return "Vehicle";
+    }
+
     public String getVin() {
         return vin;
     }

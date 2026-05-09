@@ -47,6 +47,7 @@ public abstract class Item extends Entity implements Serializable {
     public User getOwner() {
         return owner;
     }
+    public abstract String getCategory();
     public int getOwnerId() {
         return this.owner.getId();
     }
@@ -61,7 +62,7 @@ public abstract class Item extends Entity implements Serializable {
     @Override
     public String toString() {
         String ownerName = (owner != null) ? owner.getUsername() : "None";
-        return String.format("Item: %s | Starting price: %.2f | Seller: %s",
-                name, startPrice, ownerName);
+        return String.format("Item[ID: %d, Name: %s, Description: %s, Owner: %s, Start Price: %.2f]",
+                getCategory(), getId(), name, description, ownerName, startPrice);
     }
 }

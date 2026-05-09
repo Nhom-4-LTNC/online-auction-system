@@ -21,6 +21,11 @@ public class Electronics extends Item {
         this.warrantyMonths = warrantyMonths;
     }
 
+    @Override
+    public String getCategory() {
+        return "Electronics";
+    }
+
     public String getBrand() {
         return brand;
     }
