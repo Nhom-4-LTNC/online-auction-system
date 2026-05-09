@@ -4,10 +4,10 @@ import java.io.*;
 import java.net.*;
 
 import com.auction.exception.InvalidBidException;
-import com.auction.model.auction.AuctionManager;
 import com.auction.model.user.User;
-import com.auction.model.user.UserManager;
 import com.auction.network.BidMessage;
+import com.auction.service.AuctionService;
+import com.auction.service.UserService;
 
 public class ClientHandler implements Runnable {
     private Socket socket;
@@ -44,17 +44,16 @@ public class ClientHandler implements Runnable {
     public boolean isValidBid(Object receivedData) {
         if (receivedData instanceof BidMessage bidData) {
             try {
-                AuctionManager manager = AuctionManager.getInstance();
-                User bidder = UserManager.getInstance().getUserById(bidData.getUserId());
-                manager.processBid(bidData.getAuctionId(), bidder, bidData.getAmount());
+                User bidder = UserService.getInstance().getUserById(bidData.getUserId());
+                AuctionService.getInstance().placeBid(bidData.getAuctionId(), bidder, bidData.getAmount());
                 return true;
             } catch (InvalidBidException e) {
-                System.out.println("Client dat gia sai luat: "+e.getMessage());
-                this.sendData("Loi: "+e.getMessage());
+                System.out.println("Client dat gia sai luat: " + e.getMessage());
+                this.sendData("Loi: " + e.getMessage());
                 return false;
             } catch (Exception e) {
-                System.out.println("Loi he thong: "+e.getMessage());
-                this.sendData("Loi he thong: "+e.getMessage());
+                System.out.println("Loi he thong: " + e.getMessage());
+                this.sendData("Loi he thong: " + e.getMessage());
                 return false;
             }
         } else {

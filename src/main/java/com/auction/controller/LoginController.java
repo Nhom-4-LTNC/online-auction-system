@@ -3,6 +3,7 @@ package com.auction.controller;
 import com.auction.model.user.User;
 import com.auction.service.UserService;
 import com.auction.util.SceneUtils;
+import com.auction.util.SessionManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -22,8 +23,8 @@ import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
-    // Service layer
-    private final UserService userService = new UserService();
+    // Dùng singleton để cả ứng dụng dùng chung một UserService
+    private final UserService userService = UserService.getInstance();
 
     // UI Components
     @FXML
@@ -136,14 +137,15 @@ public class LoginController implements Initializable {
      * Navigate to home screen after successful login
      */
     private void navigateToHome(ActionEvent event, User user) throws IOException {
+        // Lưu user vào SessionManager để các Controller khác có thể dùng
+        SessionManager.getInstance().setCurrentUser(user);
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
         root = loader.load();
 
-        // Pass user information to home controller
         HomeController homeController = loader.getController();
         homeController.displayName(user.getEmail());
 
-        // Switch scene
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);

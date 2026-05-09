@@ -16,10 +16,5 @@ public class Admin extends User {
         super(id, username, pwd, email);
         this.addRole(Role.ADMIN);
     }
-
-    public void applyBan(User user, long durationInMillis) {
-        BanManager banManager = BanManager.getInstance();
-        banManager.applyBan(this, user, durationInMillis);
-    }
 }
 
