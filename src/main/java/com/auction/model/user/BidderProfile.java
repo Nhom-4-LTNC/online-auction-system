@@ -30,4 +30,7 @@ public class BidderProfile implements Serializable {
         return balance;
     }
 
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
 }
