@@ -5,6 +5,7 @@ import com.auction.model.Entity;
 import java.io.Serial;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 public class User extends Entity {
     @Serial
@@ -76,4 +77,9 @@ public class User extends Entity {
         return String.format("User{id=%d, username='%s', email='%s', roles=%s}",
                 id, username, email, roles);
     }
+
+    public String getPassword() {
+        return pwd;
+    }
+
 }

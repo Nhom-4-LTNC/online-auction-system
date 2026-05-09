@@ -1,98 +1,139 @@
 package com.auction.repository;
 
+import com.auction.config.DatabaseConnection;
 import com.auction.model.user.User;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserRepository {
-        private static UserRepository instance;
-        private List<User> users;
-        private static final String FILE_PATH = "users.dat";
+    private static volatile UserRepository instance;
 
-        private UserRepository() {
-                users = new ArrayList<>();
-                loadData();
+    private UserRepository() {}
+
+    public static UserRepository getInstance() {
+        if (instance == null) {
+            synchronized (UserRepository.class) {
+                if (instance == null) instance = new UserRepository();
+            }
         }
+        return instance;
+    }
 
-        public static synchronized UserRepository getInstance() {
-                if (instance == null) {
-                        instance = new UserRepository();
+    public synchronized void addUser(User user) {
+        String sql = "INSERT INTO users (username, email, password, role, balance) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+    PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getEmail());
+            stmt.setString(3, user.getPassword());
+            stmt.setString(4, "USER");
+            stmt.setDouble(5, 0.0);
+
+            stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    user.setId(rs.getInt(1));
                 }
-                return instance;
+            }
+            System.out.println("User added successfully: " + user.getEmail());
+        } catch (SQLException e) {
+            System.out.println("Error adding user: " + e.getMessage());
         }
+    }
 
-        public synchronized void saveData() {
-                try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
-                        out.writeObject(users);
-                        System.out.println("Da luu du lieu nguoi dung vao file: "+FILE_PATH);
-                } catch (IOException e) {
-                        System.out.println("Loi khi luu file du lieu nguoi dung: "+e.getMessage());
+    public synchronized User login(String email, String password) {
+        String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            stmt.setString(2, password);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                   return mapResultSetToUser(rs);
                 }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error during login: " + e.getMessage());
         }
+        return null;
+    }
+    public synchronized void updateUser(User user) {
+        String sql = "UPDATE users SET username = ?, email = ?, password = ?, role = ?, balance = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getPassword());
+            stmt.setDouble(3, user.getBidderProfile().getBalance());
+            stmt.setInt(4, user.getId());
 
-        @SuppressWarnings("unchecked")
-        private void loadData() {
-                File file = new File(FILE_PATH);
-                if (file.exists()) {
-                        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(FILE_PATH))) {
-                                users = (List<User>) in.readObject();
-                                System.out.println("Da doc "+users.size()+" tu he thong");
-                        } catch (Exception e) {
-                                System.out.println("Gap loi khi doc file "+e.getMessage());
-                        }
+            stmt.executeUpdate();
+            System.out.println("User updated successfully: " + user.getId());
+        } catch (SQLException e) {
+            System.out.println("Error updating user: " + e.getMessage());
+        }
+    }
+    public synchronized User getUserByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
                 }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching user by email: " + e.getMessage());
         }
+        return null;
+    }
+    public synchronized User getUserById(int id) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
 
-        public synchronized void addUser(User user) {
-                users.add(user);
-                saveData();
-        }
-
-        public synchronized void updateUser(User updateUser) {
-                for (int i=0; i< users.size(); i++) {
-                        if (users.get(i).getId() == updateUser.getId()) {
-                                users.set(i, updateUser);
-                                saveData();
-                                return;
-                        }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
                 }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching user by ID: " + e.getMessage());
         }
-
-        public synchronized User login(String email, String pwd) {
-                for (User user: users) {
-                        if (user.getEmail().equals(email) && user.getPwd().equals(pwd)) {
-                                return user;
-                        }
-                }
-                return null;
+        return null;
+    }
+    public synchronized List<User> getAllUser() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users";
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching all users: " + e.getMessage());
         }
+        return users;
+    }
+    private User mapResultSetToUser(ResultSet rs) throws SQLException{
+       int id =  rs.getInt("id");
+       String username = rs.getString("username");
+       String email = rs.getString("email");
+       String password = rs.getString("password");
+       double balance = rs.getDouble("balance");
 
-        public synchronized User getUserByEmail(String email) {
-                for (User user: users) {
-                        if (user.getEmail().equals(email)) {
-                                return user;
-                        }
-                }
-                return null;
-        }
+       User user = new User(id, username, email, password);
+       if (user.getBidderProfile() != null) {
+           user.getBidderProfile().setBalance(balance);
+       }
 
-        public synchronized User getUserById(int id) {
-                for (User user: users) {
-                        if (user.getId() == id) {
-                                return user;
-                        }
-                }
-                return null;
-        }
+       return user;
+    }
 
-
-        public synchronized List<User> getAllUser() {
-                return users;
-        }
 }
