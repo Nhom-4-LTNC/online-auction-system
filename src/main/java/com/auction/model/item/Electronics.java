@@ -46,4 +46,16 @@ public class Electronics extends Item {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return "Electronics{" +
+                "id=" + getId() +
+                ", name='" + getName() + '\'' +
+                ", description='" + getDescription() + '\'' +
+                ", owner=" + getOwner().getUsername() +
+                ", startPrice=" + getStartPrice() +
+                ", brand='" + brand + '\'' +
+                ", warrantyMonths=" + warrantyMonths +
+                '}';
+    }
 }

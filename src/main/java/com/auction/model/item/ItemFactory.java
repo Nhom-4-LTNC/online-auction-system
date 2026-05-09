@@ -9,7 +9,7 @@ import java.util.*;
         - Khởi tạo tập trung các lớp con của Item (Electronics, Art, Vehicle)
  */
 public class ItemFactory {
-    public static Item createItem(ItemType type, Map<String, Object> data) throws Exception{
+    public static Item createItem(ItemType type, Map<String, Object> data) throws IllegalArgumentException{
         if (data == null) throw new IllegalArgumentException("Item data can be null");
         int id = (data.get("id") != null) ? (Integer) data.get("id") : 0;
         String name = (String) data.get("name");

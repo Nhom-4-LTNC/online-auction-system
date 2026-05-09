@@ -1,4 +1,4 @@
-package com.auction.network;
+package com.auction.config;
 
 public class NetworkConfig {
     public static final String SERVER_IP = "127.0.0.1";

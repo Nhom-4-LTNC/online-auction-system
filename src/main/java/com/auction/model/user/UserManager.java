@@ -43,4 +43,8 @@ public class UserManager {
     public User getUserById(int id) {
         return users.get(id);
     }
+
+    public Collection<User> getAllUsers() {
+        return users.values();
+    }
 }

@@ -40,7 +40,7 @@ public class HomeController {
         if(alert.showAndWait().get() == ButtonType.OK){
 
             System.out.println("You logout successful");
-            SceneUtils.switchScene(event, "/fxml/LogInScreen.fxml");
+            SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
 
         }
     }

@@ -12,7 +12,7 @@
 <?import javafx.scene.text.Font?>
 
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="396.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.LogInController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="396.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.LoginController">
    <children>
       <ImageView fitHeight="355.0" fitWidth="640.0" layoutY="41.0" pickOnBounds="true" preserveRatio="true">
          <image>
@@ -32,15 +32,15 @@
             <Font size="18.0" />
          </font>
       </Label>
-      <TextField fx:id="nameTextField" layoutX="98.0" layoutY="172.0" prefHeight="26.0" prefWidth="160.0" promptText="ex: nguyen123@gmail.com" />
-      <TextField fx:id="visiblePassword" layoutX="98.0" layoutY="223.0" promptText="input password" />
+      <TextField fx:id="emailTextField" layoutX="98.0" layoutY="172.0" prefHeight="26.0" prefWidth="160.0" promptText="ex: nguyen123@gmail.com" />
+      <TextField fx:id="visiblePasswordField" layoutX="98.0" layoutY="223.0" promptText="input password" />
       <Label layoutX="31.0" layoutY="222.0" text="Pass:" textFill="#181818">
          <font>
             <Font size="18.0" />
          </font>
       </Label>
-      <CheckBox fx:id="Show" layoutX="260.0" layoutY="227.0" mnemonicParsing="false" onAction="#change" text="Show" />
-      <PasswordField fx:id="hiddenPassword" layoutX="98.0" layoutY="223.0" promptText="input password" />
+      <CheckBox fx:id="showPasswordCheckBox" layoutX="260.0" layoutY="227.0" mnemonicParsing="false" onAction="#togglePasswordVisibility" text="Show" />
+      <PasswordField fx:id="hiddenPasswordField" layoutX="98.0" layoutY="223.0" promptText="input password" />
       <Label layoutX="4.0" text="Online" textFill="#ff9000">
          <font>
             <Font size="36.0" />
@@ -51,6 +51,6 @@
             <Font size="36.0" />
          </font>
       </Label>
-      <Button layoutX="486.0" layoutY="13.0" mnemonicParsing="false" onAction="#CreateAccount" prefHeight="26.0" prefWidth="139.0" text="Create Account" />
+      <Button layoutX="486.0" layoutY="13.0" mnemonicParsing="false" onAction="#createAccount" prefHeight="26.0" prefWidth="139.0" text="Create Account" />
    </children>
 </AnchorPane>

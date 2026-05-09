@@ -56,4 +56,18 @@ public class Vehicle extends Item {
     public void setBrand(String brand) {
         this.brand = brand;
     }
+
+    @Override
+    public String toString() {
+        return "Vehicle{" +
+                "id=" + getId() +
+                ", name='" + getName() + '\'' +
+                ", description='" + getDescription() + '\'' +
+                ", owner=" + getOwner().getUsername() +
+                ", startPrice=" + getStartPrice() +
+                ", brand='" + brand + '\'' +
+                ", vin='" + vin + '\'' +
+                ", mileage=" + mileage +
+                '}';
+    }
 }

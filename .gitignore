@@ -15,6 +15,7 @@ gen/
 *.iws
 *.iml
 *.ipr
+*.class
 
 ### Eclipse ###
 .apt_generated

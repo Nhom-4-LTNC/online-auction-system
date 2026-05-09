@@ -43,4 +43,17 @@ public class Art extends Item {
         }
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "Art{" +
+                "id=" + getId() +
+                ", name='" + getName() + '\'' +
+                ", description='" + getDescription() + '\'' +
+                ", owner=" + getOwner().getUsername() +
+                ", startPrice=" + getStartPrice() +
+                ", artist='" + artist + '\'' +
+                ", yearCreated=" + yearCreated +
+                '}';
+    }
 }
