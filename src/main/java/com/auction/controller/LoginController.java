@@ -2,7 +2,6 @@ package com.auction.controller;
 
 import com.auction.model.user.User;
 import com.auction.service.UserService;
-import com.auction.service.impl.UserServiceImpl;
 import com.auction.util.SceneUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -24,7 +23,7 @@ import java.util.ResourceBundle;
 public class LoginController implements Initializable {
 
     // Service layer
-    private final UserService userService = new UserServiceImpl();
+    private final UserService userService = new UserService();
 
     // UI Components
     @FXML

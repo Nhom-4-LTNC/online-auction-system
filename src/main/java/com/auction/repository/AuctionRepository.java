@@ -66,7 +66,7 @@ public class AuctionRepository {
         }
     }
 
-    public synchronized Auction geAuctionById(int auctionId) {
+    public synchronized Auction getAuctionById(int auctionId) {
         for (Auction auction: auctions) {
             if (auction.getId() == auctionId) {
                 return auction;
