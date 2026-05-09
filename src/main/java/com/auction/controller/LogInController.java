@@ -1,8 +1,7 @@
 package com.auction.controller;
 
-import com.auction.dao.Check;
-import com.auction.dao.SceneUtils;
-import com.auction.dao.UserDAO;
+import com.auction.util.Check;
+import com.auction.util.SceneUtils;
 import com.auction.model.user.User;
 import com.auction.model.user.UserManager;
 import javafx.event.ActionEvent;
@@ -20,7 +19,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.ResourceBundle;
 
 public class LogInController implements Initializable {

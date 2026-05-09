@@ -11,7 +11,7 @@ public class User extends Entity {
     private static final long serialVersionUID = 2214371618402864005L;
 
     // BASIC ATTRIBUTES
-    private final String username;
+    private String username;
     private String pwd;
     private String email;
     // BAN ATTRIBUTES
@@ -25,9 +25,15 @@ public class User extends Entity {
     // CONSTRUCTORS
     public User (String username, String pwd, String email) {
         super();
-        this.username = username;
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        if (email == null || !email.contains("@")) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+        this.username = username.trim();
         this.pwd = pwd;
-        this.email = email;
+        this.email = email.toLowerCase().trim();
     }
     public User(int id, String username, String pwd, String email) {
         super(id);
@@ -54,6 +60,7 @@ public class User extends Entity {
         return this.sellerProfile;
     }
     public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username;}
     public String getPwd() { return pwd; }
     public String getEmail() { return email; }
     public void setPwd(String pwd) { this.pwd = pwd; }
@@ -66,8 +73,7 @@ public class User extends Entity {
 
     @Override
     public String toString() {
-       return "User{" +
-               "username=" + username + "\n" +
-               "email=" + email + "\n}";
+        return String.format("User{id=%d, username='%s', email='%s', roles=%s}",
+                id, username, email, roles);
     }
 }

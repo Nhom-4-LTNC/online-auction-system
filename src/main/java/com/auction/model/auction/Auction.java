@@ -16,23 +16,33 @@ import java.util.List;
 public class Auction extends Entity {
     @Serial
     private static final long serialVersionUID = 6720930536578062003L;
+
+    public static double DEFAULT_BID_STEP = 0.1;
+    public static long DEFAULT_DURATION = 60 * 1000; // 1 minutes in milliseconds
+
     private Item item;
     private long startTime;
     private long endTime;
     private double startPrice;
     private double currentPrice;
     private User lastBidder;
-    private final double bidStep;
+    private double bidStep;
 
     private final List<BidTransaction> bidHistory = new ArrayList<>();
+    private AuctionStatus status;
+
     // CONSTRUCTORS
     public Auction(Item item, double bidStep, long startTime, long endTime) {
         super();
+        if (bidStep < DEFAULT_BID_STEP) {
+            throw new IllegalArgumentException("Bước giá phải lớn hơn hoặc bằng " + DEFAULT_BID_STEP);
+        }
         this.bidStep = bidStep;
         this.startTime = startTime;
         this.endTime = endTime;
         this.startPrice = item.getStartPrice();
         this.currentPrice = startPrice;
+        updateStatus();
     }
     public Auction(int id, Item item, double bidStep, long startTime, long endTime) {
         super(id);
@@ -42,6 +52,7 @@ public class Auction extends Entity {
         this.bidStep = bidStep;
         this.startTime = startTime;
         this.endTime = endTime;
+        updateStatus();
     }
 
     // METHODS
@@ -72,11 +83,19 @@ public class Auction extends Entity {
 
     }
     //STATUS UPDATE
-    public AuctionStatus getStatus() {
+    public void updateStatus() {
         long now = System.currentTimeMillis();
-        if (now < startTime) return AuctionStatus.INITIALIZED; // not opened yet
-        else if (now > endTime) return AuctionStatus.CLOSED; // past closing time
-        return AuctionStatus.OPENED; // is open right now
+        if (now < startTime) {
+            this.status = AuctionStatus.INITIALIZED;
+        } else if (now > endTime) {
+            this.status = AuctionStatus.CLOSED;
+        } else {
+            this.status = AuctionStatus.OPENED;
+        }
+    }
+    public AuctionStatus getStatus() {
+        updateStatus();
+        return status;
     }
     //GET WINNER
     public User getWinner() {
@@ -98,7 +117,14 @@ public class Auction extends Entity {
         this.startPrice = startPrice;
     }
     public double getCurrentPrice() {return this.currentPrice; }
+    public void setCurrentPrice(double currentPrice) { this.currentPrice = currentPrice; }
+
     public double getBidStep() { return bidStep; }
+    public void setBidStep(double bidStep) {
+        if (bidStep >= DEFAULT_BID_STEP) {
+            this.bidStep = bidStep;
+        }
+    }
 
     public long getEndTime() {
         return endTime;
@@ -123,5 +149,10 @@ public class Auction extends Entity {
 
     public List <BidTransaction> getBidHistory() {
         return new ArrayList<>(bidHistory);
+    }
+    @Override
+    public String toString() {
+        return String.format("Auction{id=%d, item=%s, currentPrice=%.2f, status=%s}",
+                id, item.getName(), currentPrice, status);
     }
 }

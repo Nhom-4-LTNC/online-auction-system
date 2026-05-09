@@ -1,4 +1,4 @@
-package com.auction.dao;
+package com.auction.repository;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,19 +11,19 @@ import java.util.List;
 
 import com.auction.model.item.Item;
 
-public class ItemDAO {
-    private static ItemDAO instance;
+public class ItemRepository {
+    private static ItemRepository instance;
     private List<Item> items;
     private static final String FILE_PATH = "items.dat";
 
-    private ItemDAO() {
+    private ItemRepository() {
         items = new ArrayList<>();
         loadData();
     }
 
-    public static synchronized ItemDAO getInstance() {
+    public static synchronized ItemRepository getInstance() {
         if (instance == null) {
-            instance = new ItemDAO();
+            instance = new ItemRepository();
         }
         return instance;
     }

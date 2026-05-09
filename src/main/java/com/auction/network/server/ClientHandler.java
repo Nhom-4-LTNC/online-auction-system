@@ -1,4 +1,4 @@
-package com.auction.network;
+package com.auction.network.server;
 
 import java.io.*;
 import java.net.*;
@@ -7,6 +7,7 @@ import com.auction.exception.InvalidBidException;
 import com.auction.model.auction.AuctionManager;
 import com.auction.model.user.User;
 import com.auction.model.user.UserManager;
+import com.auction.network.BidMessage;
 
 public class ClientHandler implements Runnable {
     private Socket socket;

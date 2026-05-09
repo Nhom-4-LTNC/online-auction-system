@@ -44,8 +44,11 @@ public abstract class Item extends Entity implements Serializable {
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description;}
-    public Integer getOwnerId() {
-        return (owner != null) ? owner.getId() : -1;
+    public User getOwner() {
+        return owner;
+    }
+    public int getOwnerId() {
+        return this.owner.getId();
     }
     public double getStartPrice() { return startPrice; }
     public boolean setStartPrice(double startPrice) {

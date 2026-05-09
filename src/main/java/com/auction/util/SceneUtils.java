@@ -1,4 +1,4 @@
-package com.auction.dao;
+package com.auction.util;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;

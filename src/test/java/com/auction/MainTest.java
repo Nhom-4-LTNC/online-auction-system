@@ -1,13 +1,13 @@
-package com.auction.test;
+package com.auction;
 
-import com.auction.dao.UserDAO;
+import com.auction.repository.UserRepository;
 import com.auction.model.user.User;
 import com.auction.model.user.Admin;
 
 public class MainTest {
     public static void main(String[] args) {
         System.out.println("===KIỂM TRA LƯU TRỮ DỮ LIỆU===");
-        UserDAO dao = UserDAO.getInstance();
+        UserRepository dao = UserRepository.getInstance();
         System.out.println("[n1] Dang tao du lieu gia lap");
         User user1 = new User(001, "abc", "ABC", "nhat24271@gmail.com");
         Admin admin1 = new Admin(001, "NHATDEPZAI", "ABC", "nhatnguyen24271@gmail.com");

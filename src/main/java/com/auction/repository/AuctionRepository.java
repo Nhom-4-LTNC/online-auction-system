@@ -1,4 +1,4 @@
-package com.auction.dao;
+package com.auction.repository;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,23 +9,22 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.auction.model.auction.Auction;
 
-public class AuctionDAO {
-    private static AuctionDAO instance;
+public class AuctionRepository {
+    private static AuctionRepository instance;
     private List<Auction> auctions;
     private static final String FILE_PATH = "auction.dat";
 
-    private AuctionDAO() {
+    private AuctionRepository() {
         auctions = new ArrayList<>();
         loadData();
     }
 
-    public static synchronized AuctionDAO getInstance() {
+    public static synchronized AuctionRepository getInstance() {
         if (instance == null) {
-            instance = new AuctionDAO();
+            instance = new AuctionRepository();
         }
         return instance;
     }

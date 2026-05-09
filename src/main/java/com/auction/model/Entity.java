@@ -30,7 +30,7 @@ public abstract class Entity implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof Entity entity)) return false;
-        return id != -1 && id == entity.id;
+        return id != -1 && id == entity.id && createdAt == entity.createdAt;
     }
 
     @Override

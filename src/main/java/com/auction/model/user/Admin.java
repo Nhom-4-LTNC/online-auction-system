@@ -9,10 +9,12 @@ public class Admin extends User {
 
     public Admin(String username, String pwd, String email) {
         super(username, pwd, email);
+        this.addRole(Role.ADMIN);
     }
 
     public Admin(int id, String username, String pwd, String email) {
         super(id, username, pwd, email);
+        this.addRole(Role.ADMIN);
     }
 
     public void applyBan(User user, long durationInMillis) {

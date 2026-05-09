@@ -2,7 +2,7 @@ package com.auction.model.user;
 
 public class BanManager {
     // Singleton
-    private static BanManager instance;
+    private static volatile BanManager instance;
 
     // CONSTRUCTOR
     private BanManager() {
@@ -10,9 +10,11 @@ public class BanManager {
     }
 
     // GETTER
-    public static synchronized BanManager getInstance() {
+    public static BanManager getInstance() {
         if (instance == null) {
-            instance = new BanManager();
+            synchronized (BanManager.class) {
+                if (instance == null) instance = new BanManager();
+            }
         }
         return instance;
     }

@@ -1,8 +1,5 @@
 package com.auction.controller;
 
-import com.auction.dao.UserDAO;
-import com.auction.model.item.Electronics;
-import com.auction.model.item.Item;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -17,7 +14,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.Objects;
 
 public class AuctionItemMenuController {

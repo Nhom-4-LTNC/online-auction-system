@@ -1,4 +1,4 @@
-package com.auction.dao;
+package com.auction.repository;
 
 import com.auction.model.user.User;
 import java.io.File;
@@ -10,19 +10,19 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserDAO {
-        private static UserDAO instance;
+public class UserRepository {
+        private static UserRepository instance;
         private List<User> users;
         private static final String FILE_PATH = "users.dat";
 
-        private UserDAO() {
+        private UserRepository() {
                 users = new ArrayList<>();
                 loadData();
         }
 
-        public static synchronized UserDAO getInstance() {
+        public static synchronized UserRepository getInstance() {
                 if (instance == null) {
-                        instance = new UserDAO();
+                        instance = new UserRepository();
                 }
                 return instance;
         }

@@ -28,7 +28,7 @@ public class UserManager {
         users.put(user.getId(), user);
     }
 
-    public User getUserByEmail(String email) {
+    public synchronized User getUserByEmail(String email) {
         if (email == null) {
             return null;
         }
@@ -38,12 +38,9 @@ public class UserManager {
                 return user;
             }
         }
-
         return null;
     }
     public User getUserById(int id) {
-        User user = users.get(id);
-        if (user != null) return user;
-        return null;
+        return users.get(id);
     }
 }

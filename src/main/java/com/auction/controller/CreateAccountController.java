@@ -1,7 +1,7 @@
 package com.auction.controller;
 
 
-import com.auction.dao.Check;
+import com.auction.util.Check;
 import com.auction.model.user.User;
 import com.auction.model.user.UserManager;
 import javafx.event.ActionEvent;
@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class CreateAccountController implements Initializable {
     @FXML

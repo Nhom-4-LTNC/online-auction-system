@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
-    <artifactId>demo10</artifactId>
+    <groupId>com.auction</groupId>
+    <artifactId>online-auction-system</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>demo10</name>
 
@@ -17,11 +17,6 @@
     <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>21.0.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>21.0.6</version>
         </dependency>
@@ -29,15 +24,16 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit.version}</version>
+            <version>5.9.2</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.0.33</version>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -51,6 +47,7 @@
                     <target>21</target>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -60,7 +57,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>org.example.demo10/org.example.demo10.Main</mainClass>
+                            <mainClass>com.auction.controller.Launcher</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
@@ -68,6 +65,43 @@
                             <stripDebug>true</stripDebug>
                             <noHeaderFiles>true</noHeaderFiles>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.4.0</version>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

@@ -1,12 +1,9 @@
 package com.auction.controller;
 
-import com.auction.dao.Check;
-import com.auction.dao.SceneUtils;
-import com.auction.dao.UserDAO;
+import com.auction.util.Check;
+import com.auction.util.SceneUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
