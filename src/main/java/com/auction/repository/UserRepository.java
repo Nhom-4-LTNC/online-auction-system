@@ -40,6 +40,8 @@ public class UserRepository {
             System.out.println("User added successfully: " + user.getEmail());
         } catch (SQLException e) {
             System.out.println("Error adding user: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("Database driver not found: " + e.getMessage());
         }
     }
 
@@ -57,6 +59,8 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error during login: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("Database driver not found: " + e.getMessage());
         }
         return null;
     }
@@ -73,6 +77,8 @@ public class UserRepository {
             System.out.println("User updated successfully: " + user.getId());
         } catch (SQLException e) {
             System.out.println("Error updating user: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("Database driver not found: " + e.getMessage());
         }
     }
     public synchronized User getUserByEmail(String email) {
@@ -88,6 +94,8 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error fetching user by email: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("Database driver not found: " + e.getMessage());
         }
         return null;
     }
@@ -104,6 +112,8 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error fetching user by ID: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("Database driver not found: " + e.getMessage());
         }
         return null;
     }
@@ -118,6 +128,8 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error fetching all users: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("Database driver not found: " + e.getMessage());
         }
         return users;
     }
