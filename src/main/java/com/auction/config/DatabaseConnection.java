@@ -5,9 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-    public static final String URL = "jdbc:mysql://localhost:3306/online_auction_db?useSSL=false&serverTimezone=UTC";
-    public static final String USER = "president23";
-    public static final String PASSWORD = "d4c";
+    public static final String URL = "jdbc:mysql://4P1uXCyyKSzbDay.root:CK9pnI67aQFR4MuW@gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/auction_db";
+    public static final String USER = "4P1uXCyyKSzbDay.root";
+    public static final String PASSWORD = "CK9pnI67aQFR4MuW";
 
     public static Connection getConnection() {
        try {
