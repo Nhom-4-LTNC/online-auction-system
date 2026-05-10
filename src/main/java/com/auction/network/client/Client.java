@@ -46,7 +46,15 @@ public class Client {
         }
     }
 
+    public boolean isConnected() {
+        return socket != null && !socket.isClosed() && out != null;
+    }
+
     public void sendMessage(Object message) {
+        if (out == null) {
+            System.err.println("Loi gui tin nhan toi server: chua ket noi");
+            return;
+        }
         try {
             out.writeObject(message);
             out.flush();

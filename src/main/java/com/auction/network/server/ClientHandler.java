@@ -1,6 +1,7 @@
 package com.auction.network.server;
 
 import com.auction.model.user.User;
+import com.auction.network.protocol.AuthResponse;
 import com.auction.network.protocol.BidMessage;
 import com.auction.network.protocol.ActionType;
 import com.auction.network.protocol.AuthRequest;
@@ -54,22 +55,24 @@ public class ClientHandler implements Runnable {
     private void handleAuthRequest(AuthRequest request) {
         if (request.getRequestType() == ActionType.LOGIN) {
             try {
-                UserService.getInstance().login(request.getEmail(), request.getPassword());
-                sendData(ActionType.LOGIN_SUCCESS);
+               User user = UserService.getInstance().login(request.getEmail(), request.getPassword());
+               user.setPwd(null); // Không gửi mật khẩu về client
+               sendData(new AuthResponse(ActionType.LOGIN_SUCCESS, user,"Đăng nhập thành công!"));
             } catch (Exception e) {
                 System.out.println("Đăng nhập thất bại: " + e.getMessage());
-                sendData(ActionType.LOGIN_FAILURE);
+                sendData(new AuthResponse(ActionType.LOGIN_FAILURE, null, "Đăng nhập thất bại: " + e.getMessage()));
             }
 
         } else if (request.getRequestType() == ActionType.REGISTER) {
             try {
                 // register() ném Exception khi trùng email/username → bắt để gửi FAILURE
-                UserService.getInstance().register(
+                User user = UserService.getInstance().register(
                         request.getUsername(), request.getEmail(), request.getPassword());
-                sendData(ActionType.REGISTER_SUCCESS);
+                user.setPwd(null); // Không gửi mật khẩu về client
+                sendData(new AuthResponse(ActionType.REGISTER_SUCCESS, user, "Đăng ký thành công!"));
             } catch (Exception e) {
                 System.out.println("Đăng ký thất bại: " + e.getMessage());
-                sendData(ActionType.REGISTER_FAILURE);
+                sendData(new AuthResponse(ActionType.REGISTER_FAILURE, null, "Đăng ký thất bại: " + e.getMessage()));
             }
         }
     }
@@ -87,7 +90,6 @@ public class ClientHandler implements Runnable {
         }
     }
     // GỬI DỮ LIỆU / ĐÓNG KẾT NỐI
-
     public void sendData(Object data) {
         try {
             out.writeObject(data);

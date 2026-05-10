@@ -9,18 +9,10 @@ public class DatabaseConnection {
     public static final String USER = "4P1uXCyyKSzbDay.root";
     public static final String PASSWORD = "CK9pnI67aQFR4MuW";
 
-    public static Connection getConnection() {
-       try {
+    public static Connection getConnection() throws SQLException, ClassNotFoundException {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-           System.out.println("Database connection established successfully.");
+            System.out.println("Database connection established successfully.");
             return conn;
-       } catch (SQLException e) {
-            System.out.println("Error connecting to database: " + e.getMessage());
-            return null;
-        } catch (ClassNotFoundException e) {
-            System.out.println("MySQL JDBC Driver not found: " + e.getMessage());
-            return null;
-        }
     }
 }
