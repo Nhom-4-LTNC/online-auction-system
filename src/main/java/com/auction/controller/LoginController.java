@@ -1,6 +1,9 @@
 package com.auction.controller;
 
 import com.auction.model.user.User;
+import com.auction.network.client.Client;
+import com.auction.network.protocol.ActionType;
+import com.auction.network.protocol.AuthRequest;
 import com.auction.service.UserService;
 import com.auction.util.SceneUtils;
 import com.auction.util.SessionManager;
@@ -23,121 +26,93 @@ import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
-    // Dùng singleton để cả ứng dụng dùng chung một UserService
     private final UserService userService = UserService.getInstance();
+    private final Client client = Client.getInstance();
 
-    // UI Components
-    @FXML
-    private TextField emailTextField;
-    @FXML
-    private TextField visiblePasswordField;
-    @FXML
-    private PasswordField hiddenPasswordField;
-    @FXML
-    private CheckBox showPasswordCheckBox;
+    @FXML private TextField emailTextField;
+    @FXML private TextField visiblePasswordField;
+    @FXML private PasswordField hiddenPasswordField;
+    @FXML private CheckBox showPasswordCheckBox;
 
-    // Scene management
     private Stage stage;
     private Scene scene;
     private Parent root;
 
-    /**
-     * Handle login button click
-     */
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Đồng bộ hai ô nhập mật khẩu
+        visiblePasswordField.textProperty().bindBidirectional(hiddenPasswordField.textProperty());
+        visiblePasswordField.setVisible(false);
+        hiddenPasswordField.setVisible(true);
+
+        // Kết nối tới server ngay khi mở màn hình đăng nhập
+        client.connect();
+    }
+
     @FXML
-    public void login(ActionEvent event) throws IOException {
-        String email = emailTextField.getText().trim();
+    public void login(ActionEvent event) {
+        String email    = emailTextField.getText().trim();
         String password = getPasswordFromFields();
 
-        // Input validation
-        if (!validateInput(email, password)) {
-            return;
-        }
+        if (!validateInput(email, password)) return;
 
-        try {
-            // Business logic - delegate to service
-            User user = userService.login(email, password);
+        // Đăng ký xử lý phản hồi từ server
+        client.setOnMessageReceived(response -> {
+            if (response instanceof ActionType actionType) {
+                if (actionType == ActionType.LOGIN_SUCCESS) {
+                    try {
+                        // Server xác nhận hợp lệ → lấy thông tin user từ DB
+                        User user = userService.login(email, password);
+                        navigateToHome(event, user);
+                    } catch (Exception e) {
+                        showErrorAlert("Lỗi", e.getMessage());
+                    }
+                } else if (actionType == ActionType.LOGIN_FAILURE) {
+                    showErrorAlert("Đăng nhập thất bại", "Email hoặc mật khẩu không đúng!");
+                }
+            }
+        });
 
-            // UI logic - navigate to home
-            navigateToHome(event, user);
-
-        } catch (Exception e) {
-            showErrorAlert("Đăng nhập thất bại", e.getMessage());
-        }
+        // Gửi yêu cầu đăng nhập lên server
+        client.sendMessage(new AuthRequest(email, password));
     }
 
-    /**
-     * Handle password visibility toggle
-     */
     @FXML
     public void togglePasswordVisibility(ActionEvent event) {
-        boolean showPassword = showPasswordCheckBox.isSelected();
-
-        visiblePasswordField.setVisible(showPassword);
-        hiddenPasswordField.setVisible(!showPassword);
-
-        // Sync password text between fields
-        if (showPassword) {
-            visiblePasswordField.setText(hiddenPasswordField.getText());
-        } else {
-            hiddenPasswordField.setText(visiblePasswordField.getText());
-        }
+        boolean show = showPasswordCheckBox.isSelected();
+        visiblePasswordField.setVisible(show);
+        hiddenPasswordField.setVisible(!show);
     }
 
-    /**
-     * Handle create account button click
-     */
     @FXML
     public void createAccount(ActionEvent event) throws IOException {
         SceneUtils.switchScene(event, "/fxml/createAccount.fxml");
     }
 
-    /**
-     * Initialize the controller
-     */
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Bind password fields for synchronization
-        visiblePasswordField.textProperty().bindBidirectional(hiddenPasswordField.textProperty());
+    // ----------------------------------------------------------------
+    // HELPER
+    // ----------------------------------------------------------------
 
-        // Initially hide visible password field
-        visiblePasswordField.setVisible(false);
-        hiddenPasswordField.setVisible(true);
-    }
-
-    // Private helper methods
-
-    /**
-     * Get password from the appropriate field
-     */
     private String getPasswordFromFields() {
         return showPasswordCheckBox.isSelected()
-            ? visiblePasswordField.getText()
-            : hiddenPasswordField.getText();
+                ? visiblePasswordField.getText()
+                : hiddenPasswordField.getText();
     }
 
-    /**
-     * Validate user input
-     */
     private boolean validateInput(String email, String password) {
         if (email == null || email.trim().isEmpty()) {
             showErrorAlert("Lỗi nhập liệu", "Vui lòng nhập email!");
             return false;
         }
-
         if (password == null || password.trim().isEmpty()) {
             showErrorAlert("Lỗi nhập liệu", "Vui lòng nhập mật khẩu!");
             return false;
         }
-
         return true;
     }
 
-    /**
-     * Navigate to home screen after successful login
-     */
     private void navigateToHome(ActionEvent event, User user) throws IOException {
-        // Lưu user vào SessionManager để các Controller khác có thể dùng
+        // Lưu user đang đăng nhập để các màn hình khác có thể dùng
         SessionManager.getInstance().setCurrentUser(user);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
@@ -152,9 +127,6 @@ public class LoginController implements Initializable {
         stage.show();
     }
 
-    /**
-     * Show error alert to user
-     */
     private void showErrorAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);

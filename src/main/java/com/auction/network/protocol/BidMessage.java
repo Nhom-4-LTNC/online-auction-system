@@ -1,6 +1,4 @@
-package com.auction.network;
-
-import com.auction.model.user.User;
+package com.auction.network.protocol;
 
 import java.io.Serial;
 import java.io.Serializable;
