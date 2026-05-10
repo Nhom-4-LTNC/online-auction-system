@@ -4,7 +4,7 @@ import com.auction.model.user.User;
 import com.auction.network.client.Client;
 import com.auction.network.protocol.ActionType;
 import com.auction.network.protocol.AuthRequest;
-import com.auction.service.UserService;
+import com.auction.network.protocol.AuthResponse;
 import com.auction.util.SceneUtils;
 import com.auction.util.SessionManager;
 import javafx.event.ActionEvent;
@@ -26,7 +26,6 @@ import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
-    private final UserService userService = UserService.getInstance();
     private final Client client = Client.getInstance();
 
     @FXML private TextField emailTextField;
@@ -56,23 +55,27 @@ public class LoginController implements Initializable {
 
         if (!validateInput(email, password)) return;
 
+        if (!client.isConnected()) {
+            showErrorAlert("Lỗi kết nối", "Không thể kết nối tới server. Vui lòng thử lại!");
+            return;
+        }
+
         // Đăng ký xử lý phản hồi từ server
         client.setOnMessageReceived(response -> {
-            if (response instanceof ActionType actionType) {
-                if (actionType == ActionType.LOGIN_SUCCESS) {
+            if (response instanceof AuthResponse authResponse) {
+                if (authResponse.getResponseType() == ActionType.LOGIN_SUCCESS) {
                     try {
                         // Server xác nhận hợp lệ → lấy thông tin user từ DB
-                        User user = userService.login(email, password);
+                        User user = authResponse.getUser();
                         navigateToHome(event, user);
                     } catch (Exception e) {
                         showErrorAlert("Lỗi", e.getMessage());
                     }
-                } else if (actionType == ActionType.LOGIN_FAILURE) {
+                } else if (authResponse.getResponseType() == ActionType.LOGIN_FAILURE) {
                     showErrorAlert("Đăng nhập thất bại", "Email hoặc mật khẩu không đúng!");
                 }
             }
         });
-
         // Gửi yêu cầu đăng nhập lên server
         client.sendMessage(new AuthRequest(email, password));
     }
@@ -112,19 +115,21 @@ public class LoginController implements Initializable {
     }
 
     private void navigateToHome(ActionEvent event, User user) throws IOException {
-        // Lưu user đang đăng nhập để các màn hình khác có thể dùng
         SessionManager.getInstance().setCurrentUser(user);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
         root = loader.load();
 
-        HomeController homeController = loader.getController();
-        homeController.displayName(user.getEmail());
-
+        // Gắn scene vào stage TRƯỚC khi gọi displayName()
+        // Nếu đổi thứ tự: scenePane.getScene() trả về null → NullPointerException
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
+
+        // Dùng username (không dùng email) vì Check.checkName() kiểm tra quy tắc username
+        HomeController homeController = loader.getController();
+        homeController.displayName(user.getUsername());
     }
 
     private void showErrorAlert(String title, String message) {

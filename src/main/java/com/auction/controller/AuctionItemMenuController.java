@@ -54,9 +54,7 @@ public class AuctionItemMenuController {
         itemTypeLabel.setText(currentType.toUpperCase());
     }
 
-    // -------------------------------------------------------------------------
     // TẠO PHIÊN ĐẤU GIÁ — kết nối form với AuctionService
-    // -------------------------------------------------------------------------
     public void createAuction(ActionEvent event) {
         // 1. Lấy user đang đăng nhập
         User currentUser = SessionManager.getInstance().getCurrentUser();
@@ -96,7 +94,6 @@ public class AuctionItemMenuController {
                 case "Art" -> {
                     itemType = ItemType.ART;
                     itemData.put("artist", authorTF.getText().trim());
-                    // genreTF được dùng để nhập năm sáng tác (yearCreated)
                     itemData.put("year", Integer.parseInt(genreTF.getText().trim()));
                 }
                 case "Vehicle" -> {
@@ -143,9 +140,7 @@ public class AuctionItemMenuController {
         stage.show();
     }
 
-    // -------------------------------------------------------------------------
     // HELPER — hiển thị thông báo
-    // -------------------------------------------------------------------------
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
