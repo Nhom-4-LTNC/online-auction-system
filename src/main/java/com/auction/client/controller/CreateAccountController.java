@@ -1,4 +1,4 @@
-package com.auction.controller;
+package com.auction.client.controller;
 
 import com.auction.model.user.User;
 import com.auction.service.UserService;

@@ -107,20 +107,15 @@ public class AuctionService {
 
         return newAuction;
     }
-
-    public synchronized void placeBid(int auctionId, User bidder, double amount)
+    public void placeBid(int auctionId, User bidder, double amount)
             throws InvalidBidException, Exception {
 
         Auction auction = auctions.get(auctionId);
         if (auction == null)
             throw new Exception("Không tìm thấy phiên đấu giá với ID: " + auctionId);
-
-        BidTransaction txn = auction.placeBid(bidder, amount);
-
-        auctionRepository.updateAuction(auction);
-
-        for (AuctionObserver observer : observers) {
-            observer.onNewBidPlace(txn);
+        synchronized (auction) {
+            BidTransaction txn = auction.placeBid(bidder, amount);
+            auctionRepository.updateAuction(auction);
         }
     }
 

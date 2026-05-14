@@ -1,10 +1,10 @@
-package com.auction.controller;
+package com.auction.client.controller;
 
 import com.auction.model.user.User;
-import com.auction.network.client.Client;
-import com.auction.network.protocol.ActionType;
-import com.auction.network.protocol.AuthRequest;
-import com.auction.network.protocol.AuthResponse;
+import com.auction.client.Client;
+import com.auction.protocol.ActionType;
+import com.auction.protocol.AuthRequest;
+import com.auction.protocol.AuthResponse;
 import com.auction.util.SceneUtils;
 import com.auction.util.SessionManager;
 import javafx.event.ActionEvent;

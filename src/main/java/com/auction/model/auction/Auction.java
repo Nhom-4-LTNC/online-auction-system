@@ -37,6 +37,7 @@ public class Auction extends Entity {
         if (bidStep < DEFAULT_BID_STEP) {
             throw new IllegalArgumentException("Bước giá phải lớn hơn hoặc bằng " + DEFAULT_BID_STEP);
         }
+        this.item = item;
         this.bidStep = bidStep;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -64,10 +65,14 @@ public class Auction extends Entity {
         if (user.getId() == item.getOwnerId()) {
             throw new InvalidBidException("Lỗi: Không thể đấu giá cho sản phẩm của mình tạo ra!");
         }
-        if (lastBidder == null && amount < startPrice) {
-            throw new InvalidBidException("Giá đặt phải lớn hơn hoặc bằng giá khởi đầu!");
-        } else if (amount < currentPrice + bidStep) {
-            throw new InvalidBidException("Giá đặt phải lớn hơn giá hiện tại cộng bước giá!");
+        if (lastBidder == null) {
+            if (amount < startPrice) {
+                throw new InvalidBidException("Giá đặt phải lớn hơn hoặc bằng giá khởi đầu!");
+            }
+        } else {
+            if (amount < currentPrice + bidStep) {
+                throw new InvalidBidException("Giá đặt phải lớn hơn giá hiện tại cộng bước giá!");
+            }
         }
         if (!profile.canAfford(amount)) {
             throw new InsufficientFundsException("Số dư tài khoản không đủ!");
