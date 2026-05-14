@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(Get-ChildItem -Path \"D:\\\\New\\\\JavaCoding\\\\Btl\\\\online-auction-system\\\\src\\\\main\\\\java\\\\com\\\\auction\" -Directory -Recurse)",
-      "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Sort-Object)"
-    ]
-  }
-}

@@ -1,7 +1,6 @@
 package com.auction.server;
 
 import com.auction.config.NetworkConfig;
-import com.auction.model.BidTransaction;
 
 import java.io.*;
 import java.net.*;
