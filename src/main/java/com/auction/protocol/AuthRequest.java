@@ -1,4 +1,4 @@
-package com.auction.network.protocol;
+package com.auction.protocol;
 
 import java.io.Serial;
 import java.io.Serializable;

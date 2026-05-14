@@ -1,4 +1,4 @@
-package com.auction.controller;
+package com.auction.client.controller;
 
 import com.auction.util.Check;
 import com.auction.util.SceneUtils;

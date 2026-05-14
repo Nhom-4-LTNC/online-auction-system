@@ -1,6 +1,7 @@
-package com.auction.network.server;
+package com.auction.server;
 
 import com.auction.config.NetworkConfig;
+import com.auction.model.BidTransaction;
 
 import java.io.*;
 import java.net.*;
@@ -34,7 +35,6 @@ public class Server {
             client.sendData(data);
         }
     }
-
     public static void removeClient(ClientHandler client) {
         clients.remove(client);
     }
