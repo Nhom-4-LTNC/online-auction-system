@@ -1,4 +1,4 @@
-package com.auction.network.protocol;
+package com.auction.protocol;
 
 import com.auction.model.user.User;
 

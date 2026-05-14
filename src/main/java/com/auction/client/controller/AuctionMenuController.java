@@ -1,4 +1,4 @@
-package com.auction.controller;
+package com.auction.client.controller;
 
 import java.io.IOException;
 import java.util.Comparator;

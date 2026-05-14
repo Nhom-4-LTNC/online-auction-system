@@ -69,9 +69,10 @@ public class UserRepository {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getPassword());
-            stmt.setDouble(3, user.getBidderProfile().getBalance());
-            stmt.setInt(4, user.getId());
+            stmt.setString(2, user.getEmail());
+            stmt.setString(3, user.getPassword());
+            stmt.setDouble(5, user.getBidderProfile().getBalance());
+            stmt.setInt(6, user.getId());
 
             stmt.executeUpdate();
             System.out.println("User updated successfully: " + user.getId());
@@ -140,7 +141,7 @@ public class UserRepository {
        String password = rs.getString("password");
        double balance = rs.getDouble("balance");
 
-       User user = new User(id, username, email, password);
+       User user = new User(id, username, password, email);
        if (user.getBidderProfile() != null) {
            user.getBidderProfile().setBalance(balance);
        }

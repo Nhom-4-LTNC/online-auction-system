@@ -1,4 +1,4 @@
-package com.auction.network.client;
+package com.auction.client;
 
 import com.auction.config.NetworkConfig;
 import javafx.application.Platform;

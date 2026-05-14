@@ -1,10 +1,10 @@
-package com.auction.network.server;
+package com.auction.server;
 
 import com.auction.model.user.User;
-import com.auction.network.protocol.AuthResponse;
-import com.auction.network.protocol.BidMessage;
-import com.auction.network.protocol.ActionType;
-import com.auction.network.protocol.AuthRequest;
+import com.auction.protocol.AuthResponse;
+import com.auction.protocol.BidMessage;
+import com.auction.protocol.ActionType;
+import com.auction.protocol.AuthRequest;
 import com.auction.service.AuctionService;
 import com.auction.service.UserService;
 
