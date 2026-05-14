@@ -32,17 +32,27 @@ CREATE TABLE `auctions` (
   `start_time` timestamp NOT NULL,
   `end_time` timestamp NOT NULL,
   `status` enum('OPEN','RUNNING','FINISHED','PAID','CANCELED') DEFAULT 'OPEN',
-  `winer_id` int DEFAULT NULL,
+  `winner_id` int DEFAULT NULL,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,
-  KEY `fk_1` (`item_id`),
-  KEY `fk_2` (`last_bidder_id`),
-  KEY `idx_auction_id` (`id`),
+  KEY `fk_auction_item` (`item_id`),
+  KEY `fk_auction_last_bidder` (`last_bidder_id`),
+  KEY `fk_auction_winner` (`winner_id`),
   KEY `idx_auction_status` (`status`),
-  CONSTRAINT `fk_1` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_2` FOREIGN KEY (`last_bidder_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_auction_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_auction_last_bidder` FOREIGN KEY (`last_bidder_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_auction_winner` FOREIGN KEY (`winner_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `auctions`
+--
+
+LOCK TABLES `auctions` WRITE;
+/*!40000 ALTER TABLE `auctions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `auctions` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `bid_transactions`
@@ -54,17 +64,25 @@ DROP TABLE IF EXISTS `bid_transactions`;
 CREATE TABLE `bid_transactions` (
   `id` int NOT NULL AUTO_INCREMENT,
   `auction_id` int NOT NULL,
-  `user_id` int NOT NULL,
+  `bidder_id` int NOT NULL,
   `bid_amount` decimal(15,2) NOT NULL,
-  `bid_time` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `bid_time` timestamp(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT 'Lưu chính xác đến mili-giây',
   PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,
-  KEY `fk_1` (`auction_id`),
-  KEY `fk_2` (`user_id`),
-  KEY `idx_user_id` (`user_id`),
-  CONSTRAINT `fk_1` FOREIGN KEY (`auction_id`) REFERENCES `auctions` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  KEY `fk_bid_auction` (`auction_id`),
+  KEY `fk_bid_user` (`bidder_id`),
+  CONSTRAINT `fk_bid_auction` FOREIGN KEY (`auction_id`) REFERENCES `auctions` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_bid_user` FOREIGN KEY (`bidder_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `bid_transactions`
+--
+
+LOCK TABLES `bid_transactions` WRITE;
+/*!40000 ALTER TABLE `bid_transactions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `bid_transactions` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `items`
@@ -78,17 +96,30 @@ CREATE TABLE `items` (
   `owner_id` int NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` text NOT NULL,
-  `image_url` varchar(255) DEFAULT NULL,
+  `image_url` varchar(255) DEFAULT NULL COMMENT 'Thay thế cho byte[] imageBytes',
   `start_price` decimal(15,2) NOT NULL,
   `item_type` enum('GENERAL','ART','VEHICLE','ELECTRONICS') NOT NULL,
-  `specific_attributes` json DEFAULT NULL,
+  `brand` varchar(255) DEFAULT NULL,
+  `warranty_months` int DEFAULT NULL,
+  `artist` varchar(255) DEFAULT NULL,
+  `creation_year` int DEFAULT NULL,
+  `vin` varchar(100) DEFAULT NULL COMMENT 'Số khung/máy, thay cho engine_type',
+  `mileage` int DEFAULT NULL,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,
-  KEY `fk_1` (`owner_id`),
-  KEY `idx_item_id` (`id`),
-  CONSTRAINT `fk_1` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  KEY `fk_item_owner` (`owner_id`),
+  CONSTRAINT `fk_item_owner` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `items`
+--
+
+LOCK TABLES `items` WRITE;
+/*!40000 ALTER TABLE `items` DISABLE KEYS */;
+/*!40000 ALTER TABLE `items` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `users`
@@ -105,6 +136,8 @@ CREATE TABLE `users` (
   `profile_picture` varchar(255) DEFAULT NULL,
   `role` enum('ADMIN','USER') DEFAULT 'USER',
   `balance` decimal(15,2) DEFAULT '0.00',
+  `ban_start_time` bigint DEFAULT '0' COMMENT 'Lưu milliseconds từ User.java',
+  `ban_end_time` bigint DEFAULT '0' COMMENT 'Lưu milliseconds từ User.java',
   `create_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,
   UNIQUE KEY `username` (`username`),
@@ -113,6 +146,15 @@ CREATE TABLE `users` (
   KEY `idx_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=30001;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -123,4 +165,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-10 12:03:56
+-- Dump completed on 2026-05-14 11:55:14

@@ -37,22 +37,52 @@ public class UserService {
     }
 
     public User register(String username, String email, String password) throws Exception {
-        if (username == null || username.trim().isEmpty())
-            throw new Exception("Tên đăng nhập không được để trống!");
-        if (email == null || email.trim().isEmpty())
-            throw new Exception("Email không được để trống!");
-        if (password == null || password.trim().isEmpty())
-            throw new Exception("Mật khẩu không được để trống!");
+        // 1. Chuẩn hóa dữ liệu (cắt khoảng trắng, chuyển email thành chữ thường)
+        String cleanUsername = username != null ? username.trim() : null;
+        String cleanEmail = email != null ? email.trim().toLowerCase() : null;
 
-        if (userRepository.getUserByEmail(email.trim()) != null)
-            throw new Exception("Email này đã được đăng ký!");
+        // 2. Kiểm tra định dạng đầu vào cơ bản
+        validateRegisterData(cleanUsername, cleanEmail, password);
 
-        if (findByUsername(username) != null)
-            throw new Exception("Tên đăng nhập đã tồn tại!");
+        // 3. Kiểm tra logic nghiệp vụ (sự tồn tại trong hệ thống)
+        checkUserExistence(cleanUsername, cleanEmail);
 
-        User newUser = new User(username.trim(), password, email.trim());
+        // 4. Khởi tạo và lưu trữ
+        // (Lưu ý thực tế: Mật khẩu nên được mã hóa (hash) ở bước này trước khi lưu)
+        User newUser = new User(cleanUsername, password, cleanEmail);
         userRepository.addUser(newUser);
+
         return newUser;
+    }
+
+    /**
+     * Trách nhiệm: Chỉ kiểm tra tính hợp lệ của các chuỗi đầu vào.
+     */
+    private void validateRegisterData(String username, String email, String password) throws Exception {
+        if (username == null || username.isEmpty()) {
+            throw new Exception("Tên đăng nhập không được để trống!");
+        }
+        if (email == null || email.isEmpty()) {
+            throw new Exception("Email không được để trống!");
+        }
+        // Bạn có thể bổ sung thêm logic kiểm tra Regex cho Email ở đây sau này
+
+        if (password == null || password.trim().isEmpty()) {
+            throw new Exception("Mật khẩu không được để trống!");
+        }
+    }
+
+    /**
+     * Trách nhiệm: Chỉ tương tác với Database để kiểm tra trùng lặp dữ liệu.
+     */
+
+    private void checkUserExistence(String username, String email) throws Exception {
+        if (userRepository.getUserByEmail(email) != null) {
+            throw new Exception("Email này đã được đăng ký!");
+        }
+        if (findByUsername(username) != null) {
+            throw new Exception("Tên đăng nhập đã tồn tại!");
+        }
     }
 
     public User getUserById(int id) throws Exception {
@@ -71,8 +101,8 @@ public class UserService {
         return user;
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.getAllUser();
+    public List<User> getAllUsers() throws Exception {
+        return userRepository.getAllUsers();
     }
 
     public void updateUser(User user) throws Exception {
@@ -101,9 +131,9 @@ public class UserService {
         userRepository.updateUser(target);
     }
 
-    private User findByUsername(String username) {
+    private User findByUsername(String username) throws Exception {
         String normalized = username.trim();
-        for (User user : userRepository.getAllUser()) {
+        for (User user : userRepository.getAllUsers()) {
             if (user.getUsername().equals(normalized)) return user;
         }
         return null;
