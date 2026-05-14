@@ -11,4 +11,4 @@
             fx:controller="CONTROLLER_NAME"
             prefHeight="400.0" prefWidth="600.0">
 
-</AnchorPane>
+</AnchorPane>   

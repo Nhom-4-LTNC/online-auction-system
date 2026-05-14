@@ -1,10 +1,16 @@
 package com.auction.controller;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import com.auction.model.auction.Auction;
 import com.auction.model.item.ItemType;
 import com.auction.model.user.User;
 import com.auction.service.AuctionService;
 import com.auction.util.SessionManager;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -18,11 +24,6 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 public class AuctionItemMenuController {
 
