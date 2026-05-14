@@ -1,5 +1,12 @@
 package com.auction.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.auction.exception.InvalidBidException;
 import com.auction.model.BidTransaction;
 import com.auction.model.auction.Auction;
@@ -10,13 +17,6 @@ import com.auction.model.item.ItemType;
 import com.auction.model.user.User;
 import com.auction.repository.AuctionRepository;
 import com.auction.repository.ItemRepository;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /*
  * AuctionService — tầng Service cho Đấu Giá
@@ -127,6 +127,26 @@ public class AuctionService {
     public List<Auction> getAllAuctions() {
         return new ArrayList<>(auctions.values());
     }
+
+    public List<com.auction.model.auction.AuctionListItem> getAuctionListByType(ItemType type) {
+        List<Auction> list = auctionRepository.getAuctionsByItemType(type);
+        List<com.auction.model.auction.AuctionListItem> result = new ArrayList<>();
+        for (Auction auction : list) {
+            if (auction == null || auction.getItem() == null) continue;
+            ItemType category = ItemType.valueOf(auction.getItem().getCategory().toUpperCase());
+            result.add(new com.auction.model.auction.AuctionListItem(
+                    auction.getId(),
+                    auction.getItem().getId(),
+                    auction.getItem().getName(),
+                    category,
+                    auction.getCurrentPrice(),
+                    auction.getStatus(),
+                    auction.getEndTime()
+            ));
+        }
+        return result;
+    }
+
 
     public Auction getAuctionById(int id) throws Exception {
         Auction auction = auctions.get(id);

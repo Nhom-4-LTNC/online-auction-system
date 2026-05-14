@@ -17,7 +17,7 @@
             <Font size="30.0" />
          </font>
       </Label>
-      <Button fx:id="bidButton" layoutX="52.0" layoutY="196.0" mnemonicParsing="false" onAction="#joinBid" text="Tham gia" />
+      <Button fx:id="thamgiaBUtton" layoutX="52.0" layoutY="196.0" mnemonicParsing="false" onAction="#joinAuction" text="Tham gia" />
       <Button fx:id="logoutButton" layoutX="481.0" layoutY="27.0" mnemonicParsing="false" onAction="#logout" text="Logout" />
       <Label layoutX="52.0" layoutY="231.0" text="Tạo sản phẩm">
          <font>

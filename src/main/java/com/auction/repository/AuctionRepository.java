@@ -86,4 +86,21 @@ public class AuctionRepository {
     public synchronized List<Auction> getAllAuctions() {
         return auctions;
     }
+
+    public synchronized List<Auction> getAuctionsByItemType(com.auction.model.item.ItemType type) {
+        List<Auction> result = new ArrayList<>();
+        if (type == null) return result;
+        for (Auction auction : auctions) {
+            if (auction.getItem() == null) continue;
+            String category = auction.getItem().getCategory();
+            if (category == null) continue;
+            // Item.getCategory() hiện là String theo implement của từng Item
+            if (type.name().equalsIgnoreCase(category)) {
+                result.add(auction);
+            }
+        }
+        return result;
+    }
 }
+
+
