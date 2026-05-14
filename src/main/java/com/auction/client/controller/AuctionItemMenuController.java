@@ -1,47 +1,75 @@
 package com.auction.client.controller;
 
+<<<<<<< HEAD
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+=======
+import com.auction.client.Client;
+import com.auction.dto.ArtDTO;
+import com.auction.dto.ElectronicsDTO;
+import com.auction.dto.ItemDTO;
+import com.auction.dto.VehicleDTO;
+>>>>>>> cc1e837 (refactor(controller): remove direct service call)
 import com.auction.model.auction.Auction;
-import com.auction.model.item.ItemType;
 import com.auction.model.user.User;
-import com.auction.service.AuctionService;
+import com.auction.protocol.ActionType;
+import com.auction.protocol.auction.AuctionResponse;
+import com.auction.protocol.auction.CreateAuctionRequest;
+import com.auction.util.SceneUtils;
 import com.auction.util.SessionManager;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Stage;
 
+<<<<<<< HEAD
+=======
+import java.io.IOException;
+
+>>>>>>> cc1e837 (refactor(controller): remove direct service call)
 public class AuctionItemMenuController {
 
-    // Dùng singleton để cả ứng dụng dùng chung một AuctionService
-    private final AuctionService auctionService = AuctionService.getInstance();
+    private final Client client = Client.getInstance();
 
     // --- Trường chung ---
     @FXML TextField startingPriceTF;
     @FXML TextField descriptionTF;
-    @FXML Label    itemTypeLabel;
-    @FXML Button   backButton;
-    @FXML Button   auctionButton;
+    @FXML Label     itemTypeLabel;
+    @FXML Button    backButton;
+    @FXML Button    auctionButton;
 
     String currentType = "Other";
 
     // --- Radio buttons chọn loại sản phẩm ---
     @FXML RadioButton electronicsButton, artButton, vehicleButton, otherButton;
 
+    // --- Electronics ---
+    @FXML AnchorPane electronicsPane;
+    @FXML TextField  electronicsBrandTF;
+    @FXML TextField  warrantyTF;
+
+    // --- Art ---
+    @FXML AnchorPane artPane;
+    @FXML TextField  authorTF;
+    @FXML TextField  genreTF;   // nhập năm sáng tác (yearCreated)
+
+    // --- Vehicle ---
+    @FXML AnchorPane vehiclePane;
+    @FXML TextField  vehicleBrandTF;
+    @FXML TextField  vinTF;
+    @FXML TextField  mileageTF;
+
+    // ----------------------------------------------------------------
+
+    @FXML
     public void onItemSelected(ActionEvent event) {
         electronicsPane.setVisible(electronicsButton.isSelected());
         artPane.setVisible(artButton.isSelected());
@@ -55,53 +83,45 @@ public class AuctionItemMenuController {
         itemTypeLabel.setText(currentType.toUpperCase());
     }
 
-    // TẠO PHIÊN ĐẤU GIÁ — kết nối form với AuctionService
+    @FXML
     public void createAuction(ActionEvent event) {
-        // 1. Lấy user đang đăng nhập
         User currentUser = SessionManager.getInstance().getCurrentUser();
         if (currentUser == null) {
             showAlert("Lỗi", "Vui lòng đăng nhập trước!");
             return;
         }
 
-        // 2. Đọc và kiểm tra giá khởi đầu
+        // 1. Đọc và kiểm tra giá khởi đầu
         double startingPrice;
         try {
             startingPrice = Double.parseDouble(startingPriceTF.getText().trim());
             if (startingPrice <= 0) throw new NumberFormatException();
         } catch (NumberFormatException e) {
-            showAlert("Lỗi", "Giá khởi đầu phải là số dương!");
+            showAlert("Lỗi nhập liệu", "Giá khởi đầu phải là số dương!");
             return;
         }
 
         String description = descriptionTF.getText().trim();
+        String name = description.isEmpty() ? currentType : description;
 
-        // 3. Xây dựng Map thông tin sản phẩm theo từng loại
-        Map<String, Object> itemData = new HashMap<>();
-        // Dùng description làm tên sản phẩm (nếu muốn có tên riêng, thêm TextField vào FXML)
-        itemData.put("name",  description.isEmpty() ? currentType : description);
-        itemData.put("desc",  description);
-        itemData.put("price", startingPrice);
-
-        ItemType itemType;
-
+        // 2. Xây dựng DTO cụ thể theo loại sản phẩm được chọn
+        ItemDTO itemDto;
         try {
             switch (currentType) {
                 case "Electronics" -> {
-                    itemType = ItemType.ELECTRONICS;
-                    itemData.put("brand",    electronicsBrandTF.getText().trim());
-                    itemData.put("warranty", Integer.parseInt(warrantyTF.getText().trim()));
+                    int warranty = Integer.parseInt(warrantyTF.getText().trim());
+                    itemDto = new ElectronicsDTO(name, description, startingPrice,
+                            electronicsBrandTF.getText().trim(), warranty);
                 }
                 case "Art" -> {
-                    itemType = ItemType.ART;
-                    itemData.put("artist", authorTF.getText().trim());
-                    itemData.put("year", Integer.parseInt(genreTF.getText().trim()));
+                    int year = Integer.parseInt(genreTF.getText().trim());
+                    itemDto = new ArtDTO(name, description, startingPrice,
+                            authorTF.getText().trim(), year);
                 }
                 case "Vehicle" -> {
-                    itemType = ItemType.VEHICLE;
-                    itemData.put("brand",   vehicleBrandTF.getText().trim());
-                    itemData.put("vin",     vinTF.getText().trim());
-                    itemData.put("mileage", Integer.parseInt(mileageTF.getText().trim()));
+                    int mileage = Integer.parseInt(mileageTF.getText().trim());
+                    itemDto = new VehicleDTO(name, description, startingPrice,
+                            vehicleBrandTF.getText().trim(), vinTF.getText().trim(), mileage);
                 }
                 default -> {
                     showAlert("Lỗi", "Vui lòng chọn loại sản phẩm!");
@@ -113,35 +133,42 @@ public class AuctionItemMenuController {
             return;
         }
 
-        // 4. Gọi AuctionService để tạo phiên đấu giá
-        try {
-            long now     = System.currentTimeMillis();
-            long endTime = now + 60L * 60 * 1000; // mặc định: phiên kéo dài 1 tiếng
-
-            Auction newAuction = auctionService.createAuction(
-                    currentUser, itemType, itemData,
-                    Auction.DEFAULT_BID_STEP, now, endTime
-            );
-
-            showInfo("Tạo thành công",
-                    "Phiên đấu giá #" + newAuction.getId() + " đã được tạo!\n"
-                    + "Giá khởi đầu: " + startingPrice);
-
-        } catch (Exception e) {
-            showAlert("Lỗi tạo phiên đấu giá", e.getMessage());
+        // 3. Kiểm tra kết nối trước khi gửi
+        if (!client.isConnected()) {
+            showAlert("Lỗi kết nối", "Không thể kết nối tới server. Vui lòng thử lại!");
+            return;
         }
+
+        long now     = System.currentTimeMillis();
+        long endTime = now + 60L * 60 * 1000; // mặc định: phiên kéo dài 1 tiếng
+
+        // 4. Đăng ký xử lý phản hồi từ server
+        client.setOnMessageReceived(response -> {
+            if (response instanceof AuctionResponse auctionResponse) {
+                if (auctionResponse.getResponseType() == ActionType.CREATE_AUCTION_SUCCESS) {
+                    Auction created = auctionResponse.getAuction();
+                    showInfo("Tạo thành công",
+                            "Phiên đấu giá #" + created.getId() + " đã được tạo!\n"
+                            + "Giá khởi đầu: " + created.getStartPrice());
+                } else if (auctionResponse.getResponseType() == ActionType.CREATE_AUCTION_FAILURE) {
+                    showAlert("Tạo phiên thất bại", auctionResponse.getMessage());
+                }
+            }
+        });
+
+        // 5. Gửi yêu cầu tạo phiên đấu giá lên server
+        client.sendMessage(new CreateAuctionRequest(
+                currentUser.getId(), itemDto, Auction.DEFAULT_BID_STEP, now, endTime));
     }
 
+    @FXML
     public void back(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(
-                Objects.requireNonNull(getClass().getResource("/fxml/HomeScreen.fxml")));
-        Parent root = loader.load();
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(root));
-        stage.show();
+        SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
     }
 
-    // HELPER — hiển thị thông báo
+    // ----------------------------------------------------------------
+    // HELPER
+    // ----------------------------------------------------------------
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -158,20 +185,4 @@ public class AuctionItemMenuController {
         alert.setContentText(message);
         alert.showAndWait();
     }
-
-    // --- Electronics ---
-    @FXML AnchorPane electronicsPane;
-    @FXML TextField  electronicsBrandTF;
-    @FXML TextField  warrantyTF;
-
-    // --- Art ---
-    @FXML AnchorPane artPane;
-    @FXML TextField  authorTF;
-    @FXML TextField  genreTF; // nhập năm sáng tác (yearCreated)
-
-    // --- Vehicle ---
-    @FXML AnchorPane vehiclePane;
-    @FXML TextField  vehicleBrandTF;
-    @FXML TextField  vinTF;
-    @FXML TextField  mileageTF;
 }
