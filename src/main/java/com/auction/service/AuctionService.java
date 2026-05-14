@@ -1,5 +1,6 @@
 package com.auction.service;
 
+<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -7,56 +8,71 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+=======
+import com.auction.dto.ItemDTO;
+>>>>>>> 94fae01 (refactor: refactor Repostory layer and Service layer add javadoc)
 import com.auction.exception.InvalidBidException;
 import com.auction.model.BidTransaction;
 import com.auction.model.auction.Auction;
 import com.auction.model.auction.AuctionObserver;
 import com.auction.model.item.Item;
 import com.auction.model.item.ItemFactory;
-import com.auction.model.item.ItemType;
 import com.auction.model.user.User;
 import com.auction.repository.AuctionRepository;
 import com.auction.repository.ItemRepository;
 
+<<<<<<< HEAD
 /*
  * AuctionService — tầng Service cho Đấu Giá
+=======
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+/**
+ * Tầng Service cho nghiệp vụ đấu giá.
+>>>>>>> 94fae01 (refactor: refactor Repostory layer and Service layer add javadoc)
  *
- * Trách nhiệm (thay thế cho AuctionManager cũ):
- *   1. Quản lý danh sách phiên đấu giá trong bộ nhớ (truy cập nhanh)
- *   2. Xử lý nghiệp vụ: tạo phiên, đặt giá, thông báo Observer
- *   3. Lưu dữ liệu xuống file qua Repository
+ * <p>Trách nhiệm chính (SRP — chỉ điều phối luồng nghiệp vụ):
+ * <ul>
+ *   <li>Duy trì cache in-memory ({@code auctions}) để truy cập nhanh.</li>
+ *   <li>Điều phối: tạo phiên, đặt giá, thông báo Observer.</li>
+ *   <li>Đồng bộ dữ liệu xuống DB qua {@link AuctionRepository} và {@link ItemRepository}.</li>
+ * </ul>
+ * Validation đầu vào được uỷ quyền cho {@link AuctionValidator}.</p>
  *
- * Luồng dữ liệu: Controller → AuctionService → AuctionRepository → auction.dat
+ * <p>Luồng dữ liệu: Controller → AuctionService → Repository → Database</p>
  */
 public class AuctionService {
 
-    // Singleton: cả ứng dụng chỉ dùng một instance
     private static volatile AuctionService instance;
 
-    // Lưu phiên đấu giá trong bộ nhớ để truy cập nhanh (key = auction ID)
+    /** Cache in-memory: key = auction ID, truy cập O(1). */
     private final Map<Integer, Auction> auctions = new ConcurrentHashMap<>();
 
-    // Danh sách observer nhận thông báo khi có bid mới (ví dụ: cập nhật UI)
+    /** Danh sách observer nhận thông báo khi trạng thái phiên thay đổi. */
     private final List<AuctionObserver> observers = new CopyOnWriteArrayList<>();
-
-    // Bộ đếm ID tự động tăng, an toàn khi nhiều luồng chạy đồng thời
-    private final AtomicInteger auctionIdCounter = new AtomicInteger(1);
-    private final AtomicInteger itemIdCounter    = new AtomicInteger(1);
 
     private final AuctionRepository auctionRepository = AuctionRepository.getInstance();
     private final ItemRepository    itemRepository    = ItemRepository.getInstance();
 
     private AuctionService() {
-        // Khi khởi động app: load dữ liệu từ file vào bộ nhớ
-        for (Auction auction : auctionRepository.getAllAuctions()) {
-            auctions.put(auction.getId(), auction);
-            // Đảm bảo counter không bị trùng ID với dữ liệu đã lưu
-            if (auction.getId() >= auctionIdCounter.get()) {
-                auctionIdCounter.set(auction.getId() + 1);
+        try {
+            for (Auction auction : auctionRepository.getAllAuctions()) {
+                auctions.put(auction.getId(), auction);
             }
+        } catch (Exception e) {
+            System.err.println("[AuctionService] Không thể tải dữ liệu phiên đấu giá từ DB: " + e.getMessage());
         }
     }
 
+    /**
+     * Trả về instance duy nhất của {@code AuctionService} (double-checked locking).
+     *
+     * @return instance singleton của {@code AuctionService}
+     */
     public static AuctionService getInstance() {
         if (instance == null) {
             synchronized (AuctionService.class) {
@@ -66,63 +82,90 @@ public class AuctionService {
         return instance;
     }
 
-
-    public synchronized Auction createAuction(User seller, ItemType type,
-                                              Map<String, Object> itemData,
+    /**
+     * Tạo một phiên đấu giá mới và lưu vào cơ sở dữ liệu.
+     *
+     * <p>Validation được uỷ quyền cho {@link AuctionValidator}. Thứ tự thực hiện:
+     * <ol>
+     *   <li>Chuẩn hoá {@code startTimeMillis} (mặc định = now nếu {@code <= 0}).</li>
+     *   <li>Validate tham số qua {@link AuctionValidator#validateAuctionParams}.</li>
+     *   <li>Tạo {@link Item} qua {@link ItemFactory} với ID tạm {@code 0}.</li>
+     *   <li>Validate Item qua {@link AuctionValidator#validateItem}.</li>
+     *   <li>Lưu Item vào DB — {@link ItemRepository#addItem} gán ID thật vào object.</li>
+     *   <li>Tạo {@link Auction} từ Item đã có ID thật.</li>
+     *   <li>Lưu Auction vào DB — {@link AuctionRepository#addAuction} gán ID thật vào object.</li>
+     *   <li>Đưa vào cache in-memory.</li>
+     * </ol>
+     * </p>
+     *
+     * @param seller          người bán (đã xác thực); không được {@code null}
+     * @param itemDto         DTO chứa dữ liệu sản phẩm (ElectronicsDTO, ArtDTO, VehicleDTO)
+     * @param bidStep         bước giá tối thiểu; phải lớn hơn {@code 0}
+     * @param startTimeMillis thời điểm bắt đầu (ms epoch); truyền {@code 0} để dùng thời gian hiện tại
+     * @param endTimeMillis   thời điểm kết thúc (ms epoch); phải lớn hơn {@code startTimeMillis}
+     * @return đối tượng {@link Auction} vừa được tạo và lưu
+     * @throws IllegalArgumentException nếu vi phạm quy tắc nghiệp vụ
+     * @throws Exception                nếu xảy ra lỗi DB
+     */
+    public synchronized Auction createAuction(User seller, ItemDTO itemDto,
                                               double bidStep,
                                               long startTimeMillis,
                                               long endTimeMillis) throws Exception {
-        long now = System.currentTimeMillis();
-        if (startTimeMillis <= 0) startTimeMillis = now;
+        if (startTimeMillis <= 0) startTimeMillis = System.currentTimeMillis();
 
-        if (endTimeMillis <= startTimeMillis || endTimeMillis <= now)
-            throw new IllegalArgumentException(
-                    "Thời gian kết thúc phải lớn hơn thời gian bắt đầu và thời điểm hiện tại!");
+        // Validation: uỷ quyền toàn bộ cho AuctionValidator
+        AuctionValidator.validateAuctionParams(startTimeMillis, endTimeMillis, bidStep);
 
-        if (bidStep <= 0)
-            throw new IllegalArgumentException("Bước giá phải lớn hơn 0!");
+        Item newItem = ItemFactory.createItem(itemDto, seller, 0);
+        AuctionValidator.validateItem(newItem);
 
-        // Gắn thông tin bắt buộc vào map trước khi tạo Item
-        itemData.put("owner", seller);
-        itemData.put("id", itemIdCounter.getAndIncrement());
-
-        // Tạo Item qua Factory (phân loại: Electronics / Art / Vehicle)
-        Item newItem = ItemFactory.createItem(type, itemData);
-        if (newItem == null || !newItem.isValid())
-            throw new Exception("Thông tin sản phẩm không hợp lệ!");
-
-        // Tạo Auction với ID mới
-        int newId = auctionIdCounter.getAndIncrement();
-        Auction newAuction = new Auction(newId, newItem, bidStep, startTimeMillis, endTimeMillis);
-
-        // Thêm item vào danh sách của người bán
+        // Lưu Item vào DB → ID thật được set vào newItem
+        itemRepository.addItem(newItem);
         seller.getSellerProfile().addItem(newItem);
 
-        // Lưu vào bộ nhớ (để truy cập nhanh trong phiên làm việc)
-        auctions.put(newId, newAuction);
-
-        // Lưu vào file (để không mất dữ liệu khi tắt app)
-        itemRepository.addItem(newItem);
+        // Tạo Auction dùng Item đã có ID thật, lưu DB → ID thật được set vào newAuction
+        Auction newAuction = new Auction(newItem, bidStep, startTimeMillis, endTimeMillis);
         auctionRepository.addAuction(newAuction);
 
+        auctions.put(newAuction.getId(), newAuction);
         return newAuction;
     }
+
+    /**
+     * Xử lý một lượt đặt giá cho phiên đấu giá.
+     *
+     * <p>Thao tác được đồng bộ hóa trên đối tượng {@link Auction} để tránh race condition
+     * khi nhiều người cùng đặt giá đồng thời.</p>
+     *
+     * @param auctionId ID của phiên đấu giá
+     * @param bidder    người tham gia đặt giá
+     * @param amount    số tiền đặt giá
+     * @throws InvalidBidException nếu giá đặt không hợp lệ (quá thấp, chủ item tự đặt, v.v.)
+     * @throws Exception           nếu không tìm thấy phiên hoặc xảy ra lỗi DB
+     */
     public void placeBid(int auctionId, User bidder, double amount)
             throws InvalidBidException, Exception {
 
         Auction auction = auctions.get(auctionId);
         if (auction == null)
             throw new Exception("Không tìm thấy phiên đấu giá với ID: " + auctionId);
+
         synchronized (auction) {
             BidTransaction txn = auction.placeBid(bidder, amount);
             auctionRepository.updateAuction(auction);
         }
     }
 
+    /**
+     * Trả về danh sách tất cả phiên đấu giá hiện có trong cache.
+     *
+     * @return danh sách {@link Auction}; không bao giờ {@code null}
+     */
     public List<Auction> getAllAuctions() {
         return new ArrayList<>(auctions.values());
     }
 
+<<<<<<< HEAD
     public List<com.auction.model.auction.AuctionListItem> getAuctionListByType(ItemType type) {
         List<Auction> list = auctionRepository.getAuctionsByItemType(type);
         List<com.auction.model.auction.AuctionListItem> result = new ArrayList<>();
@@ -143,6 +186,15 @@ public class AuctionService {
     }
 
 
+=======
+    /**
+     * Tìm phiên đấu giá theo ID trong cache in-memory.
+     *
+     * @param id ID của phiên đấu giá cần tìm
+     * @return đối tượng {@link Auction} tương ứng
+     * @throws Exception nếu không tìm thấy phiên với ID đã cho
+     */
+>>>>>>> 94fae01 (refactor: refactor Repostory layer and Service layer add javadoc)
     public Auction getAuctionById(int id) throws Exception {
         Auction auction = auctions.get(id);
         if (auction == null)
@@ -150,6 +202,17 @@ public class AuctionService {
         return auction;
     }
 
+    /**
+     * Đăng ký một observer để nhận thông báo khi trạng thái phiên đấu giá thay đổi.
+     *
+     * @param observer observer cần đăng ký
+     */
     public void addObserver(AuctionObserver observer)    { observers.add(observer); }
+
+    /**
+     * Huỷ đăng ký một observer.
+     *
+     * @param observer observer cần huỷ
+     */
     public void removeObserver(AuctionObserver observer) { observers.remove(observer); }
 }

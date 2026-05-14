@@ -58,7 +58,7 @@ public class Auction extends Entity {
 
     // METHODS
     public synchronized BidTransaction placeBid(User user, double amount) throws InvalidBidException, AuctionClosedException, InsufficientFundsException {
-        if (getStatus() != AuctionStatus.OPENED) {
+        if (getStatus() != AuctionStatus.RUNNING) {
             throw new AuctionClosedException("Phiên đấu giá đã đóng hoặc chưa mở!");
         }
         BidderProfile profile = user.getBidderProfile();
@@ -87,15 +87,20 @@ public class Auction extends Entity {
         return bidTransaction;
 
     }
-    //STATUS UPDATE
+    // Cập nhật hàm updateStatus() trong Auction.java
     public void updateStatus() {
         long now = System.currentTimeMillis();
+        // Không ghi đè nếu trạng thái đã là PAID hoặc CANCELED (vì đây là trạng thái thủ công)
+        if (this.status == AuctionStatus.PAID || this.status == AuctionStatus.CANCELED) {
+            return;
+        }
+
         if (now < startTime) {
-            this.status = AuctionStatus.INITIALIZED;
-        } else if (now > endTime) {
-            this.status = AuctionStatus.CLOSED;
+            this.status = AuctionStatus.OPEN; // Đang chờ tới giờ
+        } else if (now >= startTime && now <= endTime) {
+            this.status = AuctionStatus.RUNNING; // Đang diễn ra
         } else {
-            this.status = AuctionStatus.OPENED;
+            this.status = AuctionStatus.FINISHED; // Đã kết thúc
         }
     }
     public AuctionStatus getStatus() {
@@ -104,7 +109,7 @@ public class Auction extends Entity {
     }
     //GET WINNER
     public User getWinner() {
-        if (System.currentTimeMillis() > endTime || getStatus() == AuctionStatus.CLOSED) {
+        if (System.currentTimeMillis() > endTime || getStatus() == AuctionStatus.FINISHED) {
                 return lastBidder;
         }
         return null;
