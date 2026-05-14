@@ -78,7 +78,7 @@ public class ItemFactory {
                 }
                 VehicleDTO vehicleDto = (VehicleDTO) dto;
 
-                // Trả về đối tượng Phương tiện
+                // Trả về đối tượng Vehicle
                 return new Vehicle(
                         id,
                         vehicleDto.getName(),
