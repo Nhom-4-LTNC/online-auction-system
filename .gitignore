@@ -16,7 +16,7 @@ gen/
 *.iml
 *.ipr
 *.class
-
+.claude
 ### Eclipse ###
 .apt_generated
 .classpath
