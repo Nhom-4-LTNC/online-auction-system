@@ -42,7 +42,7 @@ public class UserRepository {
                     user.setId(rs.getInt(1));
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[UserRepository - addUser] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi khi thêm người dùng: " + e.getMessage(), e);
         }
@@ -62,7 +62,7 @@ public class UserRepository {
                     return mapResultSetToUser(rs);
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[UserRepository - login] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi hệ thống khi xác thực đăng nhập: " + e.getMessage(), e);
         }
@@ -98,7 +98,7 @@ public class UserRepository {
             if (rowsUpdated == 0) {
                 throw new SQLException("Không tìm thấy người dùng với ID = " + user.getId() + " để cập nhật.");
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[UserRepository - updateUser] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi khi cập nhật thông tin người dùng: " + e.getMessage(), e);
         }
@@ -116,7 +116,7 @@ public class UserRepository {
                     return mapResultSetToUser(rs);
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[UserRepository - getUserByEmail] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi truy xuất cơ sở dữ liệu (Email): " + e.getMessage(), e);
         }
@@ -136,7 +136,7 @@ public class UserRepository {
                     return mapResultSetToUser(rs);
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[UserRepository - getUserByUsername] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi truy xuất cơ sở dữ liệu (Username): " + e.getMessage(), e);
         }
@@ -155,7 +155,7 @@ public class UserRepository {
                     return mapResultSetToUser(rs);
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[UserRepository - getUserById] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi truy xuất cơ sở dữ liệu (ID): " + e.getMessage(), e);
         }
@@ -173,7 +173,7 @@ public class UserRepository {
             while (rs.next()) {
                 users.add(mapResultSetToUser(rs));
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[UserRepository - getAllUsers] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi lấy danh sách người dùng: " + e.getMessage(), e);
         }

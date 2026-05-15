@@ -79,8 +79,8 @@ public class AuctionRepository {
                     auction.setId(generatedKeys.getInt(1));
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("[AuctionDAO - addAuction] Lỗi: " + e.getMessage());
+        } catch (SQLException e) {
+            System.err.println("[AuctionRepository - addAuction] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi khi tạo phiên đấu giá: " + e.getMessage(), e);
         }
     }
@@ -125,8 +125,8 @@ public class AuctionRepository {
                 throw new SQLException("Không tìm thấy phiên đấu giá với ID = " + auction.getId() + " để cập nhật.");
             }
 
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("[AuctionDAO - updateAuction] Lỗi: " + e.getMessage());
+        } catch (SQLException e) {
+            System.err.println("[AuctionRepository - updateAuction] Lỗi: " + e.getMessage());
             throw new Exception("Lỗi khi cập nhật phiên đấu giá: " + e.getMessage(), e);
         }
     }
@@ -170,7 +170,7 @@ public class AuctionRepository {
 
                 list.add(auction);
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[AuctionRepository - getAllAuctions] Lỗi: " + e.getMessage());
             throw new Exception("Không thể tải danh sách phiên đấu giá: " + e.getMessage(), e);
         }
@@ -219,8 +219,8 @@ public class AuctionRepository {
                     return auction;
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("[AuctionDAO - getAuctionById] Lỗi: " + e.getMessage());
+        } catch (SQLException e) {
+            System.err.println("[AuctionRepository - getAuctionById] Lỗi: " + e.getMessage());
             throw new Exception("Không thể lấy dữ liệu phiên đấu giá: " + e.getMessage(), e);
         }
         return null;

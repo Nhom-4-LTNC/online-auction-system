@@ -16,6 +16,7 @@ gen/
 *.iml
 *.ipr
 *.class
+*.env
 .claude
 ### Eclipse ###
 .apt_generated

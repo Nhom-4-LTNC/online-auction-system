@@ -3,7 +3,7 @@ package com.auction.model.auction;
 import com.auction.exception.AuctionClosedException;
 import com.auction.exception.InsufficientFundsException;
 import com.auction.exception.InvalidBidException;
-import com.auction.model.BidTransaction;
+import com.auction.model.Bid;
 import com.auction.model.Entity;
 import com.auction.model.item.Item;
 import com.auction.model.user.BidderProfile;
@@ -28,7 +28,7 @@ public class Auction extends Entity {
     private User lastBidder;
     private double bidStep;
 
-    private final List<BidTransaction> bidHistory = new ArrayList<>();
+    private final List<Bid> bidHistory = new ArrayList<>();
     private AuctionStatus status;
 
     // CONSTRUCTORS
@@ -57,7 +57,7 @@ public class Auction extends Entity {
     }
 
     // METHODS
-    public synchronized BidTransaction placeBid(User user, double amount) throws InvalidBidException, AuctionClosedException, InsufficientFundsException {
+    public synchronized Bid placeBid(User user, double amount) throws InvalidBidException, AuctionClosedException, InsufficientFundsException {
         if (getStatus() != AuctionStatus.RUNNING) {
             throw new AuctionClosedException("Phiên đấu giá đã đóng hoặc chưa mở!");
         }
@@ -81,7 +81,7 @@ public class Auction extends Entity {
         this.currentPrice = amount;
         this.lastBidder = user;
 
-        BidTransaction bidTransaction = new BidTransaction(this.id, user.getId(), user.getUsername(), amount);
+        Bid bidTransaction = new Bid(this.id, user.getId(), amount);
         this.bidHistory.add(bidTransaction);
 
         return bidTransaction;
@@ -157,7 +157,7 @@ public class Auction extends Entity {
         this.item = item;
     }
 
-    public List <BidTransaction> getBidHistory() {
+    public List <Bid> getBidHistory() {
         return new ArrayList<>(bidHistory);
     }
     @Override
