@@ -6,8 +6,8 @@ import java.io.Serializable;
 public class MessageData implements Serializable{
     @Serial
     private static final long serialVersionUID = 4988799950280796440L;
-    private String userName;
-    private double bidAmount;
+    private final String userName;
+    private final double bidAmount;
 
     public MessageData(String userName, double bidAmount) {
         this.userName = userName;
