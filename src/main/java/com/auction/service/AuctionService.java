@@ -2,7 +2,7 @@ package com.auction.service;
 
 import com.auction.dto.ItemDTO;
 import com.auction.exception.InvalidBidException;
-import com.auction.model.BidTransaction;
+import com.auction.model.Bid;
 import com.auction.model.auction.Auction;
 import com.auction.model.auction.AuctionObserver;
 import com.auction.model.item.Item;
@@ -136,7 +136,7 @@ public class AuctionService {
             throw new Exception("Không tìm thấy phiên đấu giá với ID: " + auctionId);
 
         synchronized (auction) {
-            BidTransaction txn = auction.placeBid(bidder, amount);
+            Bid txn = auction.placeBid(bidder, amount);
             auctionRepository.updateAuction(auction);
         }
     }

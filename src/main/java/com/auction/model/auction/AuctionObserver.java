@@ -1,8 +1,8 @@
 package com.auction.model.auction;
 
-import com.auction.model.BidTransaction;
+import com.auction.model.Bid;
 
 public interface AuctionObserver {
-    void onNewBidPlace(BidTransaction transaction);
+    void onNewBidPlace(Bid transaction);
     void onAuctionClosed(Auction auction);
 }

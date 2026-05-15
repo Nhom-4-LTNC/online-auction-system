@@ -112,7 +112,7 @@ public class ItemRepository {
                 }
             }
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[ItemRepository - addItem] Lỗi cơ sở dữ liệu: " + e.getMessage());
             throw new Exception("Lỗi hệ thống khi thêm sản phẩm: " + e.getMessage(), e);
         }
@@ -137,7 +137,7 @@ public class ItemRepository {
                     return mapResultSetToItem(rs);
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[ItemRepository - getItemById] Lỗi cơ sở dữ liệu: " + e.getMessage());
             throw new Exception("Không thể lấy thông tin sản phẩm: " + e.getMessage(), e);
         }
@@ -164,7 +164,7 @@ public class ItemRepository {
                     items.add(mapResultSetToItem(rs));
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[ItemRepository - getItemsByOwnerId] Lỗi cơ sở dữ liệu: " + e.getMessage());
             throw new Exception("Không thể lấy danh sách sản phẩm theo chủ sở hữu: " + e.getMessage(), e);
         }
@@ -188,7 +188,7 @@ public class ItemRepository {
             while (rs.next()) {
                 items.add(mapResultSetToItem(rs));
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("[ItemRepository - getAllItems] Lỗi cơ sở dữ liệu: " + e.getMessage());
             throw new Exception("Không thể lấy danh sách sản phẩm: " + e.getMessage(), e);
         }

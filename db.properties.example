@@ -1,0 +1,4 @@
+# Đổi tên file này thành db.properties và điền thông tin thật vào trước khi chạy app
+db.url=jdbc:mysql://[host]:4000/auction_db?sslMode=VERIFY_IDENTITY&sslTrustStoreLocation=...
+db.user=your_username_here
+db.password=your_password_here
