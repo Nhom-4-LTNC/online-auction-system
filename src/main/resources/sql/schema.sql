@@ -55,13 +55,13 @@ LOCK TABLES `auctions` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `bid_transactions`
+-- Table structure for table `bids`
 --
 
-DROP TABLE IF EXISTS `bid_transactions`;
+DROP TABLE IF EXISTS `bids`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `bid_transactions` (
+CREATE TABLE `bids` (
   `id` int NOT NULL AUTO_INCREMENT,
   `auction_id` int NOT NULL,
   `bidder_id` int NOT NULL,
@@ -76,12 +76,12 @@ CREATE TABLE `bid_transactions` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `bid_transactions`
+-- Dumping data for table `bids`
 --
 
-LOCK TABLES `bid_transactions` WRITE;
-/*!40000 ALTER TABLE `bid_transactions` DISABLE KEYS */;
-/*!40000 ALTER TABLE `bid_transactions` ENABLE KEYS */;
+LOCK TABLES `bids` WRITE;
+/*!40000 ALTER TABLE `bids` DISABLE KEYS */;
+/*!40000 ALTER TABLE `bids` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -144,7 +144,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `email` (`email`),
   KEY `idx_username` (`username`),
   KEY `idx_email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=30001;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=120001;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,6 +153,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (30001,'testuser','test@gmail.com','Test@123',NULL,'USER',0.00,0,0,'2026-05-14 06:12:13'),(60001,'testuser2','test2@gmail.com','Test@123',NULL,'USER',0.00,0,0,'2026-05-14 08:20:54'),(90001,'jumbledtestaccount123','jumbled@gmail.com','@JumbledTestAccount123',NULL,'USER',0.00,0,0,'2026-05-15 06:55:00');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -165,4 +166,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-14 11:55:14
+-- Dump completed on 2026-05-15 15:13:35

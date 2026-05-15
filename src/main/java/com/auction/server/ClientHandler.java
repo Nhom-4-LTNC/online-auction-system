@@ -1,10 +1,10 @@
 package com.auction.server;
 
 import com.auction.model.user.User;
-import com.auction.protocol.AuthResponse;
-import com.auction.protocol.BidMessage;
+import com.auction.protocol.auth.AuthResponse;
+import com.auction.protocol.bid.BidRequest;
 import com.auction.protocol.ActionType;
-import com.auction.protocol.AuthRequest;
+import com.auction.protocol.auth.AuthRequest;
 import com.auction.service.AuctionService;
 import com.auction.service.UserService;
 
@@ -14,8 +14,12 @@ import java.net.*;
 public class ClientHandler implements Runnable {
 
     private Socket socket;
+    ServerController controller;
+
     private ObjectInputStream in;
     private ObjectOutputStream out;
+
+    User currentUser; // Lưu thông tin user đã đăng nhập
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -37,7 +41,7 @@ public class ClientHandler implements Runnable {
 
                 if (data instanceof AuthRequest authRequest) {
                     handleAuthRequest(authRequest);
-                } else if (data instanceof BidMessage bidMessage) {
+                } else if (data instanceof BidRequest bidMessage) {
                     handleBidRequest(bidMessage);
                 }
             }
@@ -78,7 +82,7 @@ public class ClientHandler implements Runnable {
     }
 
     // XỬ LÝ ĐẶT GIÁ
-    private void handleBidRequest(BidMessage bidData) {
+    private void handleBidRequest(BidRequest bidData) {
         try {
             User bidder = UserService.getInstance().getUserById(bidData.getUserId());
             AuctionService.getInstance().placeBid(bidData.getAuctionId(), bidder, bidData.getAmount());
