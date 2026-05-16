@@ -25,7 +25,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 
-public class AuctionMenuController {
+public class
+AuctionMenuController {
 
     private final AuctionService auctionService = AuctionService.getInstance();
 
