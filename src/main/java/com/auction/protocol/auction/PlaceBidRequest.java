@@ -1,9 +1,9 @@
-package com.auction.protocol.bid;
+package com.auction.protocol.auction;
 
 import java.io.Serial;
 import java.io.Serializable;
 
-public class BidRequest implements Serializable {
+public class PlaceBidRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -11,7 +11,7 @@ public class BidRequest implements Serializable {
     private final int userId;
     private final double amount;
 
-    public BidRequest(int auctionId, int user, double amount) {
+    public PlaceBidRequest(int auctionId, int user, double amount) {
         this.auctionId = auctionId;
         this.userId = user;
         this.amount = amount;

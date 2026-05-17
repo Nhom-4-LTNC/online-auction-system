@@ -2,7 +2,7 @@ package com.auction.server;
 
 import com.auction.model.user.User;
 import com.auction.protocol.auth.AuthResponse;
-import com.auction.protocol.bid.BidRequest;
+import com.auction.protocol.auction.PlaceBidRequest;
 import com.auction.protocol.ActionType;
 import com.auction.protocol.auth.AuthRequest;
 import com.auction.service.AuctionService;
@@ -41,7 +41,7 @@ public class ClientHandler implements Runnable {
 
                 if (data instanceof AuthRequest authRequest) {
                     handleAuthRequest(authRequest);
-                } else if (data instanceof BidRequest bidMessage) {
+                } else if (data instanceof PlaceBidRequest bidMessage) {
                     handleBidRequest(bidMessage);
                 }
             }
@@ -82,7 +82,7 @@ public class ClientHandler implements Runnable {
     }
 
     // XỬ LÝ ĐẶT GIÁ
-    private void handleBidRequest(BidRequest bidData) {
+    private void handleBidRequest(PlaceBidRequest bidData) {
         try {
             User bidder = UserService.getInstance().getUserById(bidData.getUserId());
             AuctionService.getInstance().placeBid(bidData.getAuctionId(), bidder, bidData.getAmount());
