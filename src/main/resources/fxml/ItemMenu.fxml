@@ -20,19 +20,19 @@
             <Font size="23.0" />
          </font>
       </Label>
-      <RadioButton fx:id="electronicsButton" layoutX="44.0" layoutY="171.0" mnemonicParsing="false" onAction="#onItemSelected" text="Electronics">
+      <RadioButton fx:id="electronicsButton" layoutX="44.0" layoutY="171.0" mnemonicParsing="false" onAction="#onItemSelected" selected="true" text="Electronics">
          <toggleGroup>
             <ToggleGroup fx:id="itemType" />
          </toggleGroup>
       </RadioButton>
       <RadioButton fx:id="artButton" layoutX="44.0" layoutY="200.0" mnemonicParsing="false" onAction="#onItemSelected" text="Art" toggleGroup="$itemType" />
       <RadioButton fx:id="vehicleButton" layoutX="44.0" layoutY="229.0" mnemonicParsing="false" onAction="#onItemSelected" text="Vehicle" toggleGroup="$itemType" />
-      <RadioButton fx:id="otherButton" layoutX="44.0" layoutY="257.0" mnemonicParsing="false" onAction="#onItemSelected" selected="true" text="Other" toggleGroup="$itemType" />
+      <RadioButton fx:id="otherButton" layoutX="44.0" layoutY="257.0" mnemonicParsing="false" onAction="#onItemSelected" text="Other" toggleGroup="$itemType" />
       <Button fx:id="auctionButton" layoutX="48.0" layoutY="349.0" mnemonicParsing="false" onAction="#createAuction" text="AUCTION ITEM" />
       <AnchorPane fx:id="artPane" layoutX="266.0" layoutY="108.0" prefHeight="254.0" prefWidth="276.0" visible="false">
          <children>
-            <TextField fx:id="authorTF" layoutX="25.0" layoutY="110.0" promptText="Author" />
-            <TextField fx:id="genreTF" layoutX="25.0" layoutY="139.0" promptText="Genre" />
+            <TextField fx:id="authorTF" layoutX="25.0" layoutY="127.0" promptText="Author" />
+            <TextField fx:id="genreTF" layoutX="25.0" layoutY="153.0" promptText="Genre" />
          </children>
       </AnchorPane>
       <AnchorPane fx:id="vehiclePane" layoutX="266.0" layoutY="108.0" prefHeight="254.0" prefWidth="276.0" visible="false">
@@ -48,9 +48,9 @@
             <TextField fx:id="warrantyTF" layoutX="15.0" layoutY="114.0" promptText="Warranty" />
          </children>
       </AnchorPane>
-      <TextField fx:id="startingPriceTF" layoutX="47.0" layoutY="290.0" promptText="Starting Price" />
-      <TextField fx:id="descriptionTF" layoutX="47.0" layoutY="322.0" promptText="Description" />
-      <Label fx:id="itemTypeLabel" layoutX="280.0" layoutY="94.0" prefHeight="51.0" prefWidth="246.0" text="ITEM_NAME">
+      <TextField fx:id="startingPriceTF" layoutX="280.0" layoutY="151.0" promptText="Starting Price" />
+      <TextField fx:id="descriptionTF" layoutX="280.0" layoutY="183.0" promptText="Description" />
+      <Label fx:id="itemTypeLabel" layoutX="280.0" layoutY="94.0" prefHeight="51.0" prefWidth="246.0" text="ELECTRONICS">
          <font>
             <Font size="32.0" />
          </font>

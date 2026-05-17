@@ -16,9 +16,9 @@ public class Server {
 
             while (true) {
                 try {
-                    Socket clienSocket = serverSocket.accept();
-                    System.out.println("Server: Client ket noi tu IP: "+clienSocket.getInetAddress());
-                    ClientHandler handler = new ClientHandler(clienSocket);
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("Server: Client ket noi tu IP: "+clientSocket.getInetAddress());
+                    ClientHandler handler = new ClientHandler(clientSocket);
                     clients.add(handler);
                     new Thread(handler).start();
                 } catch (IOException e) {
