@@ -53,6 +53,20 @@ public class AuctionRepository {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
+            /*
+            Auction ID,
+            Start Price,
+            Bid Step,
+            Current Price,
+            Last Bidder,
+
+            Auction StartTime,
+            Auction EndTime,
+            Auction Status
+
+            Winner ID (defeault null)
+             */
+
             pstmt.setInt(1, auction.getItem().getId());
             pstmt.setDouble(2, auction.getStartPrice());
             pstmt.setDouble(3, auction.getBidStep());
