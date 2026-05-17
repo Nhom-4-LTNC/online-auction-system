@@ -1,9 +1,13 @@
 package com.auction.server;
 
+import com.auction.dto.ItemDTO;
+import com.auction.model.auction.Auction;
 import com.auction.model.user.User;
 import com.auction.protocol.auth.AuthResponse;
 import com.auction.protocol.auction.PlaceBidRequest;
 import com.auction.protocol.ActionType;
+import com.auction.protocol.auction.CreateAuctionRequest;
+import com.auction.protocol.auction.PlaceBidRequest;
 import com.auction.protocol.auth.AuthRequest;
 import com.auction.service.AuctionService;
 import com.auction.service.UserService;
@@ -43,6 +47,8 @@ public class ClientHandler implements Runnable {
                     handleAuthRequest(authRequest);
                 } else if (data instanceof PlaceBidRequest bidMessage) {
                     handleBidRequest(bidMessage);
+                } else if (data instanceof CreateAuctionRequest  newAuctionRequest) {
+                    handleCreateAuctionRequest(newAuctionRequest);
                 }
             }
         } catch (EOFException e) {
@@ -79,6 +85,20 @@ public class ClientHandler implements Runnable {
                 sendData(new AuthResponse(ActionType.REGISTER_FAILURE, null, "Đăng ký thất bại: " + e.getMessage()));
             }
         }
+    }
+
+    // XỬ LÝ TẠO AUCTION
+    public void handleCreateAuctionRequest(CreateAuctionRequest request) throws Exception {
+        int sellerID = request.getSellerId();
+        User seller = UserService.getInstance().getUserById(sellerID);
+        Auction newAuction = AuctionService.getInstance().createAuction(
+                seller,
+                request.getItemDto(),
+                request.getBidStep(),
+                request.getStartTimeMillis(),
+                request.getEndTimeMillis()
+        );
+        System.out.println("CREATED AUCTION FROM SELLER " + seller.getUsername());
     }
 
     // XỬ LÝ ĐẶT GIÁ

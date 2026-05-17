@@ -67,6 +67,8 @@ public class AuctionService {
         return instance;
     }
 
+
+
     /**
      * Tạo một phiên đấu giá mới và lưu vào cơ sở dữ liệu.
      *

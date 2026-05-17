@@ -174,7 +174,7 @@ Mật khẩu người dùng được lưu thẳng xuống DB mà không qua băm
 
 #### File protocol bị trùng lặp
 Có hai phiên bản của `AuthRequest` và `AuthResponse`:
-- `com.auction.protocol.AuthRequest` ← cái này đang được dùng
+- `com.auction.protocol.auth.AuthRequest` ← cái này đang được dùng
 - `com.auction.protocol.auth.AuthRequest` ← bản copy không dùng đến
 
 Tương tự với `CreateAuctionRequest` ở `protocol/` (bản rỗng) và `protocol/auction/` (bản đầy đủ).
