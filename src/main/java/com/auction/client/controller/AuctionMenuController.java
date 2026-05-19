@@ -122,6 +122,7 @@ public class AuctionMenuController {
     public void handleBack(ActionEvent event) {
         try{
             SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
+            
         }catch(IOException e){
         }
     }
