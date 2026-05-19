@@ -3,19 +3,18 @@ package com.auction.client.controller;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 import com.auction.model.auction.AuctionListItem;
 import com.auction.model.auction.AuctionStatus;
 import com.auction.model.item.ItemType;
 import com.auction.service.AuctionService;
+import com.auction.util.SceneUtils;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -25,8 +24,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 
-public class
-AuctionMenuController {
+public class AuctionMenuController {
 
     private final AuctionService auctionService = AuctionService.getInstance();
 
@@ -48,8 +46,6 @@ AuctionMenuController {
         vehicleButton.setToggleGroup(group);
         electronicsButton.setSelected(true);
 
-
-
         electronicsButton.setUserData(ItemType.ELECTRONICS);
         artButton.setUserData(ItemType.ART);
         vehicleButton.setUserData(ItemType.VEHICLE);
@@ -63,17 +59,54 @@ AuctionMenuController {
             }
         });
 
-        auctionListView.setCellFactory(lv -> new ListCell<>() {
-            @Override
-            protected void updateItem(AuctionListItem item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    AuctionStatus st = item.getStatus();
-                    setText("#" + item.getAuctionId() + " | " + item.getItemName() + " | " + item.getCurrentPrice() + " | " + (st == null ? "" : st));
+        auctionListView.setCellFactory(lv -> {
+            ListCell<AuctionListItem> cell = new ListCell<>() {
+                @Override
+                protected void updateItem(AuctionListItem item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        AuctionStatus st = item.getStatus();
+                        setText("#" + item.getAuctionId() + " | " + item.getItemName() + " | "
+                                + item.getCurrentPrice() + " | " + (st == null ? "" : st));
+                    }
                 }
-            }
+            };
+
+            // Click trực tiếp lên cell (không phụ thuộc selection change)
+            cell.setOnMouseClicked(e -> {
+                if (cell.isEmpty()) return;
+
+                AuctionListItem selected = cell.getItem();
+                if (selected == null) return;
+
+                try {
+                    var url = getClass().getResource("/fxml/ItemAuction.fxml");
+                    if (url == null) {
+                        System.err.println("[AuctionMenuController] Resource not found: /fxml/ItemAuction.fxml");
+                        return;
+                    }
+
+                    FXMLLoader loader = new FXMLLoader(url);
+                    Parent root = loader.load();
+
+                    ItemAuctionController controller = loader.getController();
+                    if (controller != null) {
+                        controller.setAuctionId(selected.getAuctionId());
+                    }
+
+                    Stage stage = (Stage) auctionListView.getScene().getWindow();
+                    stage.setScene(new Scene(root));
+                    stage.show();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                } catch (RuntimeException ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+            return cell;
         });
 
         load();
@@ -82,19 +115,14 @@ AuctionMenuController {
         backButton.setOnAction(this::handleBack);
     }
 
-    private void handleRefresh(ActionEvent event) {
+    public void handleRefresh(ActionEvent event) {
         load();
     }
 
-    private void handleBack(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/fxml/HomeScreen.fxml")));
-            Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            // ignore for now
+    public void handleBack(ActionEvent event) {
+        try{
+            SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
+        }catch(IOException e){
         }
     }
 

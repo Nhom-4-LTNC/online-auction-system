@@ -7,10 +7,10 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.AuctionMenuController">
+<AnchorPane prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AuctionMenuController">
 
     <children>
-        <Label layoutX="230.0" layoutY="24.0" prefWidth="240.0" text="DANH SÁCH ĐẤU GIÁ">
+        <Label layoutX="207.0" layoutY="22.0" prefHeight="30.0" prefWidth="285.0" text="DANH SÁCH ĐẤU GIÁ">
             <font>
                 <Font size="28.0" />
             </font>
@@ -28,7 +28,7 @@
 
         <ListView fx:id="auctionListView" layoutX="230.0" layoutY="110.0" prefHeight="330.0" prefWidth="430.0" />
 
-        <Button fx:id="refreshButton" layoutX="230.0" layoutY="455.0" mnemonicParsing="false" text="Refresh" />
-        <Button fx:id="backButton" layoutX="340.0" layoutY="455.0" mnemonicParsing="false" text="Back" />
+        <Button fx:id="refreshButton" layoutX="230.0" layoutY="455.0" mnemonicParsing="false" onAction="#handleRefresh" text="Refresh" />
+        <Button fx:id="backButton" layoutX="340.0" layoutY="455.0" mnemonicParsing="false" onAction="#handleBack" text="Back" />
     </children>
 </AnchorPane>

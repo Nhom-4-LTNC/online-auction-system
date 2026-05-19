@@ -10,15 +10,12 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 public class HomeController {
-    @FXML
-    private Button logoutButton, thamgiaBUtton;
     @FXML
     private AnchorPane scenePane;
 
@@ -27,7 +24,7 @@ public class HomeController {
     Parent root;
 
     public void joinBid(ActionEvent event) throws IOException{
-        SceneUtils.switchScene(event, "AC.fxml");
+        SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
     }
 
     public void createItem(ActionEvent event) throws IOException {
@@ -47,9 +44,6 @@ public class HomeController {
             SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
 
         }
-    }
-    public void joinAuction(ActionEvent event) throws IOException{
-        SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
     }
 
     // DISPLAY

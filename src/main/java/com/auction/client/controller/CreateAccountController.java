@@ -1,14 +1,11 @@
 package com.auction.client.controller;
 
-<<<<<<< HEAD
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
-=======
 import com.auction.client.Client;
->>>>>>> cc1e837 (refactor(controller): remove direct service call)
 import com.auction.model.user.User;
 import com.auction.protocol.ActionType;
 import com.auction.protocol.AuthRequest;

@@ -1,18 +1,12 @@
 package com.auction.client.controller;
 
-<<<<<<< HEAD
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
-=======
 import com.auction.client.Client;
 import com.auction.dto.ArtDTO;
 import com.auction.dto.ElectronicsDTO;
 import com.auction.dto.ItemDTO;
 import com.auction.dto.VehicleDTO;
->>>>>>> cc1e837 (refactor(controller): remove direct service call)
 import com.auction.model.auction.Auction;
 import com.auction.model.user.User;
 import com.auction.protocol.ActionType;
@@ -30,11 +24,6 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 
-<<<<<<< HEAD
-=======
-import java.io.IOException;
-
->>>>>>> cc1e837 (refactor(controller): remove direct service call)
 public class AuctionItemMenuController {
 
     private final Client client = Client.getInstance();
@@ -42,9 +31,9 @@ public class AuctionItemMenuController {
     // --- Trường chung ---
     @FXML TextField startingPriceTF;
     @FXML TextField descriptionTF;
-    @FXML Label     itemTypeLabel;
-    @FXML Button    backButton;
-    @FXML Button    auctionButton;
+    @FXML Label itemTypeLabel;
+    @FXML Button backButton;
+    @FXML Button auctionButton;
 
     String currentType = "Other";
 
@@ -53,19 +42,19 @@ public class AuctionItemMenuController {
 
     // --- Electronics ---
     @FXML AnchorPane electronicsPane;
-    @FXML TextField  electronicsBrandTF;
-    @FXML TextField  warrantyTF;
+    @FXML TextField electronicsBrandTF;
+    @FXML TextField warrantyTF;
 
     // --- Art ---
     @FXML AnchorPane artPane;
-    @FXML TextField  authorTF;
-    @FXML TextField  genreTF;   // nhập năm sáng tác (yearCreated)
+    @FXML TextField authorTF;
+    @FXML TextField genreTF;   // nhập năm sáng tác (yearCreated)
 
     // --- Vehicle ---
     @FXML AnchorPane vehiclePane;
-    @FXML TextField  vehicleBrandTF;
-    @FXML TextField  vinTF;
-    @FXML TextField  mileageTF;
+    @FXML TextField vehicleBrandTF;
+    @FXML TextField vinTF;
+    @FXML TextField mileageTF;
 
     // ----------------------------------------------------------------
 
@@ -75,10 +64,10 @@ public class AuctionItemMenuController {
         artPane.setVisible(artButton.isSelected());
         vehiclePane.setVisible(vehicleButton.isSelected());
 
-        if      (electronicsButton.isSelected()) currentType = "Electronics";
-        else if (artButton.isSelected())         currentType = "Art";
-        else if (vehicleButton.isSelected())     currentType = "Vehicle";
-        else                                     currentType = "Other";
+        if (electronicsButton.isSelected()) currentType = "Electronics";
+        else if (artButton.isSelected()) currentType = "Art";
+        else if (vehicleButton.isSelected()) currentType = "Vehicle";
+        else currentType = "Other";
 
         itemTypeLabel.setText(currentType.toUpperCase());
     }
@@ -139,20 +128,22 @@ public class AuctionItemMenuController {
             return;
         }
 
-        long now     = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
         long endTime = now + 60L * 60 * 1000; // mặc định: phiên kéo dài 1 tiếng
 
         // 4. Đăng ký xử lý phản hồi từ server
+        // Lưu ý: setOnMessageReceived bị ghi đè mỗi lần mở màn hình/gọi action.
+        // Ít nhất: bỏ qua các response không liên quan tới “create auction”.
         client.setOnMessageReceived(response -> {
-            if (response instanceof AuctionResponse auctionResponse) {
-                if (auctionResponse.getResponseType() == ActionType.CREATE_AUCTION_SUCCESS) {
-                    Auction created = auctionResponse.getAuction();
-                    showInfo("Tạo thành công",
-                            "Phiên đấu giá #" + created.getId() + " đã được tạo!\n"
-                            + "Giá khởi đầu: " + created.getStartPrice());
-                } else if (auctionResponse.getResponseType() == ActionType.CREATE_AUCTION_FAILURE) {
-                    showAlert("Tạo phiên thất bại", auctionResponse.getMessage());
-                }
+            if (!(response instanceof AuctionResponse auctionResponse)) return;
+
+            if (auctionResponse.getResponseType() == ActionType.CREATE_AUCTION_SUCCESS) {
+                Auction created = auctionResponse.getAuction();
+                showInfo("Tạo thành công",
+                        "Phiên đấu giá #" + created.getId() + " đã được tạo!\n"
+                                + "Giá khởi đầu: " + created.getStartPrice());
+            } else if (auctionResponse.getResponseType() == ActionType.CREATE_AUCTION_FAILURE) {
+                showAlert("Tạo phiên thất bại", auctionResponse.getMessage());
             }
         });
 
@@ -186,3 +177,4 @@ public class AuctionItemMenuController {
         alert.showAndWait();
     }
 }
+

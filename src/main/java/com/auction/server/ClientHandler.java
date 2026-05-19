@@ -1,17 +1,23 @@
 package com.auction.server;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
 import com.auction.model.user.User;
-import com.auction.protocol.AuthResponse;
-import com.auction.protocol.BidMessage;
 import com.auction.protocol.ActionType;
 import com.auction.protocol.AuthRequest;
+import com.auction.protocol.AuthResponse;
+import com.auction.protocol.BidMessage;
+import com.auction.protocol.auction.AuctionResponse;
+import com.auction.protocol.auction.CreateAuctionRequest;
 import com.auction.service.AuctionService;
 import com.auction.service.UserService;
 
-import java.io.*;
-import java.net.*;
-
 public class ClientHandler implements Runnable {
+
 
     private Socket socket;
     private ObjectInputStream in;
@@ -37,9 +43,12 @@ public class ClientHandler implements Runnable {
 
                 if (data instanceof AuthRequest authRequest) {
                     handleAuthRequest(authRequest);
+                } else if (data instanceof CreateAuctionRequest createReq) {
+                    handleCreateAuctionRequest(createReq);
                 } else if (data instanceof BidMessage bidMessage) {
                     handleBidRequest(bidMessage);
                 }
+
             }
         } catch (EOFException e) {
             System.out.println("Client ngắt kết nối bình thường");
@@ -77,8 +86,31 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    // XỬ LÝ TẠO PHIÊN ĐẤU GIÁ
+    private void handleCreateAuctionRequest(CreateAuctionRequest request) {
+        try {
+            User seller = UserService.getInstance().getUserById(request.getSellerId());
+            AuctionService auctionService = AuctionService.getInstance();
+
+            var auction = auctionService.createAuction(
+                    seller,
+                    request.getItemDto(),
+                    request.getBidStep(),
+                    request.getStartTimeMillis(),
+                    request.getEndTimeMillis()
+            );
+
+            sendData(new AuctionResponse(ActionType.CREATE_AUCTION_SUCCESS, auction,
+                    "Tạo phiên thành công!"));
+        } catch (Exception e) {
+            System.out.println("Tạo phiên thất bại: " + e.getMessage());
+            sendData(new AuctionResponse(ActionType.CREATE_AUCTION_FAILURE, null, e.getMessage()));
+        }
+    }
+
     // XỬ LÝ ĐẶT GIÁ
     private void handleBidRequest(BidMessage bidData) {
+
         try {
             User bidder = UserService.getInstance().getUserById(bidData.getUserId());
             AuctionService.getInstance().placeBid(bidData.getAuctionId(), bidder, bidData.getAmount());

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.auction.dto.ItemDTO;
 import com.auction.exception.InvalidBidException;
@@ -18,7 +17,6 @@ import com.auction.model.item.ItemType;
 import com.auction.model.user.User;
 import com.auction.repository.AuctionRepository;
 import com.auction.repository.ItemRepository;
-import com.google.protobuf.Service;
 
 /*
  * AuctionService — tầng Service cho Đấu Giá
@@ -162,7 +160,7 @@ public class AuctionService {
     public List<Auction> getAllAuctions() {
         return new ArrayList<>(auctions.values());
     }
-    
+
     /**
      * Tìm phiên đấu giá theo ID trong cache in-memory.
      *
@@ -190,4 +188,47 @@ public class AuctionService {
      * @param observer observer cần huỷ
      */
     public void removeObserver(AuctionObserver observer) { observers.remove(observer); }
+
+    /**
+     * Lấy danh sách các phiên đấu giá theo loại {@link ItemType}.
+     *
+     * <p>Hiện tại phần UI (AuctionMenuController) cần danh sách dạng {@link AuctionListItem} để render.</p>
+     *
+     * @param type loại sản phẩm
+     * @return danh sách AuctionListItem (không null)
+     */
+    public List<com.auction.model.auction.AuctionListItem> getAuctionListByType(ItemType type) {
+        // Lấy từ cache in-memory để tránh truy DB mỗi lần đổi tab/refresh.
+        List<com.auction.model.auction.AuctionListItem> result = new ArrayList<>();
+        for (Auction auction : auctions.values()) {
+            if (auction == null || auction.getItem() == null) continue;
+
+            // Item class hiện tại expose category dạng String ("Electronics"/"Art"/"Vehicle").
+            if (auction.getItem().getCategory() != null && auction.getItem().getCategory().equalsIgnoreCase(type.name())) {
+                // getStatus() có thể thay đổi theo thời gian nên gọi trực tiếp.
+                // Trường category trong AuctionListItem là ItemType, suy ra từ String category hiện có trên Item.
+                // Nếu category không khớp enum (DB/client sai), tránh crash bằng fallback.
+                com.auction.model.item.ItemType itemType;
+                try {
+                    itemType = ItemType.valueOf(auction.getItem().getCategory().toUpperCase());
+                } catch (IllegalArgumentException ex) {
+                    itemType = type;
+                }
+
+                result.add(new com.auction.model.auction.AuctionListItem(
+                        auction.getId(),
+                        auction.getItem().getId(),
+                        auction.getItem().getName(),
+                        itemType,
+                        auction.getCurrentPrice(),
+                        auction.getStatus(),
+                        auction.getEndTime()
+                ));
+
+            }
+
+        }
+        return result;
+    }
 }
+
