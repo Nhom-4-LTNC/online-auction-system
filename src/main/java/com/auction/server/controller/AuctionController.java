@@ -1,16 +1,16 @@
 package com.auction.server.controller;
 
-import com.auction.dto.AuctionDetailDTO;
-import com.auction.dto.AuctionSummaryDTO;
-import com.auction.dto.BidDTO;
-import com.auction.exception.AuctionAppException;
-import com.auction.protocol.ActionType;
-import com.auction.protocol.Request;
-import com.auction.protocol.Response;
-import com.auction.protocol.auction.*;
-import com.auction.server.ClientHandler;
-import com.auction.service.AuctionService;
-import com.auction.service.BidService;
+import com.auction.shared.dto.AuctionDetailDTO;
+import com.auction.shared.dto.AuctionSummaryDTO;
+import com.auction.shared.dto.BidDTO;
+import com.auction.shared.exception.AuctionAppException;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.auction.*;
+import com.auction.server.network.ClientHandler;
+import com.auction.server.service.AuctionService;
+import com.auction.server.service.BidService;
 
 import java.util.List;
 

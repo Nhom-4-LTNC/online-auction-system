@@ -1,15 +1,15 @@
 package com.auction.server.controller;
 
-import com.auction.dto.UserDTO;
-import com.auction.exception.AuctionAppException;
-import com.auction.protocol.ActionType;
-import com.auction.protocol.Request;
-import com.auction.protocol.Response;
-import com.auction.protocol.auth.AuthResponse;
-import com.auction.protocol.auth.LoginRequest;
-import com.auction.protocol.auth.RegisterRequest;
-import com.auction.server.ClientHandler;
-import com.auction.service.AuthService;
+import com.auction.shared.dto.UserDTO;
+import com.auction.shared.exception.AuctionAppException;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.auth.AuthResponse;
+import com.auction.shared.protocol.auth.LoginRequest;
+import com.auction.shared.protocol.auth.RegisterRequest;
+import com.auction.server.network.ClientHandler;
+import com.auction.server.service.AuthService;
 
 /**
  * Controller chịu trách nhiệm xử lý các luồng liên quan đến Xác thực người dùng

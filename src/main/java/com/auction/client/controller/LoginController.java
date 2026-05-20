@@ -1,14 +1,14 @@
 package com.auction.client.controller;
 
-import com.auction.client.Client;
-import com.auction.dto.UserDTO;
-import com.auction.protocol.ActionType;
-import com.auction.protocol.Request;
-import com.auction.protocol.Response;
-import com.auction.protocol.auth.AuthResponse;
-import com.auction.protocol.auth.LoginRequest;
-import com.auction.util.SceneUtils;
-import com.auction.util.SessionManager;
+import com.auction.client.network.Client;
+import com.auction.shared.dto.UserDTO;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.auth.AuthResponse;
+import com.auction.shared.protocol.auth.LoginRequest;
+import com.auction.shared.util.SceneUtils;
+import com.auction.shared.util.SessionManager;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

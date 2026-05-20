@@ -1,7 +1,7 @@
 package com.auction.client.controller;
 
-import com.auction.util.Check;
-import com.auction.util.SceneUtils;
+import com.auction.shared.util.Check;
+import com.auction.shared.util.SceneUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;

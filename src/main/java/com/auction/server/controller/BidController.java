@@ -1,16 +1,16 @@
 package com.auction.server.controller;
 
-import com.auction.dto.AuctionDetailDTO;
-import com.auction.dto.BidDTO;
-import com.auction.model.Bid;
-import com.auction.model.auction.Auction;
-import com.auction.protocol.ActionType;
-import com.auction.protocol.Request;
-import com.auction.protocol.Response;
-import com.auction.protocol.bid.*;
-import com.auction.server.ClientHandler;
-import com.auction.service.AuctionService;
-import com.auction.service.BidService;
+import com.auction.shared.dto.AuctionDetailDTO;
+import com.auction.shared.dto.BidDTO;
+import com.auction.server.model.Bid;
+import com.auction.server.model.auction.Auction;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.bid.*;
+import com.auction.server.network.ClientHandler;
+import com.auction.server.service.AuctionService;
+import com.auction.server.service.BidService;
 
 import java.util.List;
 
@@ -102,7 +102,7 @@ public class BidController {
         }
     }
 
-    public Response <GetBidHistoryResponse> handleGetRecentBids(ClientHandler client) {
+    public Response <GetBidHistoryResponse> handleGetCurrentUserBids(ClientHandler client) {
         List <Bid> bids = bidService.getBidsByBidder(client.getCurrentUser().getId());
         List <BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
 
