@@ -1,24 +1,23 @@
 package com.auction.protocol;
 
-public enum ActionType {
-    //REQUEST
+import java.io.Serializable;
+
+public enum ActionType implements Serializable {
     LOGIN,
     REGISTER,
-    PLACE_BID,
+    LOGOUT,
+
     CREATE_AUCTION,
-    GET_AUCTION_LIST,
-    //RESPONSE
-    LOGIN_SUCCESS,
-    LOGIN_FAILURE,
-    REGISTER_SUCCESS,
-    REGISTER_FAILURE,
-    PLACE_BID_SUCCESS,
-    PLACE_BID_FAILURE,
-    CREATE_AUCTION_SUCCESS,
-    CREATE_AUCTION_FAILURE,
+    GET_ALL_AUCTIONS,
+    GET_AUCTION,
+    CLOSE_AUCTION,
+
+    PLACE_BID,
+    GET_BIDS_BY_AUCTION,
+    GET_BIDS_BY_BIDDER,
+    GET_MY_BIDS,
+
+    AUCTION_CREATED,
     AUCTION_CLOSED,
-    NOTIFY_NEW_BID,
-    //COMMON
-    ERROR,
-    SUCCESS
+    AUCTION_UPDATED,
 }

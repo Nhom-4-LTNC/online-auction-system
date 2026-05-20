@@ -1,18 +1,20 @@
 package com.auction.client.controller;
 
 import com.auction.client.Client;
-import com.auction.model.user.User;
+import com.auction.dto.UserDTO;
 import com.auction.protocol.ActionType;
-import com.auction.protocol.auth.AuthRequest;
+import com.auction.protocol.Request;
+import com.auction.protocol.Response;
 import com.auction.protocol.auth.AuthResponse;
+import com.auction.protocol.auth.RegisterRequest;
 import com.auction.util.Check;
 import com.auction.util.SceneUtils;
 import com.auction.util.SessionManager;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -31,64 +33,58 @@ public class CreateAccountController implements Initializable {
 
     private final Client client = Client.getInstance();
 
-    @FXML Button   Create;
-    @FXML TextField passTextField;
-    @FXML TextField emailTextField;
-    @FXML TextField nameTextField;
+    @FXML private Button Create;
+    @FXML private TextField passTextField;
+    @FXML private TextField emailTextField;
+    @FXML private TextField nameTextField;
 
-    @FXML ImageView pwdReqNumber, pwdReqUpper, pwdReqLower, pwdReqSpecialChar, pwdReqNoWhites;
+    @FXML private ImageView pwdReqNumber;
+    @FXML private ImageView pwdReqUpper;
+    @FXML private ImageView pwdReqLower;
+    @FXML private ImageView pwdReqSpecialChar;
+    @FXML private ImageView pwdReqNoWhites;
 
-    Image validIcon   = new Image(getClass().getResource("/picture/validIcon.png").toExternalForm());
-    Image invalidIcon = new Image(getClass().getResource("/picture/invalidIcon.png").toExternalForm());
+    private final Image validIcon =
+            new Image(getClass().getResource("/picture/validIcon.png").toExternalForm());
+
+    private final Image invalidIcon =
+            new Image(getClass().getResource("/picture/invalidIcon.png").toExternalForm());
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Kết nối tới server (idempotent — an toàn nếu đã kết nối từ màn hình đăng nhập)
         client.connect();
 
-        // Cập nhật icon kiểm tra mật khẩu theo thời gian thực
-        passTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            ArrayList<Boolean> pwdRequirements = Check.checkPassRequirements(newValue);
-            setPwdReqImage(pwdReqNumber,      pwdRequirements.get(0));
-            setPwdReqImage(pwdReqLower,       pwdRequirements.get(1));
-            setPwdReqImage(pwdReqUpper,       pwdRequirements.get(2));
-            setPwdReqImage(pwdReqSpecialChar, pwdRequirements.get(3));
-            setPwdReqImage(pwdReqNoWhites,    pwdRequirements.get(4));
-        });
+        registerServerMessageHandler();
+        registerPasswordValidationListener();
     }
 
     @FXML
     public void Create(ActionEvent event) {
-        String email    = emailTextField.getText().trim();
-        String pass     = passTextField.getText();
+        String email = emailTextField.getText().trim();
+        String password = passTextField.getText();
         String username = nameTextField.getText().trim();
 
-        if (!validateInput(username, email, pass)) return;
+        if (!validateInput(username, email, password)) {
+            return;
+        }
 
         if (!client.isConnected()) {
             showAlert("Lỗi kết nối", "Không thể kết nối tới server. Vui lòng thử lại!");
             return;
         }
 
-        // Đăng ký xử lý phản hồi từ server
-        client.setOnMessageReceived(response -> {
-            if (response instanceof AuthResponse authResponse) {
-                if (authResponse.getResponseType() == ActionType.REGISTER_SUCCESS) {
-                    User newUser = authResponse.getUser();
-                    SessionManager.getInstance().setCurrentUser(newUser);
-                    try {
-                        navigateToHome(event, newUser);
-                    } catch (IOException e) {
-                        showAlert("Lỗi", "Không thể chuyển màn hình: " + e.getMessage());
-                    }
-                } else if (authResponse.getResponseType() == ActionType.REGISTER_FAILURE) {
-                    showAlert("Đăng ký thất bại", authResponse.getMessage());
-                }
-            }
-        });
+        RegisterRequest registerRequest = new RegisterRequest(
+                username,
+                password,
+                email
+        );
 
-        // Gửi yêu cầu đăng ký lên server
-        client.sendMessage(new AuthRequest(username, email, pass));
+        Request<RegisterRequest> request = new Request<>(
+                ActionType.REGISTER,
+                registerRequest
+        );
+
+        client.sendMessage(request);
     }
 
     @FXML
@@ -96,31 +92,85 @@ public class CreateAccountController implements Initializable {
         SceneUtils.switchScene(event, "/fxml/login.fxml");
     }
 
-    // ----------------------------------------------------------------
-    // HELPER
-    // ----------------------------------------------------------------
+    private void registerServerMessageHandler() {
+        client.setOnMessageReceived(message -> {
+            if (!(message instanceof Response<?> response)) {
+                return;
+            }
 
-    private boolean validateInput(String username, String email, String pass) {
+            if (response.getAction() != ActionType.REGISTER) {
+                return;
+            }
+
+            Platform.runLater(() -> handleRegisterResponse(response));
+        });
+    }
+
+    private void handleRegisterResponse(Response<?> response) {
+        if (!response.isSuccess()) {
+            showAlert("Đăng ký thất bại", response.getErrorMessage());
+            return;
+        }
+
+        Object payload = response.getPayload();
+
+        if (!(payload instanceof AuthResponse authResponse)) {
+            showAlert("Lỗi", "Phản hồi đăng ký không đúng định dạng.");
+            return;
+        }
+
+        UserDTO newUser = authResponse.getUser();
+
+        if (newUser == null) {
+            showAlert("Lỗi", authResponse.getMessage());
+            return;
+        }
+
+        SessionManager.getInstance().setCurrentUser(newUser);
+
+        try {
+            navigateToHome(newUser);
+        } catch (IOException e) {
+            showAlert("Lỗi", "Không thể chuyển màn hình: " + e.getMessage());
+        }
+    }
+
+    private void registerPasswordValidationListener() {
+        passTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            ArrayList<Boolean> pwdRequirements = Check.checkPassRequirements(newValue);
+
+            setPwdReqImage(pwdReqNumber, pwdRequirements.get(0));
+            setPwdReqImage(pwdReqLower, pwdRequirements.get(1));
+            setPwdReqImage(pwdReqUpper, pwdRequirements.get(2));
+            setPwdReqImage(pwdReqSpecialChar, pwdRequirements.get(3));
+            setPwdReqImage(pwdReqNoWhites, pwdRequirements.get(4));
+        });
+    }
+
+    private boolean validateInput(String username, String email, String password) {
         if (username.isEmpty()) {
             showAlert("Lỗi nhập liệu", "Vui lòng nhập tên người dùng!");
             return false;
         }
+
         if (email.isEmpty()) {
             showAlert("Lỗi nhập liệu", "Vui lòng nhập email!");
             return false;
         }
-        if (!Check.checkPass(pass)) {
+
+        if (!Check.checkPass(password)) {
             showAlert("Mật khẩu không hợp lệ", "Mật khẩu chưa đáp ứng đủ yêu cầu bảo mật!");
             return false;
         }
+
         return true;
     }
 
-    private void navigateToHome(ActionEvent event, User user) throws IOException {
+    private void navigateToHome(UserDTO user) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
         Parent root = loader.load();
 
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        Stage stage = (Stage) Create.getScene().getWindow();
         stage.setScene(new Scene(root));
         stage.show();
 

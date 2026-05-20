@@ -1,12 +1,12 @@
 package com.auction.util;
 
-import com.auction.model.user.User;
+import com.auction.dto.UserDTO;
 
 // Lưu thông tin user đang đăng nhập để các Controller khác có thể dùng chung
 public class SessionManager {
 
     private static SessionManager instance;
-    private User currentUser;
+    private UserDTO currentUser;
 
     private SessionManager() {}
 
@@ -17,11 +17,11 @@ public class SessionManager {
         return instance;
     }
 
-    public void setCurrentUser(User user) {
+    public void setCurrentUser(UserDTO user) {
         this.currentUser = user;
     }
 
-    public User getCurrentUser() {
+    public UserDTO getCurrentUser() {
         return currentUser;
     }
 

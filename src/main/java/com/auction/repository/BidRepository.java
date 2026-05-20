@@ -3,10 +3,7 @@ package com.auction.repository;
 import com.auction.config.DatabaseConnection;
 import com.auction.model.Bid;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,19 +52,28 @@ public class BidRepository {
      *
      * @param bid bid cần lưu
      * @return bid sau khi lưu thành công
-     * @throws RuntimeException nếu xảy ra lỗi SQL
+     * @throws SQLException nếu xảy ra lỗi SQL
      */
     public Bid save(Bid bid) {
-        String sql = "INSERT INTO bids (auction_id, bidder_id, amount) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO bids (auction_id, bidder_id, bid_amount) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, bid.getAuctionId());
             stmt.setInt(2, bid.getBidderId());
             stmt.setDouble(3, bid.getAmount());
 
-            stmt.executeUpdate();
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Không thể lưu bid vào cơ sở dữ liệu");
+            }
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    bid.setId(generatedKeys.getInt(1));
+                }
+            }
 
             return bid;
 
@@ -116,7 +122,7 @@ public class BidRepository {
      * @throws RuntimeException nếu xảy ra lỗi SQL
      */
     public List<Bid> findByAuctionId(int auctionId) {
-        String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY bid_time DESC";
 
         List<Bid> bids = new ArrayList<>();
 
@@ -147,7 +153,7 @@ public class BidRepository {
      * @throws RuntimeException nếu không có bid hoặc xảy ra lỗi SQL
      */
     public Bid findHighestBidByAuctionId(int auctionId) {
-        String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY amount DESC LIMIT 1";
+        String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY bid_amount DESC LIMIT 1";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -179,7 +185,7 @@ public class BidRepository {
      * @throws RuntimeException nếu không có bid hoặc xảy ra lỗi SQL
      */
     public List<Bid> findByBidderId(int bidderId) {
-        String sql = "SELECT * FROM bids WHERE bidder_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT * FROM bids WHERE bidder_id = ? ORDER BY bid_time DESC";
 
         List<Bid> bids = new ArrayList<>();
 
@@ -219,8 +225,8 @@ public class BidRepository {
                 rs.getInt("id"),
                 rs.getInt("auction_id"),
                 rs.getInt("bidder_id"),
-                rs.getDouble("amount"),
-                rs.getTimestamp("created_at")
+                rs.getDouble("bid_amount"),
+                rs.getTimestamp("bid_time")
                         .toInstant()
                         .toEpochMilli()
         );

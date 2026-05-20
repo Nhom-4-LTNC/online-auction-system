@@ -12,26 +12,26 @@ public class Server {
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(NetworkConfig.PORT)) {
-            System.out.println("Server dang chay o: "+NetworkConfig.PORT);
+            System.out.println("Server đang chạy ở: "+NetworkConfig.PORT);
 
             while (true) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    System.out.println("Server: Client ket noi tu IP: "+clientSocket.getInetAddress());
+                    System.out.println("Server: Client kết nối từ IP: "+clientSocket.getInetAddress());
                     ClientHandler handler = new ClientHandler(clientSocket);
                     clients.add(handler);
                     new Thread(handler).start();
                 } catch (IOException e) {
-                    System.out.println("loi "+e.getMessage());
+                    System.out.println("Lỗi "+e.getMessage());
                 }
             }
         } catch (IOException e) {
-            System.out.println("Loi khoi dong server");
+            System.out.println("Lỗi khởi động server");
         }
     }
     public static void broadcast(Object data) {
         for(ClientHandler client: clients) {
-            client.sendData(data);
+            client.sendObject(data);
         }
     }
     public static void removeClient(ClientHandler client) {

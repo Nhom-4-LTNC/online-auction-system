@@ -7,8 +7,13 @@ public class VehicleDTO extends ItemDTO{
     private final String vin;
     private final int mileage;
 
-    public VehicleDTO(String name, String description, double startingPrice, String brand, String vin, int mileage) {
-        super(ItemType.VEHICLE, name, description, startingPrice);
+    public VehicleDTO(String name,
+                      String description,
+                      double startingPrice,
+                      byte[] image,
+                      String imageFileName,
+                      String brand, String vin, int mileage) {
+        super(ItemType.VEHICLE, name, description, startingPrice, image, imageFileName);
         this.brand = brand;
         this.vin = vin;
         this.mileage = mileage;

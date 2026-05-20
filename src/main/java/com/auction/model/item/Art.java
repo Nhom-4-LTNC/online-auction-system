@@ -9,22 +9,35 @@ public class Art extends Item {
     private static final long serialVersionUID = -1593174092660038685L;
     private String artist;
     private int yearCreated;
-    public Art(String name, String description, User owner, double startPrice,
+    public Art(String name, String description,
+               User owner, double startPrice,
+               String imageUrl,
                String artist, int yearCreated) {
-        super(name, description, owner, startPrice);
+        super(name, description, owner, startPrice, imageUrl);
         this.artist = artist;
         this.yearCreated = yearCreated;
     }
-    public Art(int id, String name, String description, User owner, double startPrice,
+    public Art(int id, String name, String description,
+               User owner, double startPrice,
+               String imageUrl,
                String artist, int yearCreated) {
-        super(id, name, description, owner, startPrice);
+        super(id, name, description, owner, startPrice, imageUrl);
         this.artist = artist;
         this.yearCreated = yearCreated;
     }
-
+    public Art(int id, String name, String description,
+               User owner, double startPrice,
+               String artist, int yearCreated) {
+        this(id, name, description, owner, startPrice, null, artist, yearCreated);
+    }
+    public Art(String name, String description,
+               User owner, double startPrice,
+               String artist, int yearCreated) {
+        this(name, description, owner, startPrice, null, artist, yearCreated);
+    }
     @Override
     public String getCategory() {
-        return "Art";
+        return "ART";
     }
 
     public String getArtist() {

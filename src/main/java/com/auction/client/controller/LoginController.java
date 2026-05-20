@@ -1,17 +1,19 @@
 package com.auction.client.controller;
 
-import com.auction.model.user.User;
 import com.auction.client.Client;
+import com.auction.dto.UserDTO;
 import com.auction.protocol.ActionType;
-import com.auction.protocol.auth.AuthRequest;
+import com.auction.protocol.Request;
+import com.auction.protocol.Response;
 import com.auction.protocol.auth.AuthResponse;
+import com.auction.protocol.auth.LoginRequest;
 import com.auction.util.SceneUtils;
 import com.auction.util.SessionManager;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -33,58 +35,39 @@ public class LoginController implements Initializable {
     @FXML private PasswordField hiddenPasswordField;
     @FXML private CheckBox showPasswordCheckBox;
 
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Đồng bộ hai ô nhập mật khẩu
-        visiblePasswordField.textProperty().bindBidirectional(hiddenPasswordField.textProperty());
-        visiblePasswordField.setVisible(false);
-        hiddenPasswordField.setVisible(true);
-
-        // Kết nối tới server ngay khi mở màn hình đăng nhập
+        setupPasswordVisibility();
         client.connect();
+        registerServerMessageHandler();
     }
 
     @FXML
     public void login(ActionEvent event) {
-        String email    = emailTextField.getText().trim();
+        String email = emailTextField.getText().trim();
         String password = getPasswordFromFields();
 
-        if (!validateInput(email, password)) return;
+        if (!validateInput(email, password)) {
+            return;
+        }
 
         if (!client.isConnected()) {
             showErrorAlert("Lỗi kết nối", "Không thể kết nối tới server. Vui lòng thử lại!");
             return;
         }
 
-        // Đăng ký xử lý phản hồi từ server
-        client.setOnMessageReceived(response -> {
-            if (response instanceof AuthResponse authResponse) {
-                if (authResponse.getResponseType() == ActionType.LOGIN_SUCCESS) {
-                    try {
-                        // Server xác nhận hợp lệ → lấy thông tin user từ DB
-                        User user = authResponse.getUser();
-                        navigateToHome(event, user);
-                    } catch (Exception e) {
-                        showErrorAlert("Lỗi", e.getMessage());
-                    }
-                } else if (authResponse.getResponseType() == ActionType.LOGIN_FAILURE) {
-                    showErrorAlert("Đăng nhập thất bại", "Email hoặc mật khẩu không đúng!");
-                }
-            }
-        });
-        // Gửi yêu cầu đăng nhập lên server
-        client.sendMessage(new AuthRequest(email, password));
+        sendLoginRequest(email, password);
     }
 
     @FXML
     public void togglePasswordVisibility(ActionEvent event) {
         boolean show = showPasswordCheckBox.isSelected();
+
         visiblePasswordField.setVisible(show);
+        visiblePasswordField.setManaged(show);
+
         hiddenPasswordField.setVisible(!show);
+        hiddenPasswordField.setManaged(!show);
     }
 
     @FXML
@@ -92,9 +75,70 @@ public class LoginController implements Initializable {
         SceneUtils.switchScene(event, "/fxml/createAccount.fxml");
     }
 
-    // ----------------------------------------------------------------
-    // HELPER
-    // ----------------------------------------------------------------
+    private void setupPasswordVisibility() {
+        visiblePasswordField.textProperty()
+                .bindBidirectional(hiddenPasswordField.textProperty());
+
+        visiblePasswordField.setVisible(false);
+        visiblePasswordField.setManaged(false);
+
+        hiddenPasswordField.setVisible(true);
+        hiddenPasswordField.setManaged(true);
+    }
+
+    private void sendLoginRequest(String email, String password) {
+        LoginRequest payload = new LoginRequest(email, password);
+
+        Request<LoginRequest> request = new Request<>(
+                ActionType.LOGIN,
+                payload
+        );
+
+        client.sendMessage(request);
+    }
+
+    private void registerServerMessageHandler() {
+        client.setOnMessageReceived(message -> {
+            if (!(message instanceof Response<?> response)) {
+                return;
+            }
+
+            if (response.getAction() != ActionType.LOGIN) {
+                return;
+            }
+
+            Platform.runLater(() -> handleLoginResponse(response));
+        });
+    }
+
+    private void handleLoginResponse(Response<?> response) {
+        if (!response.isSuccess()) {
+            showErrorAlert("Đăng nhập thất bại", response.getErrorMessage());
+            return;
+        }
+
+        Object payload = response.getPayload();
+
+        if (!(payload instanceof AuthResponse authResponse)) {
+            showErrorAlert("Lỗi", "Phản hồi đăng nhập không đúng định dạng.");
+            return;
+        }
+
+        UserDTO user = authResponse.getUser();
+
+        if (user == null) {
+            showErrorAlert("Đăng nhập thất bại", authResponse.getMessage());
+            return;
+        }
+
+        SessionManager.getInstance().setCurrentUser(user);
+
+        try {
+            navigateToHome(user);
+        } catch (IOException e) {
+            showErrorAlert("Lỗi", "Không thể chuyển màn hình: " + e.getMessage());
+        }
+    }
 
     private String getPasswordFromFields() {
         return showPasswordCheckBox.isSelected()
@@ -103,31 +147,27 @@ public class LoginController implements Initializable {
     }
 
     private boolean validateInput(String email, String password) {
-        if (email == null || email.trim().isEmpty()) {
+        if (email == null || email.isBlank()) {
             showErrorAlert("Lỗi nhập liệu", "Vui lòng nhập email!");
             return false;
         }
-        if (password == null || password.trim().isEmpty()) {
+
+        if (password == null || password.isBlank()) {
             showErrorAlert("Lỗi nhập liệu", "Vui lòng nhập mật khẩu!");
             return false;
         }
+
         return true;
     }
 
-    private void navigateToHome(ActionEvent event, User user) throws IOException {
-        SessionManager.getInstance().setCurrentUser(user);
-
+    private void navigateToHome(UserDTO user) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
-        root = loader.load();
+        Parent root = loader.load();
 
-        // Gắn scene vào stage TRƯỚC khi gọi displayName()
-        // Nếu đổi thứ tự: scenePane.getScene() trả về null → NullPointerException
-        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
+        Stage stage = (Stage) emailTextField.getScene().getWindow();
+        stage.setScene(new Scene(root));
         stage.show();
 
-        // Dùng username (không dùng email) vì Check.checkName() kiểm tra quy tắc username
         HomeController homeController = loader.getController();
         homeController.displayName(user.getUsername());
     }

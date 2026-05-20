@@ -10,23 +10,35 @@ public class Vehicle extends Item {
     private String brand;
     private String vin;
     private int mileage;
-    public Vehicle (String name, String description, User owner, double startPrice, String brand, String vin, int mileage) {
-        super(name, description, owner, startPrice);
+    public Vehicle (String name, String description, User owner,
+                    double startPrice, String imageUrl,
+                    String brand, String vin, int mileage) {
+        super(name, description, owner, startPrice, imageUrl);
         this.brand = brand;
         this.vin = vin;
         this.mileage = mileage;
     }
-    public Vehicle(int id, String name, String description, User owner, double startPrice,
+    public Vehicle(int id, String name, String description,
+                   User owner, double startPrice, String imageUrl,
                    String brand, String vin, int mileage) {
-        super(id, name, description, owner, startPrice);
+        super(id, name, description, owner, startPrice, imageUrl);
         this.brand = brand;
         this.vin = vin;
         this.mileage = mileage;
     }
-
+    public Vehicle(int id, String name, String description,
+                   User owner, double startPrice,
+                   String brand, String vin, int mileage) {
+        this(id, name, description, owner, startPrice, null, brand, vin, mileage);
+    }
+    public Vehicle(String name, String description,
+                   User owner, double startPrice,
+                   String brand, String vin, int mileage) {
+        this(name, description, owner, startPrice, null, brand, vin, mileage);
+    }
     @Override
     public String getCategory() {
-        return "Vehicle";
+        return "VEHICLE";
     }
 
     public String getVin() {

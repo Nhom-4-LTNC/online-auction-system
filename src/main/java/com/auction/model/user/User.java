@@ -5,7 +5,6 @@ import com.auction.model.Entity;
 import java.io.Serial;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.prefs.Preferences;
 
 public class User extends Entity {
     @Serial
@@ -24,7 +23,7 @@ public class User extends Entity {
     private BidderProfile bidderProfile;
     private SellerProfile sellerProfile;
     // CONSTRUCTORS
-    public User (String username, String pwd, String email) {
+    public User(String username, String pwd, String email) {
         super();
         if (username == null || username.trim().isEmpty()) {
             throw new IllegalArgumentException("Username cannot be null or empty");

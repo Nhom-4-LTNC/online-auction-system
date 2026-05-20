@@ -213,29 +213,42 @@ public class ItemRepository {
         switch (type) {
             case ELECTRONICS:
                 item = new Electronics(
-                        rs.getInt("id"), rs.getString("name"), rs.getString("description"),
-                        owner, rs.getDouble("start_price"),
-                        rs.getString("brand"), rs.getInt("warranty_months")
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        owner,
+                        rs.getDouble("start_price"),
+                        rs.getString("image_url"),
+                        rs.getString("brand"),
+                        rs.getInt("warranty_months")
                 );
                 break;
             case ART:
                 item = new Art(
-                        rs.getInt("id"), rs.getString("name"), rs.getString("description"),
-                        owner, rs.getDouble("start_price"),
-                        rs.getString("artist"), rs.getInt("creation_year")
+                        rs.getInt("id"), rs.getString("name"),
+                        rs.getString("description"),
+                        owner,
+                        rs.getDouble("start_price"),
+                        rs.getString("image_url"),
+                        rs.getString("artist"),
+                        rs.getInt("creation_year")
                 );
                 break;
             case VEHICLE:
                 item = new Vehicle(
-                        rs.getInt("id"), rs.getString("name"), rs.getString("description"),
-                        owner, rs.getDouble("start_price"),
-                        rs.getString("brand"), rs.getString("vin"), rs.getInt("mileage")
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        owner,
+                        rs.getDouble("start_price"),
+                        rs.getString("image_url"),
+                        rs.getString("brand"),
+                        rs.getString("vin"), rs.getInt("mileage")
                 );
                 break;
             default:
                 throw new SQLException("Loại sản phẩm không được hỗ trợ: " + type);
         }
-        item.setImageUrl(rs.getString("image_url"));
         return item;
     }
 }

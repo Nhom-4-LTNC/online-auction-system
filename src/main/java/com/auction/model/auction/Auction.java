@@ -18,7 +18,6 @@ public class Auction extends Entity {
     private static final long serialVersionUID = 6720930536578062003L;
 
     public static double DEFAULT_BID_STEP = 0.1;
-    public static long DEFAULT_DURATION = 60 * 1000; // 1 minutes in milliseconds
 
     private Item item;
     private long startTime;
@@ -59,7 +58,7 @@ public class Auction extends Entity {
     // METHODS
     public synchronized Bid placeBid(User user, double amount) throws InvalidBidException, AuctionClosedException, InsufficientFundsException {
         if (getStatus() != AuctionStatus.RUNNING) {
-            throw new AuctionClosedException("Phiên đấu giá đã đóng hoặc chưa mở!");
+            throw new AuctionClosedException(this.id);
         }
         BidderProfile profile = user.getBidderProfile();
         if (user.getId() == item.getOwnerId()) {
@@ -75,7 +74,7 @@ public class Auction extends Entity {
             }
         }
         if (!profile.canAfford(amount)) {
-            throw new InsufficientFundsException("Số dư tài khoản không đủ!");
+            throw new InsufficientFundsException();
         }
 
         this.currentPrice = amount;
@@ -107,6 +106,7 @@ public class Auction extends Entity {
         updateStatus();
         return status;
     }
+    public void setStatus(AuctionStatus status) { this.status = status; }
     //GET WINNER
     public User getWinner() {
         if (System.currentTimeMillis() > endTime || getStatus() == AuctionStatus.FINISHED) {

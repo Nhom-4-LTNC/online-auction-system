@@ -1,137 +1,246 @@
 package com.auction.server;
 
-import com.auction.dto.ItemDTO;
-import com.auction.model.auction.Auction;
-import com.auction.model.user.User;
-import com.auction.protocol.auth.AuthResponse;
-import com.auction.protocol.auction.PlaceBidRequest;
+import com.auction.dto.UserDTO;
 import com.auction.protocol.ActionType;
-import com.auction.protocol.auction.CreateAuctionRequest;
-import com.auction.protocol.auction.PlaceBidRequest;
-import com.auction.protocol.auth.AuthRequest;
-import com.auction.service.AuctionService;
-import com.auction.service.UserService;
+import com.auction.protocol.Request;
+import com.auction.protocol.Response;
+import com.auction.protocol.auth.AuthResponse;
+import com.auction.server.controller.AuctionController;
+import com.auction.server.controller.AuthController;
+import com.auction.server.controller.BidController;
+// import com.auction.server.controller.BidController;
 
-import java.io.*;
-import java.net.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 
+/**
+ * Quản lý một kết nối socket từ client.
+ *
+ * <p>Vai trò chính:
+ * <ul>
+ *     <li>Giữ session của client hiện tại thông qua {@link #currentUser}</li>
+ *     <li>Đọc {@link Request} từ client</li>
+ *     <li>Dispatch request tới server controller phù hợp</li>
+ *     <li>Gửi {@link Response} về client</li>
+ * </ul>
+ *
+ * <p>ClientHandler không xử lý business logic trực tiếp.
+ * Business logic nằm ở Service, được gọi thông qua Server Controller.</p>
+ */
 public class ClientHandler implements Runnable {
 
-    private Socket socket;
-    ServerController controller;
+    private final Socket socket;
 
     private ObjectInputStream in;
     private ObjectOutputStream out;
 
-    User currentUser; // Lưu thông tin user đã đăng nhập
+    /**
+     * Session server-side của kết nối hiện tại.
+     * Null nghĩa là client chưa đăng nhập hoặc đã logout.
+     */
+    private UserDTO currentUser;
+
+    private final AuthController authController = new AuthController();
+    private final AuctionController auctionController = new AuctionController();
+    private final BidController bidController = new BidController();
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
     }
 
-    // ----------------------------------------------------------------
-    // VÒNG LẶP NHẬN TIN NHẮN
-    // ----------------------------------------------------------------
+    public UserDTO getCurrentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(UserDTO currentUser) {
+        this.currentUser = currentUser;
+    }
+
+    public boolean isLoggedIn() {
+        return currentUser != null;
+    }
 
     @Override
     public void run() {
         try {
-            out = new ObjectOutputStream(socket.getOutputStream());
-            out.flush();
-            in = new ObjectInputStream(socket.getInputStream());
+            initStreams();
+            listenForRequests();
 
-            while (true) {
-                Object data = in.readObject();
-
-                if (data instanceof AuthRequest authRequest) {
-                    handleAuthRequest(authRequest);
-                } else if (data instanceof PlaceBidRequest bidMessage) {
-                    handleBidRequest(bidMessage);
-                } else if (data instanceof CreateAuctionRequest  newAuctionRequest) {
-                    handleCreateAuctionRequest(newAuctionRequest);
-                }
-            }
         } catch (EOFException e) {
-            System.out.println("Client ngắt kết nối bình thường");
-        } catch (Exception e) {
-            System.out.println("Lỗi xử lý client: " + e.getMessage());
+            System.out.println("[ClientHandler] Client đã ngắt kết nối: " + getClientAddress());
+
+        } catch (IOException e) {
+            System.out.println("[ClientHandler] Lỗi I/O với client " + getClientAddress()
+                    + ": " + e.getMessage());
+
+        } catch (ClassNotFoundException e) {
+            System.out.println("[ClientHandler] Không đọc được object từ client "
+                    + getClientAddress() + ": " + e.getMessage());
+
         } finally {
-            Server.removeClient(this);
             closeConnections();
         }
     }
 
-    // XỬ LÝ ĐĂNG NHẬP / ĐĂNG KÝ
-    private void handleAuthRequest(AuthRequest request) {
-        if (request.getRequestType() == ActionType.LOGIN) {
-            try {
-               User user = UserService.getInstance().login(request.getEmail(), request.getPassword());
-               user.setPwd(null); // Không gửi mật khẩu về client
-               sendData(new AuthResponse(ActionType.LOGIN_SUCCESS, user,"Đăng nhập thành công!"));
-            } catch (Exception e) {
-                System.out.println("Đăng nhập thất bại: " + e.getMessage());
-                sendData(new AuthResponse(ActionType.LOGIN_FAILURE, null, "Đăng nhập thất bại: " + e.getMessage()));
+    private void initStreams() throws IOException {
+        /*
+         * ObjectOutputStream nên được tạo trước ObjectInputStream
+         * để tránh deadlock khi cả client và server cùng chờ header stream.
+         */
+        out = new ObjectOutputStream(socket.getOutputStream());
+        out.flush();
+
+        in = new ObjectInputStream(socket.getInputStream());
+    }
+
+    private void listenForRequests() throws IOException, ClassNotFoundException {
+        while (!socket.isClosed()) {
+            Object incoming = in.readObject();
+
+            if (!(incoming instanceof Request<?> request)) {
+                sendError(null, "Gói tin gửi lên không đúng định dạng Request.");
+                continue;
             }
 
-        } else if (request.getRequestType() == ActionType.REGISTER) {
-            try {
-                // register() ném Exception khi trùng email/username → bắt để gửi FAILURE
-                User user = UserService.getInstance().register(
-                        request.getUsername(), request.getEmail(), request.getPassword());
-                user.setPwd(null); // Không gửi mật khẩu về client
-                sendData(new AuthResponse(ActionType.REGISTER_SUCCESS, user, "Đăng ký thành công!"));
-            } catch (Exception e) {
-                System.out.println("Đăng ký thất bại: " + e.getMessage());
-                sendData(new AuthResponse(ActionType.REGISTER_FAILURE, null, "Đăng ký thất bại: " + e.getMessage()));
+            Response<?> response = dispatch(request);
+
+            if (response != null) {
+                sendResponse(response);
             }
         }
     }
 
-    // XỬ LÝ TẠO AUCTION
-    public void handleCreateAuctionRequest(CreateAuctionRequest request) throws Exception {
-        int sellerID = request.getSellerId();
-        User seller = UserService.getInstance().getUserById(sellerID);
-        Auction newAuction = AuctionService.getInstance().createAuction(
-                seller,
-                request.getItemDto(),
-                request.getBidStep(),
-                request.getStartTimeMillis(),
-                request.getEndTimeMillis()
-        );
-        System.out.println("CREATED AUCTION FROM SELLER " + seller.getUsername());
-    }
+    private Response<?> dispatch(Request<?> request) {
+        ActionType action = request.getAction();
 
-    // XỬ LÝ ĐẶT GIÁ
-    private void handleBidRequest(PlaceBidRequest bidData) {
+        if (action == null) {
+            return new Response<>(
+                    null,
+                    "ActionType không được để trống."
+            );
+        }
+
         try {
-            User bidder = UserService.getInstance().getUserById(bidData.getUserId());
-            AuctionService.getInstance().placeBid(bidData.getAuctionId(), bidder, bidData.getAmount());
-            // Thông báo cho tất cả client về giá mới
-            Server.broadcast(bidData);
+            return switch (action) {
+                // ===== AUTH =====
+                case LOGIN -> authController.handleLogin(request, this);
+
+                case REGISTER -> authController.handleRegister(request, this);
+
+                case LOGOUT -> handleLogout();
+
+                // ===== AUCTION =====
+                case GET_ALL_AUCTIONS -> auctionController.handleGetAllAuctions(request, this);
+
+                case GET_AUCTION -> auctionController.handleGetAuction(request, this);
+
+                case CREATE_AUCTION -> auctionController.handleCreateAuction(request, this);
+
+                case CLOSE_AUCTION -> auctionController.handleCloseAuction(request, this);
+
+                // ===== BID =====
+                case PLACE_BID -> bidController.handlePlaceBid(request, this);
+
+                case GET_BIDS_BY_AUCTION -> bidController.handleGetBidsByAuction(request, this);
+
+                case GET_BIDS_BY_BIDDER -> bidController.handleGetBidsByBidder(request, this);
+
+                case GET_MY_BIDS -> bidController.handleGetRecentBids(this);
+                // ===== REALTIME / SERVER PUSH =====
+                /*
+                 * Các action này thường là server gửi xuống client.
+                 * Client không nên gửi chúng lên server.
+                 */
+                case AUCTION_CREATED, AUCTION_UPDATED, AUCTION_CLOSED -> new Response<>(
+                        action,
+                        "Action này chỉ được server gửi tới client."
+                );
+                default -> null;
+            };
+
+        } catch (ClassCastException e) {
+            return new Response<>(
+                    action,
+                    "Payload không đúng kiểu cho action: " + action
+            );
+
         } catch (Exception e) {
-            System.out.println("Đặt giá thất bại: " + e.getMessage());
-            sendData("Lỗi: " + e.getMessage());
+            return new Response<>(
+                    action,
+                    e.getMessage()
+            );
         }
     }
-    // GỬI DỮ LIỆU / ĐÓNG KẾT NỐI
-    public void sendData(Object data) {
+
+    private Response<AuthResponse> handleLogout() {
+        currentUser = null;
+
+        return Response.success(
+                ActionType.LOGOUT,
+                new AuthResponse(null, "Đăng xuất thành công.")
+        );
+    }
+
+    public synchronized void sendResponse(Response<?> response) {
+        sendObject(response);
+    }
+
+    /**
+     * Dùng cho cả response thường và server-push realtime.
+     * Ví dụ: Response<>(ActionType.AUCTION_UPDATED, payload)
+     */
+    public synchronized void sendObject(Object object) {
+        if (object == null || out == null) {
+            return;
+        }
+
         try {
-            out.writeObject(data);
+            out.writeObject(object);
             out.flush();
             out.reset();
-        } catch (Exception e) {
-            System.out.println("Lỗi gửi tin nhắn: " + e.getMessage());
+
+        } catch (IOException e) {
+            System.out.println("[ClientHandler] Lỗi gửi dữ liệu tới client "
+                    + getClientAddress() + ": " + e.getMessage());
+            closeConnections();
         }
     }
 
-    public void closeConnections() {
-        try {
-            if (in != null)     in.close();
-            if (out != null)    out.close();
-            if (socket != null && !socket.isClosed()) socket.close();
-            System.out.println("Đã đóng kết nối client.");
-        } catch (IOException e) {
-            System.out.println("Lỗi khi ngắt kết nối: " + e.getMessage());
+    private void sendError(ActionType action, String message) {
+        sendResponse(new Response<>(
+                action,
+                message
+        ));
+    }
+
+    private String getClientAddress() {
+        if (socket == null || socket.getInetAddress() == null) {
+            return "unknown";
         }
+
+        return socket.getInetAddress().getHostAddress();
+    }
+
+    private void closeConnections() {
+        try {
+            if (in != null) {
+                in.close();
+            }
+        } catch (IOException ignored) {}
+
+        try {
+            if (out != null) {
+                out.close();
+            }
+        } catch (IOException ignored) {}
+
+        try {
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+        } catch (IOException ignored) {}
     }
 }

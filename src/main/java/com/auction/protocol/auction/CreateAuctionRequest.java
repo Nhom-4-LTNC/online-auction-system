@@ -1,7 +1,7 @@
 package com.auction.protocol.auction;
 
 import com.auction.dto.ItemDTO;
-import com.auction.protocol.ActionType;
+import com.auction.dto.UserDTO;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -11,39 +11,36 @@ import java.io.Serializable;
  *
  * <p>Client đính kèm {@link ItemDTO} (đã chọn đúng kiểu con: ElectronicsDTO, ArtDTO,
  * VehicleDTO) cùng các tham số phiên. Server nhận gói này, uỷ quyền cho
- * {@code AuctionService.createAuction()} xử lý và trả về {@link AuctionResponse}.</p>
+ * {@code AuctionService.createAuction()} xử lý và trả về {@link CreateAuctionResponse}.</p>
  */
 public class CreateAuctionRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final ActionType requestType = ActionType.CREATE_AUCTION;
-    private final int sellerId;
     private final ItemDTO itemDto;
+    private final double startingPrice;
     private final double bidStep;
-    private final long startTimeMillis;
-    private final long endTimeMillis;
+    private final long startTime;
+    private final long endTime;
 
     /**
-     * @param sellerId        ID của người bán (lấy từ {@code SessionManager})
      * @param itemDto         DTO chứa thông tin sản phẩm muốn đấu giá
      * @param bidStep         bước giá tối thiểu
-     * @param startTimeMillis thời điểm bắt đầu phiên (ms epoch)
-     * @param endTimeMillis   thời điểm kết thúc phiên (ms epoch)
+     * @param startTime       thời điểm bắt đầu phiên (ms epoch)
+     * @param endTime         thời điểm kết thúc phiên (ms epoch)
      */
-    public CreateAuctionRequest(int sellerId, ItemDTO itemDto, double bidStep,
-                                long startTimeMillis, long endTimeMillis) {
-        this.sellerId = sellerId;
+    public CreateAuctionRequest(ItemDTO itemDto, double startingPrice, double bidStep,
+                                              long startTime, long endTime) {
         this.itemDto = itemDto;
+        this.startingPrice = startingPrice;
         this.bidStep = bidStep;
-        this.startTimeMillis = startTimeMillis;
-        this.endTimeMillis = endTimeMillis;
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 
-    public ActionType getRequestType()  { return requestType; }
-    public int getSellerId()            { return sellerId; }
     public ItemDTO getItemDto()         { return itemDto; }
     public double getBidStep()          { return bidStep; }
-    public long getStartTimeMillis()    { return startTimeMillis; }
-    public long getEndTimeMillis()      { return endTimeMillis; }
+    public long getStartTime()    { return startTime; }
+    public long getEndTime()      { return endTime; }
+    public double getStartingPrice() { return startingPrice;}
 }

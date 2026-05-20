@@ -6,8 +6,14 @@ public class ArtDTO extends ItemDTO {
     private final String artist;
     private final int yearCreated;
 
-    public ArtDTO(String name, String description, double startingPrice, String artist, int yearCreated) {
-        super(ItemType.ART, name, description, startingPrice);
+    public ArtDTO(String name,
+                  String description,
+                  double startingPrice,
+                  byte[] image,
+                  String imageFileName,
+                  String artist,
+                  int yearCreated) {
+        super(ItemType.ART, name, description, startingPrice, image, imageFileName);
         this.artist = artist;
         this.yearCreated = yearCreated;
     }

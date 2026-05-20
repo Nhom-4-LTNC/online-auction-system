@@ -17,16 +17,27 @@ public abstract class ItemDTO implements Serializable {
     private final String name;
     private final String description;
     private final double startingPrice;
+    private final byte[] imageData;
+    private final String imageFileName;
 
-    public ItemDTO(ItemType type, String name, String description, double startingPrice) {
+    public ItemDTO(ItemType type,
+                   String name,
+                   String description,
+                   double startingPrice,
+                   byte[] image,
+                   String imageFileName) {
         this.type = type;
         this.name = name;
         this.description = description;
         this.startingPrice = startingPrice;
+        this.imageData = image;
+        this.imageFileName = imageFileName;
     }
 
     public ItemType getType() { return type; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public double getStartingPrice() { return startingPrice; }
+    public byte[] getImageData() { return imageData; }
+    public String getImageFileName() { return imageFileName; }
 }

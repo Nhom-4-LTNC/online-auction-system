@@ -15,28 +15,34 @@ public abstract class Item extends Entity implements Serializable {
     private final User owner;
     private String imageUrl;
 
-    public Item(String name, String description,User owner, double startPrice) {
+    public Item(String name, String description,
+                User owner, double startPrice, String imageUrl) {
         super();
         this.name = name;
         this.description = description;
         if (startPrice > 0) this.startPrice = startPrice;
         this.owner = owner;
+        this.imageUrl = imageUrl;
     }
-    public Item(int id, String name, String description, User owner, double startPrice) {
+    public Item(int id, String name, String description,
+                User owner, double startPrice, String imageUrl) {
         super(id);
         this.name = name;
         this.description = description;
         if (startPrice > 0) this.startPrice = startPrice;
         this.owner = owner;
+        this.imageUrl = imageUrl;
     }
-
+    public Item(int id, String name, String description, User owner, double startPrice) {
+        this(id, name, description, owner, startPrice, null);
+    }
+    public Item(String name, String description, User owner, double startPrice) {
+        this(name, description, owner, startPrice, null);
+    }
     public String getImageUrl() {
         return imageUrl;
     }
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl;}
     public String getName() { return name; }
     public boolean isValid() {
         return name != null && !name.isEmpty() && startPrice > 0;
