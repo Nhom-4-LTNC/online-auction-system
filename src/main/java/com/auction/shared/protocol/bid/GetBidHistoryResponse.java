@@ -9,8 +9,8 @@ public class GetBidHistoryResponse implements java.io.Serializable{
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private List<BidDTO> bidHistory;
-    private String message;
+    private final List<BidDTO> bidHistory;
+    private final String message;
 
     public GetBidHistoryResponse(List<BidDTO> bidHistory, String message) {
         this.bidHistory = bidHistory;

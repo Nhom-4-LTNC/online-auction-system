@@ -33,11 +33,11 @@ public class AuctionController {
     public Response<?> handleGetAllAuctions(Request<?> request, ClientHandler client) {
         try {
             List<AuctionSummaryDTO> summaries = auctionService.getAllAuctions();
-            return new Response<>(ActionType.GET_ALL_AUCTIONS,
+            return Response.success(ActionType.GET_ALL_AUCTIONS,
                     new GetAllAuctionResponse(summaries, "Lấy danh sách phòng đấu giá thành công"));
         } catch (Exception e) {
             e.printStackTrace();
-            return new Response<>(ActionType.GET_ALL_AUCTIONS, "Lỗi máy chủ khi lấy danh sách phòng!");
+            return Response.error(ActionType.GET_ALL_AUCTIONS, "Lỗi máy chủ khi lấy danh sách phòng!");
         }
     }
 
@@ -54,14 +54,16 @@ public class AuctionController {
             AuctionDetailDTO detailDTO = auctionService.getAuctionDetail(req.getAuctionId());
             List <BidDTO> recentBids = bidService.mapToBidDTOList(bidService.getBidsByAuctionId(req.getAuctionId()));
             return Response.success(ActionType.GET_AUCTION,
-                    new GetAuctionResponse(detailDTO, recentBids, null));
+                    new GetAuctionResponse(detailDTO, recentBids,
+                            "Lấy thông tin phiên đấu giá thành công"));
 
         } catch (AuctionAppException e) {
             // Bắt lỗi: ResourceNotFoundException (Không tìm thấy phòng)
-            return new Response<>(ActionType.GET_AUCTION, e.getMessage());
+            return Response.error(ActionType.GET_AUCTION, e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            return new Response<>(ActionType.GET_AUCTION, "Lỗi máy chủ khi lấy chi tiết phòng đấu giá!");
+            return Response.error(ActionType.GET_AUCTION,
+                    "Lỗi máy chủ khi lấy chi tiết phòng đấu giá!");
         }
     }
 
@@ -77,7 +79,7 @@ public class AuctionController {
         try {
             // 1. Phân quyền: Kiểm tra xem đã đăng nhập chưa
             if (client.getCurrentUser() == null) {
-                return new Response<>(ActionType.CREATE_AUCTION, "Bạn phải đăng nhập để tạo phòng đấu giá!");
+                return Response.error(ActionType.CREATE_AUCTION, "Bạn phải đăng nhập để tạo phòng đấu giá!");
             }
 
             CreateAuctionRequest req = (CreateAuctionRequest) request.getPayload();
@@ -88,13 +90,13 @@ public class AuctionController {
             // 3. Gọi Service để xử lý tạo phòng
             auctionService.createAuction(sellerId, req.getItemDto(), req.getBidStep(), req.getEndTime());
 
-            return new Response<>(ActionType.CREATE_AUCTION, "Tạo phòng đấu giá thành công!");
+            return Response.success(ActionType.CREATE_AUCTION, "Tạo phòng đấu giá thành công!");
 
         } catch (AuctionAppException e) {
-            return new Response<>(ActionType.CREATE_AUCTION, e.getMessage());
+            return Response.error(ActionType.CREATE_AUCTION, e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            return new Response<>(ActionType.CREATE_AUCTION,"Lỗi máy chủ khi tạo phòng đấu giá!");
+            return Response.error(ActionType.CREATE_AUCTION,"Lỗi máy chủ khi tạo phòng đấu giá!");
         }
     }
 

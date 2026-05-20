@@ -12,14 +12,14 @@ public class Response <T> implements Serializable {
     private final T payload;
     private final String errorMessage;
 
-    public Response(ActionType action, T payload) {
+    private Response(ActionType action, T payload) {
         this.action = action;
         this.status =  ResponseStatus.SUCCESS;
         this.payload = payload;
         this.errorMessage = null;
     }
 
-    public Response(ActionType action, String errorMessage) {
+    private Response(ActionType action, String errorMessage) {
         this.action = action;
         this.status =  ResponseStatus.ERROR;
         this.payload = null;

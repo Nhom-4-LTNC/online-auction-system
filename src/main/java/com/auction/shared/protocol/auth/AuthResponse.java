@@ -10,8 +10,8 @@ public class AuthResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private UserDTO user;
-    private String message;
+    private final UserDTO user;
+    private final String message;
     public  AuthResponse(UserDTO user, String message) {
 
         this.user = user;

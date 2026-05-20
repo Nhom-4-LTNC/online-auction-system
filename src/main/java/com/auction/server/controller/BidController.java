@@ -4,6 +4,7 @@ import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.BidDTO;
 import com.auction.server.model.Bid;
 import com.auction.server.model.auction.Auction;
+import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
 import com.auction.shared.protocol.Response;
@@ -29,6 +30,10 @@ public class BidController {
                         "Payload đặt giá không hợp lệ."
                 );
             }
+            if (!client.isLoggedIn()) {
+                return Response.error(ActionType.PLACE_BID,
+                        "Người dùng chưa đăng nhập.");
+            }
 
             Auction updatedAuction = bidService.placeBid(
                     client.getCurrentUser(),
@@ -41,11 +46,11 @@ public class BidController {
                     new PlaceBidResponse(auctionDetailDTO,
                             "Đặt giá thành công!")
             );
+        } catch (AuctionAppException e) {
+            return Response.error(ActionType.PLACE_BID, e.getMessage());
         } catch (Exception e) {
-            return Response.error(
-                    ActionType.PLACE_BID,
-                    "Lỗi khi đặt giá: " + e.getMessage()
-            );
+            e.printStackTrace();
+            return Response.error(ActionType.PLACE_BID, "Lỗi không xác định khi đặt giá.");
         }
     }
 
@@ -57,6 +62,10 @@ public class BidController {
                         ActionType.GET_BIDS_BY_AUCTION,
                         "Payload không hợp lệ."
                 );
+            }
+            if (!client.isLoggedIn()) {
+                return Response.error(ActionType.GET_BIDS_BY_AUCTION,
+                        "Người dùng chưa đăng nhập.");
             }
 
             List<Bid> bids = bidService.getBidsByAuctionId(getBidHistoryRequest.getAuctionId());
@@ -85,6 +94,9 @@ public class BidController {
                         "Payload không hợp lệ!"
                 );
             }
+            if (!client.isLoggedIn()) {
+                return Response.error(ActionType.GET_BIDS_BY_BIDDER, "Người dùng chưa đăng nhập.");
+            }
 
             List<Bid> bids = bidService.getBidsByBidder(getBidsByBidderRequest.getBidderId());
             List<BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
@@ -95,14 +107,19 @@ public class BidController {
                             "Lấy lịch sử bid theo người tham gia thành công!")
             );
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.error(
                     ActionType.GET_BIDS_BY_BIDDER,
-                    e.getMessage()
+                    "Lỗi không xác định khi lấy lịch sử bid theo người tham gia."
             );
         }
     }
 
     public Response <GetBidHistoryResponse> handleGetCurrentUserBids(ClientHandler client) {
+        if (!client.isLoggedIn()) {
+            return Response.error(ActionType.GET_MY_BIDS,
+                    "Người dùng chưa đăng nhập.");
+        }
         List <Bid> bids = bidService.getBidsByBidder(client.getCurrentUser().getId());
         List <BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
 

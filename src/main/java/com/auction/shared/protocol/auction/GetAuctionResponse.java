@@ -13,7 +13,7 @@ public class GetAuctionResponse implements Serializable {
 
     private final AuctionDetailDTO auction;
     private final List<BidDTO> recentBids;
-    private String message;
+    private final String message;
 
     public GetAuctionResponse(AuctionDetailDTO auction,
                               List<BidDTO> recentBids, String message) {

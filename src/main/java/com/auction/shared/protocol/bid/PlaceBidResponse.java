@@ -9,7 +9,7 @@ public class PlaceBidResponse implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final AuctionDetailDTO updatedAuction;
-    private String message;
+    private final String message;
     public PlaceBidResponse(AuctionDetailDTO auction, String message) {
         this.updatedAuction = auction;
         this.message = message;

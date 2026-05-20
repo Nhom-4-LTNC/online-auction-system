@@ -1,5 +1,6 @@
 package com.auction.server.handler;
 
+import com.auction.server.Server;
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
@@ -8,7 +9,6 @@ import com.auction.shared.protocol.auth.AuthResponse;
 import com.auction.server.controller.AuctionController;
 import com.auction.server.controller.AuthController;
 import com.auction.server.controller.BidController;
-// import com.auction.server.controller.BidController;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -117,7 +117,7 @@ public class ClientHandler implements Runnable {
         ActionType action = request.getAction();
 
         if (action == null) {
-            return new Response<>(
+            return Response.error(
                     null,
                     "ActionType không được để trống."
             );
@@ -154,7 +154,7 @@ public class ClientHandler implements Runnable {
                  * Các action này thường là server gửi xuống client.
                  * Client không nên gửi chúng lên server.
                  */
-                case AUCTION_CREATED, AUCTION_UPDATED, AUCTION_CLOSED -> new Response<>(
+                case AUCTION_CREATED, AUCTION_UPDATED, AUCTION_CLOSED -> Response.error(
                         action,
                         "Action này chỉ được server gửi tới client."
                 );
@@ -162,13 +162,13 @@ public class ClientHandler implements Runnable {
             };
 
         } catch (ClassCastException e) {
-            return new Response<>(
+            return Response.error(
                     action,
                     "Payload không đúng kiểu cho action: " + action
             );
 
         } catch (Exception e) {
-            return new Response<>(
+            return Response.error(
                     action,
                     e.getMessage()
             );
@@ -210,7 +210,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void sendError(ActionType action, String message) {
-        sendResponse(new Response<>(
+        sendResponse(Response.error(
                 action,
                 message
         ));
@@ -242,5 +242,8 @@ public class ClientHandler implements Runnable {
                 socket.close();
             }
         } catch (IOException ignored) {}
+        finally {
+            Server.removeClient(this);
+        }
     }
 }
