@@ -14,10 +14,10 @@ jobs:
     - name: Lấy code từ repository
       uses: actions/checkout@v4
 
-    - name: Cài đặt môi trường JDK 25
+    - name: Cài đặt môi trường JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '25'
+        java-version: '21'
         distribution: 'temurin'
         cache: maven
 
