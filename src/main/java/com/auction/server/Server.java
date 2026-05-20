@@ -34,6 +34,16 @@ public class Server {
             client.sendData(data);
         }
     }
+    /**
+     * Broadcast data only to clients subscribed to the given auctionId.
+     */
+    public static void broadcastToAuction(int auctionId, Object data) {
+        for (ClientHandler client : clients) {
+            if (client.isSubscribedToAuction(auctionId)) {
+                client.sendData(data);
+            }
+        }
+    }
     public static void removeClient(ClientHandler client) {
         clients.remove(client);
     }

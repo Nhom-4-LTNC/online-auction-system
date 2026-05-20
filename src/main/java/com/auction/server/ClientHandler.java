@@ -22,9 +22,14 @@ public class ClientHandler implements Runnable {
     private Socket socket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
+    private final java.util.Set<Integer> subscribedAuctions = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
+    }
+
+    public boolean isSubscribedToAuction(int auctionId) {
+        return subscribedAuctions.contains(auctionId);
     }
 
     // ----------------------------------------------------------------
@@ -43,6 +48,8 @@ public class ClientHandler implements Runnable {
 
                 if (data instanceof AuthRequest authRequest) {
                     handleAuthRequest(authRequest);
+                } else if (data instanceof com.auction.protocol.auction.SubscribeAuctionRequest subReq) {
+                    handleSubscribeRequest(subReq);
                 } else if (data instanceof CreateAuctionRequest createReq) {
                     handleCreateAuctionRequest(createReq);
                 } else if (data instanceof BidMessage bidMessage) {
@@ -57,6 +64,23 @@ public class ClientHandler implements Runnable {
         } finally {
             Server.removeClient(this);
             closeConnections();
+        }
+    }
+
+    private void handleSubscribeRequest(com.auction.protocol.auction.SubscribeAuctionRequest req) {
+        if (req.isSubscribe()) {
+            subscribedAuctions.add(req.getAuctionId());
+            // Optionally send current auction state
+            try {
+                AuctionService service = AuctionService.getInstance();
+                var auction = service.getAuctionById(req.getAuctionId());
+                sendData(new com.auction.protocol.auction.AuctionResponse(com.auction.protocol.ActionType.SUCCESS, auction, "Subscribed"));
+            } catch (Exception e) {
+                sendData(new com.auction.protocol.auction.AuctionResponse(com.auction.protocol.ActionType.ERROR, null, "Subscribe failed: " + e.getMessage()));
+            }
+        } else {
+            subscribedAuctions.remove(req.getAuctionId());
+            sendData(new com.auction.protocol.auction.AuctionResponse(com.auction.protocol.ActionType.SUCCESS, null, "Unsubscribed"));
         }
     }
 
@@ -114,8 +138,18 @@ public class ClientHandler implements Runnable {
         try {
             User bidder = UserService.getInstance().getUserById(bidData.getUserId());
             AuctionService.getInstance().placeBid(bidData.getAuctionId(), bidder, bidData.getAmount());
-            // Thông báo cho tất cả client về giá mới
-            Server.broadcast(bidData);
+            // Thông báo cho clients đang subscribe phiên đấu giá này
+            try {
+                var updated = AuctionService.getInstance().getAuctionById(bidData.getAuctionId());
+                com.auction.protocol.auction.AuctionResponse notify = new com.auction.protocol.auction.AuctionResponse(
+                        com.auction.protocol.ActionType.NOTIFY_NEW_BID,
+                        updated,
+                        "New bid placed"
+                );
+                Server.broadcastToAuction(bidData.getAuctionId(), notify);
+            } catch (Exception ex) {
+                System.out.println("Broadcast failed to prepare updated auction: " + ex.getMessage());
+            }
         } catch (Exception e) {
             System.out.println("Đặt giá thất bại: " + e.getMessage());
             sendData("Lỗi: " + e.getMessage());

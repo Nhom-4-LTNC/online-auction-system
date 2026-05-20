@@ -6,6 +6,7 @@ public enum ActionType {
     REGISTER,
     PLACE_BID,
     CREATE_AUCTION,
+    SUBSCRIBE_AUCTION,
     SHOW_AUCTION_LIST,
     //RESPONSE
     LOGIN_SUCCESS,

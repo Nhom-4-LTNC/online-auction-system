@@ -15,6 +15,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
+import javax.swing.*;
+
 public class HomeController {
     @FXML
     private AnchorPane scenePane;
@@ -29,6 +31,10 @@ public class HomeController {
 
     public void createItem(ActionEvent event) throws IOException {
         SceneUtils.switchScene(event, "/fxml/ItemMenu.fxml");
+    }
+
+    public void goToFinance(ActionEvent event) throws IOException {
+        SceneUtils.switchScene(event, "/fxml/FinanceMenu.fxml");
     }
 
     public void logout(ActionEvent event) throws IOException{
