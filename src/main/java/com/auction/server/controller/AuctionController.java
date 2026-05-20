@@ -8,7 +8,7 @@ import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
 import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auction.*;
-import com.auction.server.network.ClientHandler;
+import com.auction.server.handler.ClientHandler;
 import com.auction.server.service.AuctionService;
 import com.auction.server.service.BidService;
 

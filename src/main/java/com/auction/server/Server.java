@@ -1,5 +1,6 @@
-package com.auction.server.network;
+package com.auction.server;
 
+import com.auction.server.handler.ClientHandler;
 import com.auction.shared.network.NetworkConfig;
 
 import java.io.*;

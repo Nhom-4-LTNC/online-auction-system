@@ -8,7 +8,7 @@ import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auth.AuthResponse;
 import com.auction.shared.protocol.auth.LoginRequest;
 import com.auction.shared.protocol.auth.RegisterRequest;
-import com.auction.server.network.ClientHandler;
+import com.auction.server.handler.ClientHandler;
 import com.auction.server.service.AuthService;
 
 /**

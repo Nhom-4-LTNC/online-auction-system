@@ -1,4 +1,4 @@
-package com.auction.server.network;
+package com.auction.server.handler;
 
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.protocol.ActionType;
