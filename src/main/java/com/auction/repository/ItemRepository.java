@@ -7,11 +7,6 @@ import com.auction.model.user.User;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.stream.Collectors;
 
 /**
  * Repository xử lý các thao tác CRUD đối với bảng {@code items} trong cơ sở dữ liệu.
@@ -198,90 +193,6 @@ public class ItemRepository {
             throw new Exception("Không thể lấy danh sách sản phẩm: " + e.getMessage(), e);
         }
         return items;
-    }
-
-    /**
-     * Truy vấn và trả về nhiều Item theo danh sách ID. Trả về Map id->Item.
-     */
-    public Map<Integer, Item> getItemsByIds(List<Integer> ids) throws Exception {
-        Map<Integer, Item> map = new HashMap<>();
-        if (ids == null || ids.isEmpty()) return map;
-
-        String placeholders = ids.stream().map(i -> "?").collect(Collectors.joining(","));
-        String sql = "SELECT * FROM items WHERE id IN (" + placeholders + ")";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            int idx = 1;
-            for (Integer id : ids) pstmt.setInt(idx++, id);
-
-            // First collect owner ids
-            Set<Integer> ownerIds = new HashSet<>();
-            List<ResultSet> rows = new ArrayList<>();
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                List<java.util.Map<String, Object>> temp = new ArrayList<>();
-                while (rs.next()) {
-                    int ownerId = rs.getInt("owner_id");
-                    ownerIds.add(ownerId);
-                    java.util.Map<String, Object> row = new HashMap<>();
-                    row.put("id", rs.getInt("id"));
-                    row.put("name", rs.getString("name"));
-                    row.put("description", rs.getString("description"));
-                    row.put("image_url", rs.getString("image_url"));
-                    row.put("start_price", rs.getDouble("start_price"));
-                    row.put("item_type", rs.getString("item_type"));
-                    row.put("brand", rs.getString("brand"));
-                    row.put("warranty_months", rs.getObject("warranty_months"));
-                    row.put("artist", rs.getString("artist"));
-                    row.put("creation_year", rs.getObject("creation_year"));
-                    row.put("vin", rs.getString("vin"));
-                    row.put("mileage", rs.getObject("mileage"));
-                    row.put("owner_id", ownerId);
-                    temp.add(row);
-                }
-
-                // Load owners
-                Map<Integer, User> owners = UserRepository.getInstance().getUsersByIds(new ArrayList<>(ownerIds));
-
-                // Build items
-                for (java.util.Map<String, Object> r : temp) {
-                    int id = (int) r.get("id");
-                    String name = (String) r.get("name");
-                    String description = (String) r.get("description");
-                    User owner = owners.get((Integer) r.get("owner_id"));
-                    double startPrice = (double) r.get("start_price");
-                    String type = (String) r.get("item_type");
-
-                    Item item;
-                    switch (ItemType.valueOf(type)) {
-                        case ELECTRONICS:
-                            item = new Electronics(id, name, description, owner, startPrice,
-                                    (String) r.get("brand"), r.get("warranty_months") == null ? 0 : (int) r.get("warranty_months"));
-                            break;
-                        case ART:
-                            item = new Art(id, name, description, owner, startPrice,
-                                    (String) r.get("artist"), r.get("creation_year") == null ? 0 : (int) r.get("creation_year"));
-                            break;
-                        case VEHICLE:
-                            item = new Vehicle(id, name, description, owner, startPrice,
-                                    (String) r.get("brand"), (String) r.get("vin"), r.get("mileage") == null ? 0 : (int) r.get("mileage"));
-                            break;
-                        default:
-                            throw new SQLException("Loại sản phẩm không được hỗ trợ: " + type);
-                    }
-                    item.setImageUrl((String) r.get("image_url"));
-                    map.put(id, item);
-                }
-            }
-
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("[ItemRepository - getItemsByIds] Lỗi cơ sở dữ liệu: " + e.getMessage());
-            throw new Exception("Lỗi khi tải danh sách items: " + e.getMessage(), e);
-        }
-
-        return map;
     }
 
     /**

@@ -5,9 +5,6 @@ import com.auction.model.user.User;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
 
 public class UserRepository {
     private static volatile UserRepository instance;
@@ -204,36 +201,6 @@ public class UserRepository {
             throw new Exception("Lỗi lấy danh sách người dùng: " + e.getMessage(), e);
         }
         return users;
-    }
-
-    /**
-     * Truy vấn và trả về nhiều người dùng theo danh sách ID (trả về Map id->User).
-     */
-    public Map<Integer, User> getUsersByIds(List<Integer> ids) throws Exception {
-        Map<Integer, User> map = new HashMap<>();
-        if (ids == null || ids.isEmpty()) return map;
-
-        // Build placeholders
-        String placeholders = ids.stream().map(i -> "?").collect(Collectors.joining(","));
-        String sql = "SELECT * FROM users WHERE id IN (" + placeholders + ")";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            int idx = 1;
-            for (Integer id : ids) stmt.setInt(idx++, id);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    User u = mapResultSetToUser(rs);
-                    map.put(u.getId(), u);
-                }
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("[UserRepository - getUsersByIds] Lỗi: " + e.getMessage());
-            throw new Exception("Lỗi khi tải danh sách người dùng: " + e.getMessage(), e);
-        }
-        return map;
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {

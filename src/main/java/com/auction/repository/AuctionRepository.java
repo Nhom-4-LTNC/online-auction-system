@@ -144,60 +144,32 @@ public class AuctionRepository {
         String sql = "SELECT * FROM auctions";
         List<Auction> list = new ArrayList<>();
 
-        class TempAuction {
-            int id;
-            int itemId;
-            double bidStep;
-            long startTime;
-            long endTime;
-            double currentPrice;
-            Integer lastBidderId;
-        }
-
-        List<TempAuction> temp = new ArrayList<>();
-        List<Integer> itemIds = new ArrayList<>();
-        List<Integer> lastBidderIds = new ArrayList<>();
-
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                TempAuction ta = new TempAuction();
-                ta.id = rs.getInt("id");
-                ta.itemId = rs.getInt("item_id");
-                ta.bidStep = rs.getDouble("bid_step");
-                ta.startTime = rs.getTimestamp("start_time").getTime();
-                ta.endTime = rs.getTimestamp("end_time").getTime();
-                ta.currentPrice = rs.getDouble("current_price");
+                int itemId = rs.getInt("item_id");
+                Item item = ItemRepository.getInstance().getItemById(itemId);
 
-                int lb = rs.getInt("last_bidder_id");
+                Auction auction = new Auction(
+                        rs.getInt("id"),
+                        item,
+                        rs.getDouble("bid_step"),
+                        rs.getTimestamp("start_time").getTime(),
+                        rs.getTimestamp("end_time").getTime()
+                );
+
+                auction.setCurrentPrice(rs.getDouble("current_price"));
+
+                int lastBidderId = rs.getInt("last_bidder_id");
                 if (!rs.wasNull()) {
-                    ta.lastBidderId = lb;
-                    lastBidderIds.add(lb);
-                } else {
-                    ta.lastBidderId = null;
-                }
-
-                temp.add(ta);
-                itemIds.add(ta.itemId);
-            }
-
-            // Batch load items and users to avoid N+1 queries
-            java.util.Map<Integer, Item> items = ItemRepository.getInstance().getItemsByIds(itemIds);
-            java.util.Map<Integer, User> users = UserRepository.getInstance().getUsersByIds(lastBidderIds);
-
-            for (TempAuction ta : temp) {
-                Item item = items.get(ta.itemId);
-                Auction auction = new Auction(ta.id, item, ta.bidStep, ta.startTime, ta.endTime);
-                auction.setCurrentPrice(ta.currentPrice);
-                if (ta.lastBidderId != null) {
-                    User lastBidder = users.get(ta.lastBidderId);
+                    User lastBidder = UserRepository.getInstance().getUserById(lastBidderId);
                     auction.setLastBidder(lastBidder);
                 }
+
                 list.add(auction);
             }
-
         } catch (SQLException | ClassNotFoundException e) {
             System.err.println("[AuctionRepository - getAllAuctions] Lỗi: " + e.getMessage());
             throw new Exception("Không thể tải danh sách phiên đấu giá: " + e.getMessage(), e);
