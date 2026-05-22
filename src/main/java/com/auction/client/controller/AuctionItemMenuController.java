@@ -5,7 +5,6 @@ import com.auction.shared.dto.ArtDTO;
 import com.auction.shared.dto.ElectronicsDTO;
 import com.auction.shared.dto.ItemDTO;
 import com.auction.shared.dto.VehicleDTO;
-import com.auction.server.model.auction.Auction;
 import com.auction.shared.enums.ItemType;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;

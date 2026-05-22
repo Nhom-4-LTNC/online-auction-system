@@ -1,44 +1,42 @@
 package com.auction.server.service;
 
+import com.auction.server.database.DatabaseConnection;
+import com.auction.server.model.auction.Auction;
+import com.auction.server.model.item.Item;
+import com.auction.server.model.user.User;
+import com.auction.server.repository.AuctionRepository;
+import com.auction.server.repository.ItemRepository;
+import com.auction.server.repository.UserRepository;
 import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.ItemDTO;
+import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.exception.AuthorizationException;
 import com.auction.shared.exception.ResourceNotFoundException;
-import com.auction.server.model.auction.Auction;
-import com.auction.shared.enums.AuctionStatus;
-import com.auction.server.model.item.Item;
-import com.auction.server.model.user.Role;
-import com.auction.server.model.user.User;
-import com.auction.server.repository.AuctionRepository;
-import com.auction.server.repository.BidRepository;
+import com.auction.shared.util.ItemFactory;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Tầng Service xử lý nghiệp vụ đấu giá.
- * Áp dụng Cache In-memory để tăng tốc độ truy xuất, tự động đồng bộ xuống DB.
- */
 public class AuctionService {
 
     private static volatile AuctionService instance;
 
-    /** Cache in-memory: key = auction ID, truy cập O(1). */
     private final Map<Integer, Auction> auctions = new ConcurrentHashMap<>();
-
-    /** Danh sách observer nhận thông báo khi trạng thái phiên thay đổi (Dùng cho Realtime). */
     private final List<AuctionObserver> observers = new CopyOnWriteArrayList<>();
 
     private final AuctionRepository auctionRepository = AuctionRepository.getInstance();
-    private final BidRepository bidRepository = BidRepository.getInstance();
+    private final ItemRepository itemRepository = ItemRepository.getInstance();
+    private final UserRepository userRepository = UserRepository.getInstance();
 
     private AuctionService() {
         try {
-            // Khởi động server: Tải toàn bộ phòng đấu giá từ DB lên Cache
             for (Auction auction : auctionRepository.getAllAuctions()) {
                 auctions.put(auction.getId(), auction);
             }
@@ -56,36 +54,64 @@ public class AuctionService {
         return instance;
     }
 
-    // ==========================================
-    // NHÓM QUẢN LÝ PHÒNG ĐẤU GIÁ (AUCTION)
-    // ==========================================
-
-    /**
-     * Tạo phòng đấu giá mới.
-     */
     public synchronized Auction createAuction(int sellerId, ItemDTO itemDto, double bidStep, long endTimeMillis) throws Exception {
-        // 1. Lấy thông tin người bán
-        User seller = UserService.getInstance().getUserById(sellerId);
-        if (seller == null) {
-            throw new ResourceNotFoundException("Người dùng (Người bán)", sellerId);
-        }
-
         long startTimeMillis = System.currentTimeMillis();
-
-        // 2. Validate dữ liệu
         AuctionValidator.validateAuctionParams(startTimeMillis, endTimeMillis, bidStep);
 
-        // 3. Tạo Item và lưu DB để lấy ID tự tăng
-        Item newItem = ItemService.getInstance().createItem(seller, itemDto);
-        // 4. Tạo Auction và lưu DB
-        Auction newAuction = new Auction(newItem, bidStep, startTimeMillis, endTimeMillis);
-        auctionRepository.addAuction(newAuction);
+        String imageUrl = ItemService.getInstance().saveImage(
+                itemDto != null ? itemDto.getImageData() : null,
+                itemDto != null ? itemDto.getImageFileName() : null
+        );
 
-        // 5. Cập nhật Cache in-memory
-        auctions.put(newAuction.getId(), newAuction);
+        Auction newAuction;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            try {
+                conn.setAutoCommit(false);
 
+                User seller = userRepository.getUserById(conn, sellerId);
+                if (seller == null) {
+                    throw new ResourceNotFoundException("Người dùng (Người bán)", sellerId);
+                }
+
+                Item newItem = ItemFactory.createItem(itemDto, seller, 0, imageUrl);
+                AuctionValidator.validateItem(newItem);
+                itemRepository.addItem(conn, newItem);
+
+                newAuction = new Auction(newItem, bidStep, startTimeMillis, endTimeMillis);
+                auctionRepository.addAuction(conn, newAuction);
+
+                conn.commit();
+            } catch (Exception e) {
+                rollbackQuietly(conn);
+                throw e;
+            } finally {
+                restoreAutoCommitQuietly(conn, originalAutoCommit);
+            }
+        }
+
+        updateCachedAuction(newAuction);
         return newAuction;
     }
+
+    private void rollbackQuietly(Connection conn) {
+        try {
+            conn.rollback();
+        } catch (SQLException rollbackError) {
+            System.err.println("[AuctionService] Cannot rollback transaction: "
+                    + rollbackError.getMessage());
+        }
+    }
+
+    private void restoreAutoCommitQuietly(Connection conn, boolean originalAutoCommit) {
+        try {
+            conn.setAutoCommit(originalAutoCommit);
+        } catch (SQLException restoreError) {
+            System.err.println("[AuctionService] Cannot restore autoCommit: "
+                    + restoreError.getMessage());
+        }
+    }
+
     public Auction getAuctionModelById(int auctionId) throws Exception {
         Auction auction = auctions.get(auctionId);
         if (auction == null) {
@@ -94,17 +120,18 @@ public class AuctionService {
 
         return auction;
     }
-    /**
-     * Lấy chi tiết 1 phòng đấu giá (Đã sửa lỗi NullPointerException khi chưa có ai Bid).
-     */
+
+    public void updateCachedAuction(Auction auction) {
+        if (auction != null && auction.getId() > 0) {
+            auctions.put(auction.getId(), auction);
+        }
+    }
+
     public AuctionDetailDTO getAuctionDetail(int auctionId) throws Exception {
         Auction auction = getAuctionModelById(auctionId);
         return mapToAuctionDetailDTO(auction);
     }
 
-    /**
-     * Lấy danh sách tóm tắt toàn bộ phòng đấu giá.
-     */
     public List<AuctionSummaryDTO> getAllAuctions() {
         List<AuctionSummaryDTO> auctionDTOs = new ArrayList<>();
         for (Auction auction : auctions.values()) {
@@ -113,37 +140,54 @@ public class AuctionService {
         return auctionDTOs;
     }
 
-    /**
-     * Đóng phòng đấu giá (Kết thúc sớm).
-     * Chỉ Chủ phòng hoặc Admin mới có quyền thực hiện.
-     */
     public void closeAuction(int requesterId, int auctionId) throws Exception {
-        Auction auction = auctions.get(auctionId);
-        if (auction == null) {
-            throw new ResourceNotFoundException("Phòng đấu giá", auctionId);
-        }
+        Auction auction;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            try {
+                conn.setAutoCommit(false);
 
-        User requester = UserService.getInstance().getUserById(requesterId);
-        boolean isOwner = auction.getItem().getOwner().getId() == requesterId;
-        boolean isAdmin = requester.isAdmin();
+                auction = auctionRepository.findByIdForUpdate(conn, auctionId);
+                if (auction == null) {
+                    throw new ResourceNotFoundException("Phòng đấu giá", auctionId);
+                }
 
-        // Kiểm tra quyền
-        if (!isOwner && !isAdmin) {
-            throw new AuthorizationException("Bạn không có quyền đóng phòng đấu giá này!");
-        }
+                User requester = userRepository.getUserById(conn, requesterId);
+                if (requester == null) {
+                    throw new ResourceNotFoundException("Người dùng", requesterId);
+                }
 
-        synchronized (auction) {
-            if (auction.getStatus() == AuctionStatus.FINISHED) {
-                throw new AuctionAppException("Phòng đấu giá này đã được đóng từ trước!");
+                boolean isOwner = auction.getItem().getOwner().getId() == requesterId;
+                boolean isAdmin = requester.isAdmin();
+                if (!isOwner && !isAdmin) {
+                    throw new AuthorizationException("Bạn không có quyền đóng phòng đấu giá này!");
+                }
+
+                if (auction.getStatus() == AuctionStatus.FINISHED) {
+                    throw new AuctionAppException("Phòng đấu giá này đã được đóng từ trước!");
+                }
+
+                auction.close();
+                auctionRepository.updateAuction(conn, auction);
+
+                conn.commit();
+            } catch (Exception e) {
+                rollbackQuietly(conn);
+                throw e;
+            } finally {
+                restoreAutoCommitQuietly(conn, originalAutoCommit);
             }
-            auction.setStatus(AuctionStatus.FINISHED);
-            auctionRepository.updateAuction(auction);
         }
+
+        updateCachedAuction(auction);
+        notifyAuctionClosed(auction);
     }
 
-    // ==========================================
-    // NHÓM MAPPER (CHUYỂN ĐỔI ENTITY -> DTO)
-    // ==========================================
+    private void notifyAuctionClosed(Auction auction) {
+        for (AuctionObserver observer : observers) {
+            observer.onAuctionClosed(auction);
+        }
+    }
 
     public AuctionSummaryDTO mapToAuctionSummaryDTO(Auction auction) {
         return new AuctionSummaryDTO(
@@ -160,14 +204,12 @@ public class AuctionService {
         User owner = UserService.getInstance().getUserById(auction.getItem().getOwner().getId());
         ItemDTO itemDto = ItemService.getInstance().mapToItemDTO(auction.getItem());
 
-        // FIX LỖI NPE: Kiểm tra xem đã có ai bid chưa
         Integer lastBidderId = null;
         String lastBidderUsername = null;
 
         User lastBidder = auction.getLastBidder();
         if (lastBidder != null) {
             lastBidderId = lastBidder.getId();
-            // Fetch username đầy đủ từ DB đề phòng cache User bị thiếu data
             User fetchedBidder = UserService.getInstance().getUserById(lastBidderId);
             lastBidderUsername = fetchedBidder != null ? fetchedBidder.getUsername() : "Unknown";
         }

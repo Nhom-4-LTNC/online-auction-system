@@ -36,7 +36,7 @@ public class BidController {
             }
 
             Auction updatedAuction = bidService.placeBid(
-                    client.getCurrentUser(),
+                    client.getCurrentUser().getId(),
                     placeBidRequest.getAuctionId(),
                     placeBidRequest.getAmount()
             );
