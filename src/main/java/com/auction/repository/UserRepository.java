@@ -5,6 +5,9 @@ import com.auction.model.user.User;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class UserRepository {
     private static volatile UserRepository instance;
@@ -104,6 +107,29 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Cập nhật riêng trường balance cho người dùng (an toàn hơn khi chỉ cần thay đổi số dư).
+     */
+    public void updateUserBalance(int userId, double balance) throws Exception {
+        String sql = "UPDATE users SET balance = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDouble(1, balance);
+            stmt.setInt(2, userId);
+
+            int rowsUpdated = stmt.executeUpdate();
+            if (rowsUpdated == 0) {
+                throw new SQLException("Không tìm thấy người dùng với ID = " + userId + " để cập nhật balance.");
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("[UserRepository - updateUserBalance] Lỗi: " + e.getMessage());
+            throw new Exception("Lỗi khi cập nhật số dư người dùng: " + e.getMessage(), e);
+        }
+    }
+
     public User getUserByEmail(String email) throws Exception {
         String sql = "SELECT * FROM users WHERE email = ?";
 
@@ -178,6 +204,36 @@ public class UserRepository {
             throw new Exception("Lỗi lấy danh sách người dùng: " + e.getMessage(), e);
         }
         return users;
+    }
+
+    /**
+     * Truy vấn và trả về nhiều người dùng theo danh sách ID (trả về Map id->User).
+     */
+    public Map<Integer, User> getUsersByIds(List<Integer> ids) throws Exception {
+        Map<Integer, User> map = new HashMap<>();
+        if (ids == null || ids.isEmpty()) return map;
+
+        // Build placeholders
+        String placeholders = ids.stream().map(i -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT * FROM users WHERE id IN (" + placeholders + ")";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int idx = 1;
+            for (Integer id : ids) stmt.setInt(idx++, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    User u = mapResultSetToUser(rs);
+                    map.put(u.getId(), u);
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("[UserRepository - getUsersByIds] Lỗi: " + e.getMessage());
+            throw new Exception("Lỗi khi tải danh sách người dùng: " + e.getMessage(), e);
+        }
+        return map;
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {

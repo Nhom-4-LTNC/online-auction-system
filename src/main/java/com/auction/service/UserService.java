@@ -1,9 +1,11 @@
 package com.auction.service;
 
 import com.auction.model.user.Admin;
+import com.auction.model.user.BidderProfile;
 import com.auction.model.user.Role;
 import com.auction.model.user.User;
 import com.auction.repository.UserRepository;
+import com.auction.util.SessionManager;
 
 import java.util.List;
 
@@ -105,9 +107,20 @@ public class UserService {
         return userRepository.getAllUsers();
     }
 
-    public void updateUser(User user) throws Exception {
+    public void updateUserBalance(User user, double balance) throws Exception {
         if (user == null) throw new Exception("Người dùng không hợp lệ!");
-        userRepository.updateUser(user);
+        // Check current user by ID (don't rely on object identity)
+        var sessionUser = SessionManager.getInstance().getCurrentUser();
+        if (sessionUser == null || sessionUser.getId() != user.getId()) {
+            throw new Exception("Bạn chỉ có thể cập nhật số dư của chính mình!");
+        }
+
+        // Delegate to repository method that only updates balance column to avoid overwriting other fields
+        userRepository.updateUserBalance(user.getId(), balance);
+        // Update in-memory session object as well
+        if (user.getBidderProfile() != null) {
+            user.getBidderProfile().setBalance(balance);
+        }
     }
 
     public boolean isBanned(User user) {

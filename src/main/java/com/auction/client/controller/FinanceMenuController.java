@@ -48,10 +48,8 @@ public class FinanceMenuController {
                 return;
             }
 
-            bidderProfile.setBalance(newBalance);
-
-            // Save updated user to database
-            userService.updateUser(currentUser);
+            // Save updated balance to database
+            userService.updateUserBalance(currentUser, newBalance);
 
             showInfo("Success", String.format("Balance updated! New balance: %.2f", newBalance));
             incrementBalanceTextField.clear();
@@ -86,12 +84,8 @@ public class FinanceMenuController {
                 return;
             }
 
-            // Set balance directly
-            var bidderProfile = currentUser.getBidderProfile();
-            bidderProfile.setBalance(amount);
-
-            // Save updated user to database
-            userService.updateUser(currentUser);
+            // Save updated balance to database
+            userService.updateUserBalance(currentUser, amount);
 
             showInfo("Success", String.format("Balance set to: %.2f", amount));
             setBalanceTextField.clear();
