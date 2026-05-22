@@ -15,6 +15,7 @@ public abstract class Item extends Entity implements Serializable {
     private final User owner;
     private String imageUrl;
 
+
     public Item(String name, String description,
                 User owner, double startPrice, String imageUrl) {
         super();
@@ -39,36 +40,21 @@ public abstract class Item extends Entity implements Serializable {
     public Item(String name, String description, User owner, double startPrice) {
         this(name, description, owner, startPrice, null);
     }
+    public boolean isValid() {
+        return name != null && !name.isEmpty() && description != null && !description.isEmpty() && owner != null && startPrice > 0;
+    }
     public String getImageUrl() {
         return imageUrl;
     }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl;}
     public String getName() { return name; }
-    public boolean isValid() {
-        return name != null && !name.isEmpty() && startPrice > 0;
-    }
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description;}
     public User getOwner() {
         return owner;
     }
-    public abstract String getCategory();
-    public int getOwnerId() {
-        return this.owner.getId();
-    }
+    public abstract String getItemType();
     public double getStartPrice() { return startPrice; }
-    public boolean setStartPrice(double startPrice) {
-        if (startPrice > 0) {
-            this.startPrice = startPrice;
-            return true;
-        }
-        return false;
-    }
-    @Override
-    public String toString() {
-        String ownerName = (owner != null) ? owner.getUsername() : "None";
-        return String.format("Item[ID: %d, Name: %s, Description: %s, Owner: %s, Start Price: %.2f]",
-                getCategory(), getId(), name, description, ownerName, startPrice);
-    }
+    public void setStartPrice(double startPrice) { this.startPrice = startPrice; }
 }

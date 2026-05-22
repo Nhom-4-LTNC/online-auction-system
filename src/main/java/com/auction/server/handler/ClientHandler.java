@@ -122,7 +122,6 @@ public class ClientHandler implements Runnable {
                     "ActionType không được để trống."
             );
         }
-
         try {
             return switch (action) {
                 // ===== AUTH =====

@@ -6,6 +6,8 @@ import com.auction.shared.dto.ItemDTO;
 import com.auction.shared.dto.VehicleDTO;
 import com.auction.shared.enums.ItemType;
 import com.auction.server.model.item.*;
+import com.auction.shared.exception.ResourceNotFoundException;
+import com.auction.shared.exception.ValidationException;
 import com.auction.shared.util.ItemFactory;
 import com.auction.server.model.user.User;
 import com.auction.server.repository.ItemRepository;
@@ -65,10 +67,16 @@ public class ItemService {
      * @param seller  người sở hữu sản phẩm; không được {@code null}
      * @param itemDto DTO chứa dữ liệu sản phẩm (ElectronicsDTO, ArtDTO, VehicleDTO)
      * @return đối tượng {@link Item} vừa được tạo và lưu (đã có ID thật từ DB)
-     * @throws IllegalArgumentException nếu dữ liệu sản phẩm không hợp lệ
+     * @throws ValidationException nếu dữ liệu sản phẩm không hợp lệ
      * @throws Exception                nếu xảy ra lỗi khi lưu vào DB
      */
     public Item createItem(User seller, ItemDTO itemDto) throws Exception {
+        if (seller == null) {
+            throw new ValidationException("Người bán không hợp lệ!");
+        }
+        if (itemDto == null) {
+            throw new ValidationException("Thông tin sản phẩm không hợp lệ!");
+        }
         String imageUrl = saveImage(itemDto.getImageData(), itemDto.getImageFileName());
 
         Item item = ItemFactory.createItem(itemDto, seller, 0, imageUrl);
@@ -121,12 +129,13 @@ public class ItemService {
      *
      * @param id ID của sản phẩm cần tìm
      * @return đối tượng {@link Item} tương ứng
-     * @throws Exception nếu không tìm thấy sản phẩm hoặc xảy ra lỗi DB
+     * @throws ResourceNotFoundException nếu không tìm thấy sản phẩm
+     * @throws Exception nếu xảy ra lỗi DB
      */
     public Item getItemById(int id) throws Exception {
         Item item = itemRepository.getItemById(id);
         if (item == null) {
-            throw new Exception("Không tìm thấy sản phẩm với ID: " + id);
+            throw new ResourceNotFoundException("Item", id);
         }
         return item;
     }
@@ -153,7 +162,7 @@ public class ItemService {
     }
 
     public ItemDTO mapToItemDTO(Item item) {
-        ItemType type = ItemType.valueOf(item.getCategory());
+        ItemType type = ItemType.valueOf(item.getItemType());
         byte[] imageData = readImage(item.getImageUrl());
         String imageFileName = getFileName(item.getImageUrl());
 
@@ -214,6 +223,7 @@ public class ItemService {
         try {
             return Files.readAllBytes(Paths.get(imageUrl));
         } catch (IOException e) {
+            System.err.println("Không đọc được ảnh: " + imageUrl);
             return null;
         }
     }

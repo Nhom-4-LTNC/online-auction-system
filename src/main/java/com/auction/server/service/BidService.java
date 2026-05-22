@@ -35,12 +35,13 @@ public class BidService {
      * Đặt giá cho một phiên đấu giá.
      *
      * @param currentUser user đang đăng nhập, lấy từ ClientHandler
-     * @param request payload từ client
+     * @param auctionId id của phiên đấu giá
+     * @param amount giá đặt
      * @return Auction đã được cập nhật sau khi đặt giá thành công
      * @throws Exception nếu chưa đăng nhập, không có quyền, auction không tồn tại,
      *                  bid không hợp lệ hoặc lỗi database
      */
-    public Auction placeBid(UserDTO currentUser, PlaceBidRequest request) throws Exception {
+    public Auction placeBid(UserDTO currentUser, int auctionId, double amount) throws Exception {
         if (currentUser == null) {
             throw new AuctionAppException("Bạn cần đăng nhập để đặt giá!");
         }
@@ -50,25 +51,23 @@ public class BidService {
             throw new ResourceNotFoundException("Người đặt giá", currentUser.getId());
         }
 
-        Auction auction = auctionService.getAuctionModelById(request.getAuctionId());
+        Auction auction = auctionService.getAuctionModelById(auctionId);
 
         synchronized (auction) {
-            Bid bid =   auction.placeBid(bidder, request.getAmount());
-
-            Bid savedBid = bidRepository.save(bid);
+            Bid bid = auction.placeBid(bidder, amount);
+            bidRepository.save(bid);
             auctionRepository.updateAuction(auction);
-
-            return auction;
         }
+        return auction;
     }
 
     /**
      * Lấy danh sách các bid theo id của đấu giá
-     * @param bidId
+     * @param auctionId
      * @return
      */
-    public List<Bid> getBidsByAuctionId(int bidId) {
-        return bidRepository.findByAuctionId(bidId);
+    public List<Bid> getBidsByAuctionId(int auctionId) throws Exception {
+        return bidRepository.findByAuctionId(auctionId);
     }
 
     /**
@@ -76,7 +75,7 @@ public class BidService {
      * @param auctionId
      * @return
      */
-    public Bid getHighestBidByAuctionId(int auctionId) {
+    public Bid getHighestBidByAuctionId(int auctionId) throws Exception {
         return bidRepository.findHighestBidByAuctionId(auctionId);
     }
 
@@ -85,7 +84,7 @@ public class BidService {
      * @param bidderId
      * @return
      */
-    public List<Bid> getBidsByBidder(int bidderId) {
+    public List<Bid> getBidsByBidder(int bidderId) throws Exception {
         return bidRepository.findByBidderId(bidderId);
     }
 
@@ -94,12 +93,12 @@ public class BidService {
      * @param bid
      * @return
      */
-    public BidDTO mapToBidDTO(Bid bid) {
+    public BidDTO mapToBidDTO(Bid bid) throws AuctionAppException {
         User bidder = null;
         try {
             bidder = userService.getUserById(bid.getBidderId());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new AuctionAppException("Lỗi khi lấy thông tin người đặt giá");
         }
 
         String BidderUsername = bidder != null
@@ -116,13 +115,17 @@ public class BidService {
         );
     }
 
-    public List<BidDTO> mapToBidDTOList(List<Bid> bids) {
+    public List<BidDTO> mapToBidDTOList(List<Bid> bids) throws AuctionAppException {
         return bids.stream()
                 .map(bid -> {
                     try {
                         return mapToBidDTO(bid);
                     } catch (Exception e) {
-                        throw new RuntimeException("Không thể map Bid sang BidDTO", e);
+                        try {
+                            throw new AuctionAppException("Không thể map Bid sang BidDTO");
+                        } catch (AuctionAppException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                 })
                 .toList();

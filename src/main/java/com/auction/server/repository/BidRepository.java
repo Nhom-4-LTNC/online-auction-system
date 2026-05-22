@@ -3,232 +3,158 @@ package com.auction.server.repository;
 import com.auction.server.database.DatabaseConnection;
 import com.auction.server.model.Bid;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Repository chịu trách nhiệm truy cập dữ liệu cho bảng {@code bids}.
- *
- * <p>Lớp này cung cấp các thao tác CRUD và truy vấn liên quan đến:
- * <ul>
- *     <li>Lưu bid mới</li>
- *     <li>Tìm bid theo ID</li>
- *     <li>Lấy danh sách bid của một auction</li>
- *     <li>Lấy bid cao nhất của auction</li>
- *     <li>Lấy lịch sử bid của một bidder</li>
- * </ul>
- *
- * <p>Repository chỉ xử lý thao tác database,
- * không chứa business logic đấu giá.</p>
- *
- * <p>Pattern sử dụng: Singleton.</p>
- */
 public class BidRepository {
+    private static volatile BidRepository instance;
 
-    /** Singleton instance của BidRepository */
-    private static BidRepository instance;
+    private BidRepository() {}
 
-    /**
-     * Constructor private để ngăn tạo object trực tiếp.
-     */
-    private BidRepository() {
-    }
-
-    /**
-     * Lấy instance duy nhất của {@code BidRepository}.
-     *
-     * @return singleton instance
-     */
-    public static synchronized BidRepository getInstance() {
+    public static  BidRepository getInstance() {
         if (instance == null) {
-            instance = new BidRepository();
+            synchronized (BidRepository.class) {
+                if (instance == null) {
+                    instance = new BidRepository();
+                }
+            }
         }
         return instance;
     }
 
-    /**
-     * Lưu một bid mới vào database.
-     *
-     * @param bid bid cần lưu
-     * @return bid sau khi lưu thành công
-     * @throws SQLException nếu xảy ra lỗi SQL
-     */
-    public Bid save(Bid bid) {
-        String sql = "INSERT INTO bids (auction_id, bidder_id, bid_amount) VALUES (?, ?, ?)";
+    public Bid save(Bid bid) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return save(conn, bid);
+        }
+    }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    public Bid save(Connection conn, Bid bid) throws SQLException {
+        String sql = "INSERT INTO bids (auction_id, bidder_id, bid_amount, bid_time) VALUES (?, ?, ?, ?)";
 
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, bid.getAuctionId());
             stmt.setInt(2, bid.getBidderId());
             stmt.setDouble(3, bid.getAmount());
+            stmt.setTimestamp(4, Timestamp.from(Instant.ofEpochMilli(bid.getTimestamp())));
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
-                throw new SQLException("Không thể lưu bid vào cơ sở dữ liệu");
+                throw new SQLException("Insert bid affected no rows.");
             }
 
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     bid.setId(generatedKeys.getInt(1));
+                } else {
+                    throw new SQLException("Insert bid did not return generated id.");
                 }
             }
+        }
+        return bid;
+    }
 
-            return bid;
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lưu bid", e);
+    public Bid findById(int id) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return findById(conn, id);
         }
     }
 
-    /**
-     * Tìm bid theo ID.
-     *
-     * @param id ID của bid
-     * @return bid tương ứng
-     * @throws RuntimeException nếu không tìm thấy hoặc lỗi SQL xảy ra
-     */
-    public Bid findById(int id) {
+    public Bid findById(Connection conn, int id) throws SQLException {
         String sql = "SELECT * FROM bids WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
 
-            try (var rs = stmt.executeQuery()) {
-
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToBid(rs);
                 }
             }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tìm bid theo ID", e);
         }
-
-        throw new RuntimeException("Không tìm thấy bid với ID: " + id);
+        return null;
     }
 
-    /**
-     * Lấy danh sách tất cả bid thuộc một auction.
-     *
-     * <p>Danh sách được sắp xếp theo thời gian tạo giảm dần
-     * (bid mới nhất đứng trước).</p>
-     *
-     * @param auctionId ID của auction
-     * @return danh sách bid
-     * @throws RuntimeException nếu xảy ra lỗi SQL
-     */
-    public List<Bid> findByAuctionId(int auctionId) {
-        String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY bid_time DESC";
+    public List<Bid> findByAuctionId(int auctionId) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return findByAuctionId(conn, auctionId);
+        }
+    }
 
+    public List<Bid> findByAuctionId(Connection conn, int auctionId) throws SQLException {
+        String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY bid_time DESC";
         List<Bid> bids = new ArrayList<>();
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
 
-            try (var rs = stmt.executeQuery()) {
-
+            try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     bids.add(mapResultSetToBid(rs));
                 }
             }
+        }
+        return bids;
+    }
 
-            return bids;
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tìm bid theo auction ID", e);
+    public Bid findHighestBidByAuctionId(int auctionId) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return findHighestBidByAuctionId(conn, auctionId);
         }
     }
 
-    /**
-     * Lấy bid có giá trị cao nhất của một auction.
-     *
-     * @param auctionId ID của auction
-     * @return bid cao nhất
-     * @throws RuntimeException nếu không có bid hoặc xảy ra lỗi SQL
-     */
-    public Bid findHighestBidByAuctionId(int auctionId) {
+    public Bid findHighestBidByAuctionId(Connection conn, int auctionId) throws SQLException {
         String sql = "SELECT * FROM bids WHERE auction_id = ? ORDER BY bid_amount DESC LIMIT 1";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, auctionId);
 
-            try (var rs = stmt.executeQuery()) {
-
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToBid(rs);
                 }
             }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tìm bid cao nhất theo auction ID", e);
         }
-
-        throw new RuntimeException("Không tìm thấy bids cho auction ID: " + auctionId);
+        return null;
     }
 
-    /**
-     * Lấy toàn bộ lịch sử bid của một bidder.
-     *
-     * <p>Danh sách được sắp xếp theo thời gian tạo giảm dần
-     * (bid mới nhất đứng trước).</p>
-     *
-     * @param bidderId ID của bidder
-     * @return danh sách bid của bidder
-     * @throws RuntimeException nếu không có bid hoặc xảy ra lỗi SQL
-     */
-    public List<Bid> findByBidderId(int bidderId) {
-        String sql = "SELECT * FROM bids WHERE bidder_id = ? ORDER BY bid_time DESC";
+    public List<Bid> findByBidderId(int bidderId) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return findByBidderId(conn, bidderId);
+        }
+    }
 
+    public List<Bid> findByBidderId(Connection conn, int bidderId) throws SQLException {
+        String sql = "SELECT * FROM bids WHERE bidder_id = ? ORDER BY bid_time DESC";
         List<Bid> bids = new ArrayList<>();
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, bidderId);
 
-            try (var rs = stmt.executeQuery()) {
-
+            try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     bids.add(mapResultSetToBid(rs));
                 }
             }
-
-            if (bids.isEmpty()) {
-                throw new RuntimeException("Không tìm thấy bids cho bidder ID: " + bidderId);
-            }
-
-            return bids;
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tìm bid theo bidder ID", e);
         }
+        return bids;
     }
 
-    /**
-     * Chuyển đổi một dòng dữ liệu trong {@link ResultSet}
-     * thành object {@link Bid}.
-     *
-     * @param rs ResultSet chứa dữ liệu bid
-     * @return object Bid tương ứng
-     * @throws SQLException nếu đọc dữ liệu thất bại
-     */
     private Bid mapResultSetToBid(ResultSet rs) throws SQLException {
+        Timestamp bidTime = rs.getTimestamp("bid_time");
+        long timestamp = bidTime != null ? bidTime.toInstant().toEpochMilli() : 0L;
         return new Bid(
                 rs.getInt("id"),
                 rs.getInt("auction_id"),
                 rs.getInt("bidder_id"),
                 rs.getDouble("bid_amount"),
-                rs.getTimestamp("bid_time")
-                        .toInstant()
-                        .toEpochMilli()
+                timestamp
         );
     }
 }

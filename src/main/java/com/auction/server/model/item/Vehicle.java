@@ -37,49 +37,24 @@ public class Vehicle extends Item {
         this(name, description, owner, startPrice, null, brand, vin, mileage);
     }
     @Override
-    public String getCategory() {
+    public String getItemType() {
         return "VEHICLE";
     }
-
     public String getVin() {
         return vin;
     }
-
     public void setVin(String vin) {
         this.vin = vin;
     }
-
     public int getMileage() {
         return mileage;
     }
-
-    public boolean setMileage(int mileage) {
-        if (mileage > 0) {
-            this.mileage = mileage;
-            return true;
-        }
-        return false;
-    }
-
+    public void setMileage(int mileage) { this.mileage = mileage;}
     public String getBrand() {
         return brand;
     }
-
     public void setBrand(String brand) {
         this.brand = brand;
     }
 
-    @Override
-    public String toString() {
-        return "Vehicle{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", owner=" + getOwner().getUsername() +
-                ", startPrice=" + getStartPrice() +
-                ", brand='" + brand + '\'' +
-                ", vin='" + vin + '\'' +
-                ", mileage=" + mileage +
-                '}';
-    }
 }

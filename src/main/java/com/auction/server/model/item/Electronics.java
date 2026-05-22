@@ -34,7 +34,7 @@ public class Electronics extends Item {
         this(id, name, description, owner, startPrice, null, brand, warrantyMonths);
     }
     @Override
-    public String getCategory() {
+    public String getItemType() {
         return "ELECTRONICS";
     }
 
@@ -50,24 +50,6 @@ public class Electronics extends Item {
         return warrantyMonths;
     }
 
-    public boolean setWarrantyMonths(int warrantyMonths) {
-        if (warrantyMonths > 0) {
-            this.warrantyMonths = warrantyMonths;
-            return true;
-        }
-        return false;
-    }
+    public void setWarrantyMonths(int warrantyMonths) { this.warrantyMonths = warrantyMonths; }
 
-    @Override
-    public String toString() {
-        return "Electronics{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", owner=" + getOwner().getUsername() +
-                ", startPrice=" + getStartPrice() +
-                ", brand='" + brand + '\'' +
-                ", warrantyMonths=" + warrantyMonths +
-                '}';
-    }
 }

@@ -37,7 +37,8 @@ public class BidController {
 
             Auction updatedAuction = bidService.placeBid(
                     client.getCurrentUser(),
-                    placeBidRequest
+                    placeBidRequest.getAuctionId(),
+                    placeBidRequest.getAmount()
             );
             AuctionDetailDTO auctionDetailDTO = auctionService.getAuctionDetail(updatedAuction.getId());
 
@@ -115,13 +116,18 @@ public class BidController {
         }
     }
 
-    public Response <GetBidHistoryResponse> handleGetCurrentUserBids(ClientHandler client) {
+    public Response <GetBidHistoryResponse> handleGetCurrentUserBids(ClientHandler client) throws Exception {
         if (!client.isLoggedIn()) {
             return Response.error(ActionType.GET_MY_BIDS,
                     "Người dùng chưa đăng nhập.");
         }
         List <Bid> bids = bidService.getBidsByBidder(client.getCurrentUser().getId());
-        List <BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
+        List <BidDTO> bidDTOs = null;
+        try {
+            bidDTOs = bidService.mapToBidDTOList(bids);
+        } catch (AuctionAppException e) {
+            throw new RuntimeException(e);
+        }
 
         return Response.success(
                     ActionType.GET_MY_BIDS,

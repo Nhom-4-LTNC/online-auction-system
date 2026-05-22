@@ -1,5 +1,6 @@
 package com.auction.server.service;
 
+import com.auction.server.model.user.Role;
 import com.auction.shared.exception.*;
 import com.auction.server.model.user.User;
 import com.auction.server.repository.UserRepository;
@@ -53,7 +54,7 @@ public class AuthService {
         }
 
         // Tạo mới
-        User newUser = new User(cleanUsername, password, cleanEmail);
+        User newUser = new User(cleanUsername, password, cleanEmail, Role.USER);
         userRepository.addUser(newUser);
 
         return mapUserToDTO(newUser);

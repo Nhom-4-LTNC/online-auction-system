@@ -1,10 +1,9 @@
 package com.auction.server.model.user;
 
 import com.auction.server.model.Entity;
+import com.auction.shared.exception.ValidationException;
 
 import java.io.Serial;
-import java.util.HashSet;
-import java.util.Set;
 
 public class User extends Entity {
     @Serial
@@ -12,73 +11,46 @@ public class User extends Entity {
 
     // BASIC ATTRIBUTES
     private String username;
-    private String pwd;
+    private String password;
     private String email;
+    private double balance;
     // BAN ATTRIBUTES
     private long banStartTime = 0L; // in millis
     private long banEndTime = 0L;
     // ENUMS
-    private final Set <Role> roles = new HashSet<>();
-
-    private BidderProfile bidderProfile;
-    private SellerProfile sellerProfile;
+    private Role role;
     // CONSTRUCTORS
-    public User(String username, String pwd, String email) {
+    public User(String username, String pwd, String email, Role role) {
         super();
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be null or empty");
-        }
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("Invalid email format");
-        }
         this.username = username.trim();
-        this.pwd = pwd;
+        this.password = pwd;
         this.email = email.toLowerCase().trim();
+        this.role = role;
     }
-    public User(int id, String username, String pwd, String email) {
+    public User(int id, String username, String pwd, String email, Role role) {
         super(id);
         this.username = username;
-        this.pwd = pwd;
+        this.password = pwd;
         this.email = email;
+        this.role = role;
     }
-    public void addRole(Role role) { roles.add(role);}
-    public boolean hasRole(Role role) { return roles.contains(role); }
+    public boolean isAdmin() { return role == Role.ADMIN; }
 
-    public synchronized BidderProfile getBidderProfile() {
-        if (this.bidderProfile == null) {
-            this.bidderProfile = new BidderProfile();
-            this.addRole(Role.BIDDER);
-        }
-        return this.bidderProfile;
-    }
-
-    public synchronized SellerProfile getSellerProfile() {
-        if (this.sellerProfile == null ) {
-            this.sellerProfile = new SellerProfile();
-            this.addRole(Role.SELLER);
-        }
-        return this.sellerProfile;
-    }
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username;}
-    public String getPwd() { return pwd; }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String pwd) { this.password = pwd; }
     public String getEmail() { return email; }
-    public void setPwd(String pwd) { this.pwd = pwd; }
     public void setEmail(String email) { this.email = email; }
-
+    public double getBalance() { return balance; }
+    public void setBalance(double balance) { this.balance = balance; }
     public long getBanStartTime() {return banStartTime;}
     public long getBanEndTime() {return banEndTime;}
     public void setBanStartTime(long banStartTime) { this.banStartTime = banStartTime;}
     public void setBanEndTime(long banEndTime) { this.banEndTime = banEndTime;}
-
-    @Override
-    public String toString() {
-        return String.format("User{id=%d, username='%s', email='%s', roles=%s}",
-                id, username, email, roles);
-    }
-
-    public String getPassword() {
-        return pwd;
-    }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
 }

@@ -120,7 +120,7 @@ public class AuctionItemMenuController implements Initializable {
             CreateAuctionRequest payload = new CreateAuctionRequest(
                     itemDto,
                     itemDto.getStartingPrice(),
-                    Auction.DEFAULT_BID_STEP,
+                    10,
                     now,
                     endTime
             );

@@ -71,75 +71,6 @@ public class UserService {
 
         return instance;
     }
-
-    /**
-     * Xử lý đăng nhập người dùng bằng email và mật khẩu.
-     *
-     * <p>Phương thức sẽ chuẩn hóa email, kiểm tra dữ liệu đầu vào,
-     * xác thực thông tin đăng nhập qua repository, sau đó kiểm tra
-     * trạng thái khóa tài khoản.</p>
-     *
-     * @param email    email đăng nhập của người dùng
-     * @param password mật khẩu người dùng nhập
-     * @return entity {@link User} nếu đăng nhập thành công
-     * @throws ValidationException     nếu email hoặc mật khẩu bị bỏ trống
-     * @throws AuthenticationException nếu email hoặc mật khẩu không đúng
-     * @throws AuthorizationException  nếu tài khoản đang bị khóa
-     * @throws Exception               nếu có lỗi phát sinh từ tầng repository
-     */
-    public User login(String email, String password) throws Exception {
-        String cleanEmail = normalizeEmail(email);
-
-        if (password == null || password.trim().isEmpty()) {
-            throw new ValidationException("Mật khẩu không được để trống!");
-        }
-
-        User user = userRepository.login(cleanEmail, password);
-
-        if (user == null) {
-            throw new AuthenticationException("Email hoặc mật khẩu không đúng!");
-        }
-
-        if (isBanned(user)) {
-            throw new AuthorizationException("Tài khoản của bạn đang bị khóa!");
-        }
-
-        return user;
-    }
-
-    /**
-     * Đăng ký tài khoản người dùng mới.
-     *
-     * <p>Phương thức thực hiện các bước:</p>
-     * <ol>
-     *     <li>Chuẩn hóa username và email</li>
-     *     <li>Kiểm tra mật khẩu</li>
-     *     <li>Kiểm tra trùng email hoặc username</li>
-     *     <li>Tạo entity {@link User}</li>
-     *     <li>Lưu người dùng mới xuống database</li>
-     * </ol>
-     *
-     * @param username tên đăng nhập của người dùng
-     * @param email    email của người dùng
-     * @param password mật khẩu của người dùng
-     * @return entity {@link User} vừa được tạo
-     * @throws ValidationException          nếu dữ liệu đầu vào không hợp lệ
-     * @throws DuplicateResourceException   nếu email hoặc username đã tồn tại
-     * @throws Exception                    nếu có lỗi phát sinh từ tầng repository
-     */
-    public User register(String username, String email, String password) throws Exception {
-        String cleanUsername = normalizeRequiredText(username, "Tên đăng nhập");
-        String cleanEmail = normalizeEmail(email);
-
-        validatePassword(password);
-        checkUserExistence(cleanUsername, cleanEmail);
-
-        User newUser = new User(cleanUsername, password, cleanEmail);
-        userRepository.addUser(newUser);
-
-        return newUser;
-    }
-
     /**
      * Tìm người dùng theo ID.
      *
@@ -343,7 +274,7 @@ public class UserService {
             throw new AuthenticationException("Bạn cần đăng nhập!");
         }
 
-        if (!requester.hasRole(Role.ADMIN)) {
+        if (!requester.isAdmin()) {
             throw new AuthorizationException("Chỉ Admin mới có quyền thực hiện thao tác này!");
         }
     }

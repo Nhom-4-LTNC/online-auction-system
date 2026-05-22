@@ -36,7 +36,7 @@ public class Art extends Item {
         this(name, description, owner, startPrice, null, artist, yearCreated);
     }
     @Override
-    public String getCategory() {
+    public String getItemType() {
         return "ART";
     }
 

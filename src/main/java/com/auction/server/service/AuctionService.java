@@ -7,7 +7,6 @@ import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.exception.AuthorizationException;
 import com.auction.shared.exception.ResourceNotFoundException;
 import com.auction.server.model.auction.Auction;
-import com.auction.server.model.auction.AuctionObserver;
 import com.auction.shared.enums.AuctionStatus;
 import com.auction.server.model.item.Item;
 import com.auction.server.model.user.Role;
@@ -78,12 +77,6 @@ public class AuctionService {
 
         // 3. Tạo Item và lưu DB để lấy ID tự tăng
         Item newItem = ItemService.getInstance().createItem(seller, itemDto);
-
-        // Thêm vào profile của seller (nếu bạn có dùng tới)
-        if (seller.getSellerProfile() != null) {
-            seller.getSellerProfile().addItem(newItem);
-        }
-
         // 4. Tạo Auction và lưu DB
         Auction newAuction = new Auction(newItem, bidStep, startTimeMillis, endTimeMillis);
         auctionRepository.addAuction(newAuction);
@@ -131,21 +124,21 @@ public class AuctionService {
         }
 
         User requester = UserService.getInstance().getUserById(requesterId);
-        boolean isOwner = auction.getItem().getOwnerId() == requesterId;
-        boolean isAdmin = requester.hasRole(Role.ADMIN);
+        boolean isOwner = auction.getItem().getOwner().getId() == requesterId;
+        boolean isAdmin = requester.isAdmin();
 
         // Kiểm tra quyền
         if (!isOwner && !isAdmin) {
             throw new AuthorizationException("Bạn không có quyền đóng phòng đấu giá này!");
         }
 
-        if (auction.getStatus() == AuctionStatus.FINISHED) {
-            throw new AuctionAppException("Phòng đấu giá này đã được đóng từ trước!");
+        synchronized (auction) {
+            if (auction.getStatus() == AuctionStatus.FINISHED) {
+                throw new AuctionAppException("Phòng đấu giá này đã được đóng từ trước!");
+            }
+            auction.setStatus(AuctionStatus.FINISHED);
+            auctionRepository.updateAuction(auction);
         }
-
-        // Thực hiện đóng
-        auction.setStatus(AuctionStatus.FINISHED);
-        auctionRepository.updateAuction(auction); // Cập nhật DB
     }
 
     // ==========================================
@@ -156,7 +149,7 @@ public class AuctionService {
         return new AuctionSummaryDTO(
                 auction.getId(),
                 auction.getItem().getName(),
-                auction.getItem().getCategory(),
+                auction.getItem().getItemType(),
                 auction.getCurrentPrice(),
                 auction.getEndTime(),
                 auction.getStatus()
@@ -164,7 +157,7 @@ public class AuctionService {
     }
 
     public AuctionDetailDTO mapToAuctionDetailDTO(Auction auction) throws Exception {
-        User owner = UserService.getInstance().getUserById(auction.getItem().getOwnerId());
+        User owner = UserService.getInstance().getUserById(auction.getItem().getOwner().getId());
         ItemDTO itemDto = ItemService.getInstance().mapToItemDTO(auction.getItem());
 
         // FIX LỖI NPE: Kiểm tra xem đã có ai bid chưa
@@ -194,11 +187,4 @@ public class AuctionService {
                 lastBidderUsername
         );
     }
-
-    // ==========================================
-    // NHÓM OBSERVER (REALTIME)
-    // ==========================================
-
-    public void addObserver(AuctionObserver observer) { observers.add(observer); }
-    public void removeObserver(AuctionObserver observer) { observers.remove(observer); }
 }
