@@ -18,7 +18,7 @@ public class BidRepository {
 
     private BidRepository() {}
 
-    public static  BidRepository getInstance() {
+    public static BidRepository getInstance() {
         if (instance == null) {
             synchronized (BidRepository.class) {
                 if (instance == null) {
