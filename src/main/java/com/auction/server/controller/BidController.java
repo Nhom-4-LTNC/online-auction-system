@@ -99,7 +99,10 @@ public class BidController {
                 return Response.error(ActionType.GET_BIDS_BY_BIDDER, "Người dùng chưa đăng nhập.");
             }
 
-            List<Bid> bids = bidService.getBidsByBidder(getBidsByBidderRequest.getBidderId());
+            List<Bid> bids = bidService.getBidsByBidderForRequester(
+                    client.getCurrentUser().getId(),
+                    getBidsByBidderRequest.getBidderId()
+            );
             List<BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
 
             return Response.success(

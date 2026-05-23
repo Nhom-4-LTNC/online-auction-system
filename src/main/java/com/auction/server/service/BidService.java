@@ -8,7 +8,9 @@ import com.auction.server.repository.AuctionRepository;
 import com.auction.server.repository.BidRepository;
 import com.auction.server.repository.UserRepository;
 import com.auction.shared.dto.BidDTO;
+import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.exception.AuctionAppException;
+import com.auction.shared.exception.AuctionClosedException;
 import com.auction.shared.exception.ResourceNotFoundException;
 
 import java.sql.Connection;
@@ -41,6 +43,7 @@ public class BidService {
         }
 
         Auction auction;
+        Auction expiredAuction = null;
         try (Connection conn = DatabaseConnection.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             try {
@@ -56,11 +59,22 @@ public class BidService {
                     throw new ResourceNotFoundException("Người đặt giá", bidderId);
                 }
 
-                Bid bid = auction.placeBid(bidder, amount);
-                bidRepository.save(conn, bid);
-                auctionRepository.updateAuction(conn, auction);
+                AuctionStatus oldStatus = auction.getStatus();
+                Integer oldWinnerId = userIdOrNull(auction.getWinner());
+                auction.refreshStatus(System.currentTimeMillis());
 
-                conn.commit();
+                if (!auction.isBiddable()) {
+                    if (auctionStateChanged(oldStatus, oldWinnerId, auction)) {
+                        auctionRepository.updateAuction(conn, auction);
+                    }
+                    conn.commit();
+                    expiredAuction = auction;
+                } else {
+                    Bid bid = auction.placeBid(bidder, amount);
+                    bidRepository.save(conn, bid);
+                    auctionRepository.updateAuction(conn, auction);
+                    conn.commit();
+                }
             } catch (Exception e) {
                 rollbackQuietly(conn);
                 throw e;
@@ -70,14 +84,26 @@ public class BidService {
         }
 
         auctionService.updateCachedAuction(auction);
+        if (expiredAuction != null) {
+            throw new AuctionClosedException(auctionId);
+        }
         return auction;
+    }
+
+    private boolean auctionStateChanged(AuctionStatus oldStatus, Integer oldWinnerId, Auction auction) {
+        return oldStatus != auction.getStatus()
+                || !java.util.Objects.equals(oldWinnerId, userIdOrNull(auction.getWinner()));
+    }
+
+    private Integer userIdOrNull(User user) {
+        return user != null ? user.getId() : null;
     }
 
     private void rollbackQuietly(Connection conn) {
         try {
             conn.rollback();
         } catch (SQLException rollbackError) {
-            System.err.println("[BidService] Không thể rollback giao dịch đặt giá: "
+            System.err.println("[BidService] Cannot rollback placeBid transaction: "
                     + rollbackError.getMessage());
         }
     }
@@ -86,7 +112,7 @@ public class BidService {
         try {
             conn.setAutoCommit(originalAutoCommit);
         } catch (SQLException restoreError) {
-            System.err.println("[BidService] Không thể khôi phục autoCommit: "
+            System.err.println("[BidService] Cannot restore autoCommit: "
                     + restoreError.getMessage());
         }
     }
@@ -101,6 +127,16 @@ public class BidService {
 
     public List<Bid> getBidsByBidder(int bidderId) throws Exception {
         return bidRepository.findByBidderId(bidderId);
+    }
+
+    public List<Bid> getBidsByBidderForRequester(int requesterId, int bidderId) throws Exception {
+        User requester = userService.getUserById(requesterId);
+        if (!requester.isAdmin() && requesterId != bidderId) {
+            throw new com.auction.shared.exception.AuthorizationException(
+                    "Bạn không có quyền xem lịch sử bid của người dùng khác!"
+            );
+        }
+        return getBidsByBidder(bidderId);
     }
 
     public BidDTO mapToBidDTO(Bid bid) throws AuctionAppException {

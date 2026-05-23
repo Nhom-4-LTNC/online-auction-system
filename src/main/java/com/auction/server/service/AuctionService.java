@@ -127,17 +127,65 @@ public class AuctionService {
         }
     }
 
+    private boolean auctionStateChanged(AuctionStatus oldStatus, Integer oldWinnerId, Auction auction) {
+        return oldStatus != auction.getStatus()
+                || !java.util.Objects.equals(oldWinnerId, userIdOrNull(auction.getWinner()));
+    }
+
+    private Integer userIdOrNull(User user) {
+        return user != null ? user.getId() : null;
+    }
+
     public AuctionDetailDTO getAuctionDetail(int auctionId) throws Exception {
-        Auction auction = getAuctionModelById(auctionId);
+        Auction auction = refreshAndPersistIfChanged(auctionId);
         return mapToAuctionDetailDTO(auction);
     }
 
-    public List<AuctionSummaryDTO> getAllAuctions() {
+    public List<AuctionSummaryDTO> getAllAuctions() throws Exception {
         List<AuctionSummaryDTO> auctionDTOs = new ArrayList<>();
-        for (Auction auction : auctions.values()) {
+        for (Integer auctionId : new ArrayList<>(auctions.keySet())) {
+            Auction auction = refreshAndPersistIfChanged(auctionId);
             auctionDTOs.add(mapToAuctionSummaryDTO(auction));
         }
         return auctionDTOs;
+    }
+
+    public Auction refreshAndPersistIfChanged(int auctionId) throws Exception {
+        Auction auction;
+        boolean changed;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            try {
+                conn.setAutoCommit(false);
+
+                auction = auctionRepository.findByIdForUpdate(conn, auctionId);
+                if (auction == null) {
+                    throw new ResourceNotFoundException("Phòng đấu giá", auctionId);
+                }
+
+                AuctionStatus oldStatus = auction.getStatus();
+                Integer oldWinnerId = userIdOrNull(auction.getWinner());
+                auction.refreshStatus(System.currentTimeMillis());
+                changed = auctionStateChanged(oldStatus, oldWinnerId, auction);
+
+                if (changed) {
+                    auctionRepository.updateAuction(conn, auction);
+                }
+
+                conn.commit();
+            } catch (Exception e) {
+                rollbackQuietly(conn);
+                throw e;
+            } finally {
+                restoreAutoCommitQuietly(conn, originalAutoCommit);
+            }
+        }
+
+        updateCachedAuction(auction);
+        if (changed && auction.getStatus() == AuctionStatus.FINISHED) {
+            notifyAuctionClosed(auction);
+        }
+        return auction;
     }
 
     public void closeAuction(int requesterId, int auctionId) throws Exception {
