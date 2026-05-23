@@ -10,6 +10,7 @@ public class AuctionSummaryDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final int auctionId;
+    private final int itemId;
     private final String itemName;
     private final String itemType;
     private final double currentPrice;
@@ -17,12 +18,14 @@ public class AuctionSummaryDTO implements Serializable {
     private final AuctionStatus status;
 
     public AuctionSummaryDTO(int auctionId,
+                             int itemId,
                              String itemName,
                              String itemType,
                              double currentPrice,
                              long endTimeMillis,
                              AuctionStatus status) {
         this.auctionId = auctionId;
+        this.itemId = itemId;
         this.itemName = itemName;
         this.itemType = itemType;
         this.currentPrice = currentPrice;

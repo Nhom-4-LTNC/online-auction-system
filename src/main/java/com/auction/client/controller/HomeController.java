@@ -1,20 +1,23 @@
 package com.auction.client.controller;
 
+import java.io.IOException;
+
+
 import com.auction.shared.util.Check;
 import com.auction.shared.util.SceneUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-import java.io.IOException;
+import javax.swing.*;
 
 public class HomeController {
-    @FXML
-    private Button logoutButton, thamgiaBUtton;
     @FXML
     private AnchorPane scenePane;
 
@@ -23,11 +26,15 @@ public class HomeController {
     Parent root;
 
     public void joinBid(ActionEvent event) throws IOException{
-        SceneUtils.switchScene(event, "AC.fxml");
+        SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
     }
 
     public void createItem(ActionEvent event) throws IOException {
         SceneUtils.switchScene(event, "/fxml/ItemMenu.fxml");
+    }
+
+    public void goToFinance(ActionEvent event) throws IOException {
+        SceneUtils.switchScene(event, "/fxml/FinanceMenu.fxml");
     }
 
     public void logout(ActionEvent event) throws IOException{

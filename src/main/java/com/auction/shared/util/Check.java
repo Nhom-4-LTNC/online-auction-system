@@ -23,11 +23,12 @@ public class Check {
     private static final Pattern isValidLengthNoWhites = Pattern.compile("^\\S{8,}$");
 
     public static boolean checkName(String username) {
-        // 1. Handle null to prevent NullPointerException
-        if (username.isEmpty()) {
+        // Handle null to prevent NullPointerException
+        if (username == null || username.isEmpty()) {
             System.out.println("Username cannot be null.");
             return false;
         }
+
 
         // 2. Check for any whitespace characters anywhere in the string
         // This is more efficient than replacing/trimming and comparing
@@ -61,11 +62,12 @@ public class Check {
         ));
     }
     public static boolean checkPass(String password) {
-        // 1. Check for null or empty to prevent errors
-        if (password.isEmpty()) {
+        // Check for null or empty to prevent errors
+        if (password == null || password.isEmpty()) {
             System.out.println("Password cannot be empty.");
             return false;
         }
+
 
 
         ArrayList<Boolean> result = checkPassRequirements(password);

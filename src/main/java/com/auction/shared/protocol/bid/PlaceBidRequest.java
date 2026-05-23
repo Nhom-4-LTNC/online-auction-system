@@ -1,5 +1,6 @@
 package com.auction.shared.protocol.bid;
 
+
 import java.io.Serial;
 import java.io.Serializable;
 

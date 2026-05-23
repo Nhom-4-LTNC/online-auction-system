@@ -240,6 +240,7 @@ public class AuctionService {
     public AuctionSummaryDTO mapToAuctionSummaryDTO(Auction auction) {
         return new AuctionSummaryDTO(
                 auction.getId(),
+                auction.getItem().getId(),
                 auction.getItem().getName(),
                 auction.getItem().getItemType(),
                 auction.getCurrentPrice(),
