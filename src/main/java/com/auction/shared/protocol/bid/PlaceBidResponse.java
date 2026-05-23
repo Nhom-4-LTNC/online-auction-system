@@ -17,4 +17,10 @@ public class PlaceBidResponse implements Serializable {
 
     public AuctionDetailDTO getAuction() { return updatedAuction; }
     public String getMessage() { return message; }
+
+    @Override
+    public String toString() {
+        return String.format("PlaceBidResponse{auction=%s, message='%s'}", updatedAuction, message);
+    }
+
 }

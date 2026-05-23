@@ -1,5 +1,5 @@
 package com.auction.manual;
 
-public class ManualAuctinFlowTest {
+public class ManualAuctionFlowTest {
 
 }

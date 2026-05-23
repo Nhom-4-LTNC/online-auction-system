@@ -33,4 +33,10 @@ public class BidDTO implements Serializable {
     public double getAmount() { return amount; }
     public long getBidTime() { return bidTime; }
 
+    @Override
+    public String toString() {
+        return String.format("Bid[ID: %d, Auction: %d, Bidder: %s, Amount: %.2f, Time: %s]",
+                bidId, auctionId, bidderUsername, amount, bidTime);
+    }
+
 }

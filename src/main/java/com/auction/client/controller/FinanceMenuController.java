@@ -59,7 +59,6 @@ public class FinanceMenuController {
      * - Client-side service gửi Request qua socket, ví dụ ActionType.ADD_BALANCE hoặc UPDATE_BALANCE.
      * - Server kiểm tra currentUser từ ClientHandler/session, không tin user object từ client gửi lên.
      */
-    private final UserService userService = UserService.getInstance();
 
     @FXML
     public void incrementBalance(ActionEvent event) {
@@ -105,8 +104,6 @@ public class FinanceMenuController {
              * - Client chỉ tính toán để hiển thị tạm được.
              * - Giá trị chính thức phải do server cập nhật và trả về.
              */
-            var bidderProfile = currentUser.getBidderProfile();
-            double newBalance = bidderProfile.getBalance() + amount;
 
             /*
              * REVIEW:
@@ -115,10 +112,6 @@ public class FinanceMenuController {
              *
              * Nếu muốn có chức năng rút/trừ tiền, nên làm action riêng và server phải kiểm tra quyền.
              */
-            if (newBalance < 0) {
-                showAlert("Error", "Balance cannot be negative!");
-                return;
-            }
 
             /*
              * REVIEW - VẤN ĐỀ BẢO MẬT/NGHIỆP VỤ:
@@ -132,16 +125,12 @@ public class FinanceMenuController {
              * Không nên truyền currentUser object từ client vào service để update DB.
              * Server nên lấy user hiện tại từ session server-side.
              */
-            userService.updateUserBalance(currentUser, newBalance);
 
             /*
              * REVIEW:
              * Sau khi server cập nhật thành công, nên cập nhật lại SessionManager.currentUser.balance
              * bằng giá trị server trả về, tránh client hiển thị balance cũ.
              */
-            showInfo("Success", String.format("Balance updated! New balance: %.2f", newBalance));
-            incrementBalanceTextField.clear();
-
         } catch (NumberFormatException e) {
             showAlert("Error", "Please enter a valid number!");
         } catch (Exception e) {
@@ -196,7 +185,6 @@ public class FinanceMenuController {
              * - Chỉ ADMIN được gọi.
              * - Server phải kiểm tra role ADMIN từ session server-side.
              */
-            userService.updateUserBalance(currentUser, amount);
 
             showInfo("Success", String.format("Balance set to: %.2f", amount));
             setBalanceTextField.clear();

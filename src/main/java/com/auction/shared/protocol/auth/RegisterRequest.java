@@ -17,4 +17,8 @@ public class RegisterRequest implements Serializable {
     public String getPassword() { return password; }
     public String getEmail() { return email; }
 
+    @Override
+    public String toString() {
+        return String.format("RegisterRequest{username='%s', email='%s'}", username, email);
+    }
 }

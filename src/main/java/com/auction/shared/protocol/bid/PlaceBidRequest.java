@@ -19,8 +19,12 @@ public class PlaceBidRequest implements Serializable {
     public int getAuctionId() {
         return auctionId;
     }
-
     public double getAmount() {
         return amount;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("PlaceBidRequest{auctionId=%d, amount=%.2f}", auctionId, amount);
     }
 }

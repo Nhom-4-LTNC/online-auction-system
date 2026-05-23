@@ -25,4 +25,8 @@ public class AuthResponse implements Serializable {
         return message;
     }
 
+    @Override
+    public String toString() {
+        return String.format("AuthResponse{user=%s, message='%s'}", user, message);
+    }
 }

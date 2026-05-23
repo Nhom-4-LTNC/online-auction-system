@@ -23,4 +23,9 @@ public class GetBidHistoryResponse implements java.io.Serializable{
     public String getMessage() {
         return message;
     }
+
+    @Override
+    public String toString() {
+        return String.format("GetBidHistoryResponse{bidHistory=%s, message='%s'}", bidHistory, message);
+    }
 }

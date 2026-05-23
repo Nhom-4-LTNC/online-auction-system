@@ -20,12 +20,9 @@ public class UserDTO implements Serializable {
     public int getId() { return userId; }
     public String getUsername() { return username; }
     public String getEmail() { return email; }
+
     @Override
     public String toString() {
-        return "UserDTO{" +
-                "id=" + userId +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                '}';
+        return String.format("UserDTO{userId=%d, username='%s', email='%s'}", userId, username, email);
     }
 }

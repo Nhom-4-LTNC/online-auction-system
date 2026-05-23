@@ -15,4 +15,9 @@ public class GetBidsByAuctionRequest implements java.io.Serializable{
     public int getAuctionId() {
         return auctionId;
     }
+
+    @Override
+    public String toString() {
+        return String.format("GetBidsByAuctionRequest{auctionId=%d}", auctionId);
+    }
 }

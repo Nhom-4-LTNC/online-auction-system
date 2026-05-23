@@ -28,4 +28,9 @@ public class CreateAuctionResponse implements Serializable {
 
     public AuctionDetailDTO getAuction()         { return auction; }
     public String getMessage()          { return message; }
+
+    @Override
+    public String toString() {
+        return String.format("CreateAuctionResponse{auction=%s, message='%s'}", auction, message);
+    }
 }

@@ -12,4 +12,9 @@ public class CloseAuctionRequest implements Serializable {
         this.auctionId = auctionId;
     }
     public int getAuctionId() { return auctionId; }
+
+    @Override
+    public String toString() {
+        return String.format("CloseAuctionRequest{auctionId=%d}", auctionId);
+    }
 }

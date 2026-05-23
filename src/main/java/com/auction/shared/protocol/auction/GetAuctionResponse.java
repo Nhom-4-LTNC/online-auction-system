@@ -25,4 +25,9 @@ public class GetAuctionResponse implements Serializable {
     public AuctionDetailDTO getAuction() { return auction; }
     public List<BidDTO> getRecentBids() { return recentBids; }
     public String getMessage() { return message; }
+
+    @Override
+    public String toString() {
+        return String.format("GetAuctionResponse{auction=%s, recentBids=%s, message='%s'}", auction, recentBids, message);
+    }
 }

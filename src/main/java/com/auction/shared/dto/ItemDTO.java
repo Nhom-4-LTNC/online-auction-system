@@ -40,4 +40,10 @@ public abstract class ItemDTO implements Serializable {
     public double getStartingPrice() { return startingPrice; }
     public byte[] getImageData() { return imageData; }
     public String getImageFileName() { return imageFileName; }
+
+    @Override
+    public String toString() {
+        return String.format("ItemDTO{type=%s, name='%s', description='%s', startingPrice=%.2f, imageData=%s, imageFileName='%s'}",
+                type, name, description, startingPrice, imageData, imageFileName);
+    }
 }

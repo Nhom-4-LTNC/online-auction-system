@@ -20,4 +20,9 @@ public class ElectronicsDTO extends ItemDTO{
 
     public String getBrand() { return brand; }
     public int getWarrantyMonths() { return warrantyMonths; }
+
+    @Override
+    public String toString() {
+        return String.format("ElectronicsDTO{brand='%s', warrantyMonths=%d}", brand, warrantyMonths);
+    }
 }

@@ -55,4 +55,10 @@ public class AuctionDetailDTO implements Serializable {
     public AuctionStatus getStatus() { return status; }
     public Integer getLastBidderId() { return lastBidderId; }
     public String getLastBidderUsername() { return lastBidderUsername; }
+
+    @Override
+    public String toString() {
+        return String.format("AuctionDetailDTO{id=%d, sellerId=%d, sellerUsername='%s', item=%s, startingPrice=%.2f, currentPrice=%.2f, bidStep=%.2f, startTime=%s, endTime=%s, status=%s, lastBidderId=%d, lastBidderUsername='%s'}",
+                auctionId, sellerId, sellerUsername, item, startingPrice, currentPrice, bidStep, startTimeMillis, endTimeMillis, status, lastBidderId, lastBidderUsername);
+    }
 }

@@ -21,4 +21,9 @@ public class GetAllAuctionResponse implements Serializable {
         return auctions;
     }
     public String getMessage() { return message; }
+
+    @Override
+    public String toString() {
+        return String.format("GetAllAuctionResponse{auctions=%s, message='%s'}", auctions, message);
+    }
 }

@@ -7,12 +7,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ManualClientTest implements AutoCloseable{
+public class ManualClient implements AutoCloseable{
     private final Socket socket;
     private final ObjectOutputStream out;
     private final ObjectInputStream in;
 
-    public ManualClientTest(String host, int port) throws Exception {
+    public ManualClient(String host, int port) throws Exception {
         this.socket = new Socket(host, port);
         this.out = new ObjectOutputStream(socket.getOutputStream());
         this.in = new ObjectInputStream(socket.getInputStream());

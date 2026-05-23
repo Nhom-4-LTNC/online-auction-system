@@ -36,6 +36,7 @@ public class AuctionSummaryDTO implements Serializable {
     public int getAuctionId() {
         return auctionId;
     }
+    public int getItemId() {return itemId;}
     public String getItemName() {
         return itemName;
     }
@@ -51,4 +52,11 @@ public class AuctionSummaryDTO implements Serializable {
     public AuctionStatus getStatus() {
         return status;
     }
+
+    @Override
+    public String toString() {
+        return String.format("AuctionSummaryDTO{id=%d, itemId=%d, itemName='%s', itemType='%s', currentPrice=%.2f, endTimeMillis=%d, status=%s}",
+                auctionId, itemId, itemName, itemType, currentPrice, endTimeMillis, status);
+    }
+
 }

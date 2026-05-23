@@ -16,4 +16,9 @@ public class GetAuctionRequest implements Serializable {
     public int getAuctionId() {
         return auctionId;
     }
+
+    @Override
+    public String toString() {
+        return String.format("GetAuctionRequest{auctionId=%d}", auctionId);
+    }
 }

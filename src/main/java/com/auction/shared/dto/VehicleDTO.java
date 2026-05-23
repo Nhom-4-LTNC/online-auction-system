@@ -22,4 +22,9 @@ public class VehicleDTO extends ItemDTO{
     public String getBrand() { return brand; }
     public String getVin() { return vin; }
     public int getMileage() { return mileage; }
+
+    @Override
+    public String toString() {
+        return String.format("VehicleDTO{brand='%s', vin='%s', mileage=%d}", brand, vin, mileage);
+    }
 }

@@ -16,4 +16,8 @@ public class GetBidsByBidderRequest implements java.io.Serializable{
         return bidderId;
     }
 
+    @Override
+    public String toString() {
+        return String.format("GetBidsByBidderRequest{bidderId=%d}", bidderId);
+    }
 }

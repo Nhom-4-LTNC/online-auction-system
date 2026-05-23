@@ -42,4 +42,10 @@ public class CreateAuctionRequest implements Serializable {
     public long getStartTime()    { return startTime; }
     public long getEndTime()      { return endTime; }
     public double getStartingPrice() { return startingPrice;}
+
+    @Override
+    public String toString() {
+        return String.format("CreateAuctionRequest{item=%s, startingPrice=%.2f, bidStep=%.2f, startTime=%d, endTime=%d}",
+                itemDto, startingPrice, bidStep, startTime, endTime);
+    }
 }

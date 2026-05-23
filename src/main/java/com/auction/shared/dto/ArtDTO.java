@@ -20,4 +20,11 @@ public class ArtDTO extends ItemDTO {
 
     public String getArtist() { return artist; }
     public int getYearCreated() { return yearCreated; }
+
+    @Override
+    public String toString() {
+        return String.format("ArtDTO{artist='%s', yearCreated=%d, %s}", artist, yearCreated, super.toString());
+    }
+
+
 }
