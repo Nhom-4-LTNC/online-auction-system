@@ -9,6 +9,7 @@ public enum ActionType implements Serializable {
 
     CREATE_AUCTION,
     GET_ALL_AUCTIONS,
+    GET_AUCTIONS_BY_TYPE,
     GET_AUCTION,
     CLOSE_AUCTION,
 
@@ -20,4 +21,6 @@ public enum ActionType implements Serializable {
     AUCTION_CREATED,
     AUCTION_CLOSED,
     AUCTION_UPDATED,
+
+    ADD_BALANCE
 }
