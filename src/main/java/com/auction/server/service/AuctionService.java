@@ -211,12 +211,23 @@ public class AuctionService {
                     throw new AuthorizationException("Bạn không có quyền đóng phòng đấu giá này!");
                 }
 
-                if (auction.getStatus() == AuctionStatus.FINISHED) {
+                if (auction.getStatus() == AuctionStatus.FINISHED
+                        || auction.getStatus() == AuctionStatus.PAID
+                        || auction.getStatus() == AuctionStatus.CANCELED) {
                     throw new AuctionAppException("Phòng đấu giá này đã được đóng từ trước!");
                 }
 
+                System.out.println("[closeAuction] before close status = " + auction.getStatus());
                 auction.close();
+                System.out.println("[closeAuction] after close status = " + auction.getStatus());
                 auctionRepository.updateAuction(conn, auction);
+
+                Auction reloaded = auctionRepository.findByIdForUpdate(conn, auctionId);
+                System.out.println("[closeAuction] after update reload status = "
+                        + (reloaded != null ? reloaded.getStatus() : null));
+                if (reloaded != null) {
+                    auction = reloaded;
+                }
 
                 conn.commit();
             } catch (Exception e) {

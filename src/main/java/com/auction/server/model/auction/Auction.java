@@ -81,7 +81,9 @@ public class Auction extends Entity {
     }
 
     public synchronized void refreshStatus(long now) {
-        if (status == AuctionStatus.PAID || status == AuctionStatus.CANCELED) {
+        if (status == AuctionStatus.FINISHED
+                || status == AuctionStatus.PAID
+                || status == AuctionStatus.CANCELED) {
             return;
         }
 
