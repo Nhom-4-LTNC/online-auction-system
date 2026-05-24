@@ -11,12 +11,7 @@ import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
 import com.auction.shared.protocol.Response;
-import com.auction.shared.protocol.auction.CloseAuctionRequest;
-import com.auction.shared.protocol.auction.CreateAuctionRequest;
-import com.auction.shared.protocol.auction.CreateAuctionResponse;
-import com.auction.shared.protocol.auction.GetAllAuctionResponse;
-import com.auction.shared.protocol.auction.GetAuctionRequest;
-import com.auction.shared.protocol.auction.GetAuctionResponse;
+import com.auction.shared.protocol.auction.*;
 
 import java.util.List;
 
@@ -25,7 +20,7 @@ public class AuctionController {
     private final AuctionService auctionService = AuctionService.getInstance();
     private final BidService bidService = BidService.getInstance();
 
-    public Response<?> handleGetAllAuctions(Request<?> request, ClientHandler client) {
+    public Response<?> handleGetAllAuctions() {
         try {
             List<AuctionSummaryDTO> summaries = auctionService.getAllAuctions();
             return Response.success(
@@ -91,7 +86,38 @@ public class AuctionController {
             return Response.error(ActionType.CREATE_AUCTION, "Lỗi máy chủ khi tạo phòng đấu giá!");
         }
     }
+    public Response<?> handleGetAuctionsByType(Request<?> request) {
+        try {
+            Object payload = request.getPayload();
 
+            if (!(payload instanceof GetAuctionsByTypeRequest getRequest)) {
+                return Response.error(
+                        ActionType.GET_AUCTIONS_BY_TYPE,
+                        "Payload GET_AUCTIONS_BY_TYPE không hợp lệ."
+                );
+            }
+
+            List<AuctionSummaryDTO> auctions =
+                    auctionService.getAuctionSummariesByType(getRequest.getItemType());
+
+            GetAuctionsByTypeResponse responsePayload =
+                    new GetAuctionsByTypeResponse(
+                            auctions,
+                            "Lấy danh sách đấu giá theo loại thành công."
+                    );
+
+            return Response.success(ActionType.GET_AUCTIONS_BY_TYPE, responsePayload);
+
+        } catch (AuctionAppException e) {
+            return Response.error(ActionType.GET_AUCTIONS_BY_TYPE, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.error(
+                    ActionType.GET_AUCTIONS_BY_TYPE,
+                    "Lỗi máy chủ khi lấy danh sách đấu giá theo loại."
+            );
+        }
+    }
     public Response<?> handleCloseAuction(Request<?> request, ClientHandler client) {
         try {
             if (client.getCurrentUser() == null) {

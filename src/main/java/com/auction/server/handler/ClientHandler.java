@@ -132,13 +132,15 @@ public class ClientHandler implements Runnable {
                 case LOGOUT -> handleLogout();
 
                 // ===== AUCTION =====
-                case GET_ALL_AUCTIONS -> auctionController.handleGetAllAuctions(request, this);
+                case GET_ALL_AUCTIONS -> auctionController.handleGetAllAuctions();
 
                 case GET_AUCTION -> auctionController.handleGetAuction(request, this);
 
                 case CREATE_AUCTION -> auctionController.handleCreateAuction(request, this);
 
                 case CLOSE_AUCTION -> auctionController.handleCloseAuction(request, this);
+
+                case GET_AUCTIONS_BY_TYPE -> auctionController.handleGetAuctionsByType(request);
 
                 // ===== BID =====
                 case PLACE_BID -> bidController.handlePlaceBid(request, this);

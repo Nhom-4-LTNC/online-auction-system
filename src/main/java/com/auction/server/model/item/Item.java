@@ -2,6 +2,7 @@ package com.auction.server.model.item;
 
 import com.auction.server.model.Entity;
 import com.auction.server.model.user.User;
+import com.auction.shared.enums.ItemType;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -54,7 +55,7 @@ public abstract class Item extends Entity implements Serializable {
     public User getOwner() {
         return owner;
     }
-    public abstract String getItemType();
+    public abstract ItemType getItemType();
     public double getStartPrice() { return startPrice; }
     public void setStartPrice(double startPrice) { this.startPrice = startPrice; }
 }

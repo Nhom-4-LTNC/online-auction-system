@@ -11,6 +11,7 @@ import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.ItemDTO;
 import com.auction.shared.enums.AuctionStatus;
+import com.auction.shared.enums.ItemType;
 import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.exception.AuthorizationException;
 import com.auction.shared.exception.ResourceNotFoundException;
@@ -141,6 +142,13 @@ public class AuctionService {
         return mapToAuctionDetailDTO(auction);
     }
 
+    public List<AuctionSummaryDTO> getAuctionSummariesByType(ItemType itemType) throws Exception {
+        if (itemType == null) {
+            throw new AuctionAppException("Loại sản phẩm không hợp lệ.");
+        }
+
+        return auctionRepository.getAuctionSummariesByType(itemType);
+    }
     public List<AuctionSummaryDTO> getAllAuctions() throws Exception {
         List<AuctionSummaryDTO> auctionDTOs = new ArrayList<>();
         for (Integer auctionId : new ArrayList<>(auctions.keySet())) {

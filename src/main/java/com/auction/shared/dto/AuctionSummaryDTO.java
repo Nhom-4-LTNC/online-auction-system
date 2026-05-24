@@ -1,6 +1,7 @@
 package com.auction.shared.dto;
 
 import com.auction.shared.enums.AuctionStatus;
+import com.auction.shared.enums.ItemType;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -12,7 +13,7 @@ public class AuctionSummaryDTO implements Serializable {
     private final int auctionId;
     private final int itemId;
     private final String itemName;
-    private final String itemType;
+    private final ItemType itemType;
     private final double currentPrice;
     private final long endTimeMillis;
     private final AuctionStatus status;
@@ -20,7 +21,7 @@ public class AuctionSummaryDTO implements Serializable {
     public AuctionSummaryDTO(int auctionId,
                              int itemId,
                              String itemName,
-                             String itemType,
+                             ItemType itemType,
                              double currentPrice,
                              long endTimeMillis,
                              AuctionStatus status) {
@@ -40,7 +41,7 @@ public class AuctionSummaryDTO implements Serializable {
     public String getItemName() {
         return itemName;
     }
-    public String getItemType() {
+    public ItemType getItemType() {
         return itemType;
     }
     public double getCurrentPrice() {

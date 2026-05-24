@@ -162,7 +162,7 @@ public class ItemService {
     }
 
     public ItemDTO mapToItemDTO(Item item) {
-        ItemType type = ItemType.valueOf(item.getItemType());
+        ItemType type = item.getItemType();
         byte[] imageData = readImage(item.getImageUrl());
         String imageFileName = getFileName(item.getImageUrl());
 

@@ -323,15 +323,15 @@ public class ManualAuctionFlowTest {
          * có thể đổi thành GET_ALL_AUCTIONS rồi filter ở client.
          */
         Response<?> response = client.send(new Request<>(
-                ActionType.GET_ALL_AUCTIONS,
-                type
+                ActionType.GET_AUCTIONS_BY_TYPE,
+                new GetAuctionsByTypeRequest(type)
         ));
 
         expectSuccess(response, "Get auctions by type: " + type);
 
         Object payload = response.getPayload();
 
-        if (!(payload instanceof GetAllAuctionResponse res)) {
+        if (!(payload instanceof GetAuctionsByTypeResponse res)) {
             throw new AssertionError(
                     "GET_AUCTIONS_BY_TYPE payload is not List. Actual: " +
                             (payload == null ? "null" : payload.getClass().getName())

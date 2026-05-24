@@ -1,6 +1,7 @@
 package com.auction.server.model.item;
 
 import com.auction.server.model.user.User;
+import com.auction.shared.enums.ItemType;
 
 import java.io.Serial;
 
@@ -34,8 +35,8 @@ public class Electronics extends Item {
         this(id, name, description, owner, startPrice, null, brand, warrantyMonths);
     }
     @Override
-    public String getItemType() {
-        return "ELECTRONICS";
+    public ItemType getItemType() {
+        return ItemType.ELECTRONICS;
     }
 
     public String getBrand() {

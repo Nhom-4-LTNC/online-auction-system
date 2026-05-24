@@ -4,7 +4,9 @@ import com.auction.server.database.DatabaseConnection;
 import com.auction.server.model.auction.Auction;
 import com.auction.server.model.item.Item;
 import com.auction.server.model.user.User;
+import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.enums.AuctionStatus;
+import com.auction.shared.enums.ItemType;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -136,11 +138,62 @@ public class AuctionRepository {
         }
     }
 
+    public List<Auction> getAuctionsByType(Connection conn, String type) throws Exception {
+         String sql = "SELECT * FROM auctions WHERE item_type = ?";
+         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             pstmt.setString(1, type);
+             return queryAuctions(conn, pstmt.toString());
+         }
+    }
+
     public List<Auction> getAllAuctions(Connection conn) throws Exception {
         String sql = "SELECT * FROM auctions";
         return queryAuctions(conn, sql);
     }
+    public List<AuctionSummaryDTO> getAuctionSummariesByType(ItemType itemType) throws Exception {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return getAuctionSummariesByType(conn, itemType);
+        }
+    }
 
+    public List<AuctionSummaryDTO> getAuctionSummariesByType(Connection conn, ItemType itemType) throws SQLException {
+        String sql = """
+            SELECT
+                a.id AS auction_id,
+                i.id AS item_id,
+                i.name AS item_name,
+                i.item_type AS item_type,
+                a.current_price AS current_price,
+                a.end_time AS end_time,
+                a.status AS status
+            FROM auctions a
+            JOIN items i ON a.item_id = i.id
+            WHERE i.item_type = ?
+            ORDER BY a.end_time ASC
+            """;
+
+        List<AuctionSummaryDTO> result = new ArrayList<>();
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, itemType.name());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new AuctionSummaryDTO(
+                            rs.getInt("auction_id"),
+                            rs.getInt("item_id"),
+                            rs.getString("item_name"),
+                            ItemType.valueOf(rs.getString("item_type")),
+                            rs.getDouble("current_price"),
+                            rs.getTimestamp("end_time").getTime(),
+                            AuctionStatus.valueOf(rs.getString("status"))
+                    ));
+                }
+            }
+        }
+
+        return result;
+    }
     public List<Auction> getActiveAuctions() throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return getActiveAuctions(conn);

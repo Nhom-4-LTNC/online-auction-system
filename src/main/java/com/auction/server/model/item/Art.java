@@ -1,6 +1,7 @@
 package com.auction.server.model.item;
 
 import com.auction.server.model.user.User;
+import com.auction.shared.enums.ItemType;
 
 import java.io.Serial;
 
@@ -36,8 +37,8 @@ public class Art extends Item {
         this(name, description, owner, startPrice, null, artist, yearCreated);
     }
     @Override
-    public String getItemType() {
-        return "ART";
+    public ItemType getItemType() {
+        return ItemType.ART;
     }
 
     public String getArtist() {

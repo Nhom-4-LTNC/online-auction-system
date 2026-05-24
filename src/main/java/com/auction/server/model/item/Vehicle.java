@@ -1,6 +1,7 @@
 package com.auction.server.model.item;
 
 import com.auction.server.model.user.User;
+import com.auction.shared.enums.ItemType;
 
 import java.io.Serial;
 
@@ -37,8 +38,8 @@ public class Vehicle extends Item {
         this(name, description, owner, startPrice, null, brand, vin, mileage);
     }
     @Override
-    public String getItemType() {
-        return "VEHICLE";
+    public ItemType getItemType() {
+        return ItemType.VEHICLE;
     }
     public String getVin() {
         return vin;
