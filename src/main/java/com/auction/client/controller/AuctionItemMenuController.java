@@ -1,5 +1,11 @@
 package com.auction.client.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.util.ResourceBundle;
+
 import com.auction.client.network.Client;
 import com.auction.shared.dto.ArtDTO;
 import com.auction.shared.dto.ElectronicsDTO;
@@ -12,6 +18,7 @@ import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auction.CreateAuctionRequest;
 import com.auction.shared.protocol.auction.CreateAuctionResponse;
 import com.auction.shared.util.SceneUtils;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -24,13 +31,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.util.ResourceBundle;
-
 public class AuctionItemMenuController implements Initializable {
+
+    private static final long DEFAULT_AUCTION_DURATION_MILLIS = 60L * 60 * 1000;
+    private static final int DEFAULT_AUCTION_EXTENSION_SECONDS = 10;
 
     private final Client client = Client.getInstance();
 
@@ -114,12 +118,12 @@ public class AuctionItemMenuController implements Initializable {
             ItemDTO itemDto = buildItemDTO();
 
             long now = System.currentTimeMillis();
-            long endTime = now + 60L * 60 * 1000;
+            long endTime = now + DEFAULT_AUCTION_DURATION_MILLIS;
 
             CreateAuctionRequest payload = new CreateAuctionRequest(
                     itemDto,
                     itemDto.getStartingPrice(),
-                    10,
+                    DEFAULT_AUCTION_EXTENSION_SECONDS,
                     now,
                     endTime
             );
@@ -315,3 +319,4 @@ public class AuctionItemMenuController implements Initializable {
     private record ImagePayload(byte[] imageData, String imageFileName) {
     }
 }
+

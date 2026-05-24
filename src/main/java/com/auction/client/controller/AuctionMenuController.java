@@ -159,7 +159,7 @@ public class AuctionMenuController {
 
             List<AuctionSummaryDTO> filtered = payload.getAuctions().stream()
                     .filter(Objects::nonNull)
-                    .filter(a -> a.getItemType() != null && a.getItemType().equalsIgnoreCase(currentType.name()))
+                    .filter(a -> a.getItemType() != null && a.getItemType().equals(currentType.name()))
                     .sorted(Comparator.comparingLong(AuctionSummaryDTO::getEndTimeMillis).reversed())
                     .collect(Collectors.toList());
 
