@@ -1,7 +1,7 @@
 package com.auction.server.repository;
 
 import com.auction.server.database.DatabaseConnection;
-import com.auction.server.model.user.Role;
+import com.auction.shared.enums.Role;
 import com.auction.server.model.user.User;
 
 import java.sql.Connection;

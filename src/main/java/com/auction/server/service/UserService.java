@@ -6,7 +6,7 @@ import com.auction.shared.exception.AuthorizationException;
 import com.auction.shared.exception.DuplicateResourceException;
 import com.auction.shared.exception.ResourceNotFoundException;
 import com.auction.shared.exception.ValidationException;
-import com.auction.server.model.user.Role;
+import com.auction.shared.enums.Role;
 import com.auction.server.model.user.User;
 import com.auction.server.repository.UserRepository;
 
@@ -240,7 +240,8 @@ public class UserService {
         return new UserDTO(
                 user.getId(),
                 user.getUsername(),
-                user.getEmail()
+                user.getEmail(),
+                user.getRole()
         );
     }
 

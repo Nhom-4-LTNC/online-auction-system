@@ -1,4 +1,4 @@
-package com.auction.server.model.user;
+package com.auction.shared.enums;
 
 import java.io.Serializable;
 

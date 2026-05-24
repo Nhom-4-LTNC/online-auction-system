@@ -1,7 +1,7 @@
 package com.auction.server.model.user;
 
 import com.auction.server.model.Entity;
-import com.auction.shared.exception.ValidationException;
+import com.auction.shared.enums.Role;
 
 import java.io.Serial;
 

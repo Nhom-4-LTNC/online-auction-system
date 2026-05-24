@@ -1,5 +1,7 @@
 package com.auction.server.model.user;
 
+import com.auction.shared.enums.Role;
+
 import java.io.Serial;
 
 public class Admin extends User {

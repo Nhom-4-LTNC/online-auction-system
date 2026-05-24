@@ -1,6 +1,7 @@
 package com.auction.server.service;
 
-import com.auction.server.model.user.Role;
+import com.auction.shared.dto.UserDTO;
+import com.auction.shared.enums.Role;
 import com.auction.shared.exception.*;
 import com.auction.server.model.user.User;
 import com.auction.server.repository.UserRepository;
@@ -22,7 +23,7 @@ public class AuthService {
         return instance;
     }
 
-    public com.auction.shared.dto.UserDTO login(String email, String password) throws Exception {
+    public UserDTO login(String email, String password) throws Exception {
         if (email == null || email.trim().isEmpty()) throw new AuctionAppException("Email không được để trống!");
         if (password == null || password.trim().isEmpty()) throw new AuctionAppException("Mật khẩu không được để trống!");
 
@@ -39,7 +40,7 @@ public class AuthService {
         return mapUserToDTO(user);
     }
 
-    public com.auction.shared.dto.UserDTO register(String username, String email, String password) throws Exception {
+    public UserDTO register(String username, String email, String password) throws Exception {
         String cleanUsername = username != null ? username.trim() : null;
         String cleanEmail = email != null ? email.trim().toLowerCase() : null;
 
@@ -66,7 +67,7 @@ public class AuthService {
         if (password == null || password.trim().isEmpty()) throw new ValidationException("Mật khẩu không được để trống!");
     }
 
-    private com.auction.shared.dto.UserDTO mapUserToDTO(User user) {
-        return new com.auction.shared.dto.UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    private UserDTO mapUserToDTO(User user) {
+        return new UserDTO(user.getId(), user.getUsername(), user.getEmail(), user.getRole());
     }
 }
