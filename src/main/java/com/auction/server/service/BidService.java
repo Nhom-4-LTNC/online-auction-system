@@ -11,6 +11,7 @@ import com.auction.shared.dto.BidDTO;
 import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.exception.AuctionClosedException;
+import com.auction.shared.exception.InsufficientFundsException;
 import com.auction.shared.exception.ResourceNotFoundException;
 
 import java.sql.Connection;
@@ -25,6 +26,7 @@ public class BidService {
     private final UserService userService = UserService.getInstance();
     private final AuctionService auctionService = AuctionService.getInstance();
     private final AuctionRepository auctionRepository = AuctionRepository.getInstance();
+    private final WalletService walletService = WalletService.getInstance();
 
     private BidService() {}
 
@@ -70,6 +72,11 @@ public class BidService {
                     conn.commit();
                     expiredAuction = auction;
                 } else {
+                    double availableForThisBid = walletService.getAvailableBalanceForBid(conn, bidderId, auctionId);
+                    if (availableForThisBid < amount) {
+                        throw new InsufficientFundsException("Số dư khả dụng không đủ để đặt giá.");
+                    }
+
                     Bid bid = auction.placeBid(bidder, amount);
                     bidRepository.save(conn, bid);
                     auctionRepository.updateAuction(conn, auction);
