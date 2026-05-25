@@ -22,5 +22,6 @@ public enum ActionType implements Serializable {
     AUCTION_CLOSED,
     AUCTION_UPDATED,
 
-    ADD_BALANCE
+    ADD_BALANCE,
+    PAY_AUCTION
 }

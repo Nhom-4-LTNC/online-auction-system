@@ -7,17 +7,13 @@ public class AddBalanceRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final double balance;
-    public AddBalanceRequest(double balance) {
-        this.balance = balance;
+    private final double amount;
+
+    public AddBalanceRequest(double amount) {
+        this.amount = amount;
     }
-    public double getBalance() {
-        return balance;
-    }
-    @Override
-    public String toString() {
-        return "AddBalanceRequest{" +
-                "balance=" + balance +
-                '}';
+
+    public double getAmount() {
+        return amount;
     }
 }
