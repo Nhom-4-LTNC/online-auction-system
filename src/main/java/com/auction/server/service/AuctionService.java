@@ -118,7 +118,6 @@ public class AuctionService {
         if (auction == null) {
             throw new ResourceNotFoundException("Phòng đấu giá", auctionId);
         }
-
         return auction;
     }
 

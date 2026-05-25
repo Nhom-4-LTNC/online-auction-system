@@ -222,7 +222,6 @@ public class UserService {
 
         userRepository.updateUser(target);
     }
-
     /**
      * Chuyển đổi entity {@link User} sang DTO {@link UserDTO}.
      *

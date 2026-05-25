@@ -127,7 +127,37 @@ public class UserRepository {
         }
         return null;
     }
+    public double addUserBalance(Connection conn, int userId, double amount) throws SQLException {
+        String sql = "UPDATE users SET balance = balance + ? WHERE id = ?";
 
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDouble(1, amount);
+            stmt.setInt(2, userId);
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new SQLException("Không tìm thấy User với ID = " + userId);
+            }
+        }
+
+        User updatedUser = getUserById(conn, userId);
+        if (updatedUser == null) {
+            throw new SQLException("Không tìm thấy User sau khi cập nhật balance, ID = " + userId);
+        }
+
+        return updatedUser.getBalance();
+    }
+    public double getUserBalance(Connection conn, int userId) throws SQLException {
+        String sql = "SELECT balance FROM users WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("balance");
+                }
+            }
+        }
+        throw new SQLException("Không tìm thấy balance cho User với ID = " + userId);
+    }
     public User getUserByUsername(String username) throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return getUserByUsername(conn, username);
