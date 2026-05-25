@@ -14,6 +14,8 @@ import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
 import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auction.GetAllAuctionResponse;
+import com.auction.shared.protocol.auction.GetAuctionsByTypeRequest;
+import com.auction.shared.protocol.auction.GetAuctionsByTypeResponse;
 import com.auction.shared.util.SceneUtils;
 
 import javafx.application.Platform;
@@ -150,25 +152,23 @@ public class AuctionMenuController {
 
         client.setOnMessageReceived(message -> {
             if (!(message instanceof Response<?> response)) return;
-            if (response.getAction() != ActionType.GET_ALL_AUCTIONS) return;
+            if (response.getAction() != ActionType.GET_AUCTIONS_BY_TYPE) return;
             if (!response.isSuccess()) {
                 System.err.println("[AuctionMenuController] Failed: " + response.getErrorMessage());
                 return;
             }
-            if (!(response.getPayload() instanceof GetAllAuctionResponse payload)) return;
+            if (!(response.getPayload() instanceof GetAuctionsByTypeResponse payload)) return;
 
-            List<AuctionSummaryDTO> filtered = payload.getAuctions().stream()
-                    .filter(Objects::nonNull)
-                    .filter(a -> a.getItemType() != null && a.getItemType().equals(currentType.name()))
-                    .sorted(Comparator.comparingLong(AuctionSummaryDTO::getEndTimeMillis).reversed())
-                    .collect(Collectors.toList());
+            List<AuctionSummaryDTO> filtered = payload.getAuctions();
+
 
             ObservableList<AuctionSummaryDTO> data = FXCollections.observableArrayList(filtered);
             Platform.runLater(() -> auctionListView.setItems(data));
         });
 
         // Request all auctions then filter client-side by currentType
-        Request<java.io.Serializable> request = new Request<>(ActionType.GET_ALL_AUCTIONS, null);
+        Request<java.io.Serializable> request = new Request<>(ActionType.GET_AUCTIONS_BY_TYPE,
+                new GetAuctionsByTypeRequest(currentType));
 
         client.sendMessage(request);
     }
