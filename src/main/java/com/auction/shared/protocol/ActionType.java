@@ -23,5 +23,14 @@ public enum ActionType implements Serializable {
     AUCTION_UPDATED,
 
     ADD_BALANCE,
+<<<<<<< Updated upstream
     PAY_AUCTION
+=======
+
+    // ===== ADMIN =====
+    GET_ALL_USERS,
+    APPLY_BAN,
+    REMOVE_BAN
+>>>>>>> Stashed changes
 }
+

@@ -1,16 +1,16 @@
 package com.auction.server.service;
 
+import java.util.List;
+
+import com.auction.server.model.user.User;
+import com.auction.server.repository.UserRepository;
 import com.auction.shared.dto.UserDTO;
+import com.auction.shared.enums.Role;
 import com.auction.shared.exception.AuthenticationException;
 import com.auction.shared.exception.AuthorizationException;
 import com.auction.shared.exception.DuplicateResourceException;
 import com.auction.shared.exception.ResourceNotFoundException;
 import com.auction.shared.exception.ValidationException;
-import com.auction.shared.enums.Role;
-import com.auction.server.model.user.User;
-import com.auction.server.repository.UserRepository;
-
-import java.util.List;
 
 /**
  * Service chịu trách nhiệm xử lý các nghiệp vụ liên quan đến người dùng.
@@ -240,7 +240,9 @@ public class UserService {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getBanStartTime(),
+                user.getBanEndTime()
         );
     }
 

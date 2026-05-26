@@ -1,5 +1,6 @@
 package com.auction.client.network;
 
+<<<<<<< Updated upstream
 import com.auction.shared.network.NetworkConfig;
 import javafx.application.Platform;
 
@@ -15,6 +16,18 @@ import java.util.function.Consumer;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
 import com.auction.shared.protocol.Response;
+=======
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.function.Consumer;
+
+import com.auction.shared.network.NetworkConfig;
+
+import javafx.application.Platform;
+>>>>>>> Stashed changes
 
 public class Client {
     private static volatile Client instance;
@@ -41,12 +54,16 @@ public class Client {
     public void connect() {
         if (socket != null && !socket.isClosed()) {return;}
         try {
+            // --- THÊM LOG Ở ĐÂY ---
+            System.out.println("[LOG NETWORK] Bắt đầu kết nối tới Server lúc: " + System.currentTimeMillis() + " ms");
+
             socket = new Socket(NetworkConfig.SERVER_IP, NetworkConfig.PORT);
             out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(socket.getInputStream());
 
-            System.out.println("Client da ket noi toi server thanh cong!");
+            // ---LOG---
+            System.out.println("Client da ket noi toi server thanh cong! Lúc: " + System.currentTimeMillis() + " ms");
 
             Thread listenthread = new Thread(this::listenForData);
             listenthread.setDaemon(true);
@@ -97,6 +114,7 @@ public class Client {
     private void listenForData() {
         try {
             while (true) {
+<<<<<<< Updated upstream
                 Object receivedData = in.readObject();
                 if (receivedData instanceof Response<?> response) {
                     BlockingQueue<Response<?>> queue = pendingResponses.get(response.getAction());
@@ -104,6 +122,13 @@ public class Client {
                         queue.offer(response);
                     }
                 }
+=======
+                Object receivedData = in.readObject();  // Hàm này đứng đợi Server trả lời
+
+                // --- THÊM LOG Ở ĐÂY ---
+                System.out.println("[LOG NETWORK] Client nhận được phản hồi thô từ Server lúc: " + System.currentTimeMillis() + " ms. Kiểu dữ liệu: " + receivedData.getClass().getSimpleName());
+
+>>>>>>> Stashed changes
                 if (onMessageReceived != null) {
                     Platform.runLater(() -> onMessageReceived.accept(receivedData));
                 }
