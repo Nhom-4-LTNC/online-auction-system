@@ -69,12 +69,23 @@ public class Server {
 
         System.out.println("[Server] Broadcasting to " + connectedClients.size() + " client(s): "
                 + data.getClass().getSimpleName());
-
         for (ClientHandler client : connectedClients) {
             client.sendObject(data);
         }
     }
+    public static void broadcastToLoggedIn(Object data) {
+        if (data == null) {
+            return;
+        }
 
+        for (ClientHandler client : connectedClients) {
+            System.out.println("[Server] Broadcasting client(s): " +
+                    data.getClass().getSimpleName());
+            if (client.isLoggedIn()) {
+                client.sendObject(data);
+            }
+        }
+    }
     public static int getConnectedClientCount() {
         return connectedClients.size();
     }
