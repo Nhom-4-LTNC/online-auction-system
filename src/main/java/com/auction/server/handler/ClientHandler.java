@@ -9,6 +9,7 @@ import com.auction.shared.protocol.auth.AuthResponse;
 import com.auction.server.controller.AuctionController;
 import com.auction.server.controller.AuthController;
 import com.auction.server.controller.BidController;
+import com.auction.server.controller.WalletController;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class ClientHandler implements Runnable {
     private final AuthController authController = new AuthController();
     private final AuctionController auctionController = new AuctionController();
     private final BidController bidController = new BidController();
+    private final WalletController walletController = new WalletController();
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -150,6 +152,12 @@ public class ClientHandler implements Runnable {
                 case GET_BIDS_BY_BIDDER -> bidController.handleGetBidsByBidder(request, this);
 
                 case GET_MY_BIDS -> bidController.handleGetCurrentUserBids(this);
+
+                // ===== WALLET / PAYMENT =====
+                case ADD_BALANCE -> walletController.handleAddBalance(this, request);
+
+                case PAY_AUCTION -> walletController.handlePayAuction(this, request);
+
                 // ===== REALTIME / SERVER PUSH =====
                 /*
                  * Các action này thường là server gửi xuống client.

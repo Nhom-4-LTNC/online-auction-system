@@ -2,7 +2,9 @@ package com.auction.manual;
 
 import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.AuctionSummaryDTO;
+import com.auction.shared.dto.BalanceResponse;
 import com.auction.shared.dto.ElectronicsDTO;
+import com.auction.shared.dto.PayAuctionResponse;
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.enums.ItemType;
 import com.auction.shared.protocol.ActionType;
@@ -15,6 +17,8 @@ import com.auction.shared.protocol.auth.AuthResponse;
 import com.auction.shared.protocol.auth.LoginRequest;
 import com.auction.shared.protocol.auth.RegisterRequest;
 import com.auction.shared.protocol.bid.PlaceBidRequest;
+import com.auction.shared.protocol.finance.AddBalanceRequest;
+import com.auction.shared.protocol.finance.PayAuctionRequest;
 
 // Nếu bạn đã thêm chức năng nạp tiền demo
 // import com.auction.shared.protocol.finance.AddBalanceRequest;
@@ -83,9 +87,9 @@ public class ManualAuctionFlowTest {
             registerAndLoginBidder(bidderClient);
             registerAndLoginOtherBidder(otherBidderClient);
 
-            // Nếu project của bạn yêu cầu bidder có balance trước khi bid, bật đoạn này.
-            // addBalanceIfSupported(bidderClient, 1_000_000);
-            // addBalanceIfSupported(otherBidderClient, 1_000_000);
+            addBalanceRejectsInvalidAmount(bidderClient);
+            addBalance(bidderClient, 1_000_000);
+            addBalance(otherBidderClient, 1_000_000);
 
             int auctionId = createAuctionAsSeller(sellerClient);
 
@@ -101,6 +105,10 @@ public class ManualAuctionFlowTest {
 
             nonOwnerCannotCloseAuction(bidderClient, auctionId);
             sellerCanCloseAuction(sellerClient, auctionId);
+
+            nonWinnerCannotPayAuction(bidderClient, auctionId);
+            winnerCanPayAuction(otherBidderClient, auctionId);
+            winnerCannotPayPaidAuctionAgain(otherBidderClient, auctionId);
 
             bidderCannotBidAfterAuctionClosed(bidderClient, auctionId);
 
@@ -455,23 +463,72 @@ public class ManualAuctionFlowTest {
     }
 
     // =========================================================
-    // OPTIONAL BALANCE FLOW
+    // WALLET / PAYMENT FLOW
     // =========================================================
 
-    /*
-     * Bật method này nếu project của bạn đã có ADD_BALANCE.
-     *
-     * private static void addBalanceIfSupported(ManualClient client, double amount) throws Exception {
-     *     System.out.println("\n=== ADD BALANCE FLOW ===");
-     *
-     *     Response<?> response = client.send(new Request<>(
-     *             ActionType.ADD_BALANCE,
-     *             new AddBalanceRequest(amount)
-     *     ));
-     *
-     *     expectSuccess(response, "Add balance: " + amount);
-     * }
-     */
+    private static void addBalanceRejectsInvalidAmount(ManualClient client) throws Exception {
+        System.out.println("\n=== INVALID ADD BALANCE FLOW ===");
+
+        Response<?> response = client.send(new Request<>(
+                ActionType.ADD_BALANCE,
+                new AddBalanceRequest(0)
+        ));
+
+        expectError(response, "Add balance rejects amount <= 0");
+    }
+
+    private static void addBalance(ManualClient client, double amount) throws Exception {
+        System.out.println("\n=== ADD BALANCE FLOW ===");
+
+        Response<?> response = client.send(new Request<>(
+                ActionType.ADD_BALANCE,
+                new AddBalanceRequest(amount)
+        ));
+
+        expectSuccess(response, "Add balance: " + amount);
+        BalanceResponse balance = extractPayload(response, BalanceResponse.class, "Add balance payload");
+        System.out.println("[INFO] balance=" + balance.getBalance()
+                + ", unpaidWinningAmount=" + balance.getUnpaidWinningAmount()
+                + ", availableBalance=" + balance.getAvailableBalance());
+    }
+
+    private static void nonWinnerCannotPayAuction(ManualClient client, int auctionId) throws Exception {
+        System.out.println("\n=== NON-WINNER PAY AUCTION FLOW ===");
+
+        Response<?> response = client.send(new Request<>(
+                ActionType.PAY_AUCTION,
+                new PayAuctionRequest(auctionId)
+        ));
+
+        expectError(response, "Non-winner cannot pay auction");
+    }
+
+    private static void winnerCanPayAuction(ManualClient client, int auctionId) throws Exception {
+        System.out.println("\n=== WINNER PAY AUCTION FLOW ===");
+
+        Response<?> response = client.send(new Request<>(
+                ActionType.PAY_AUCTION,
+                new PayAuctionRequest(auctionId)
+        ));
+
+        expectSuccess(response, "Winner pays finished auction");
+        PayAuctionResponse pay = extractPayload(response, PayAuctionResponse.class, "Pay auction payload");
+        System.out.println("[INFO] paidAmount=" + pay.getPaidAmount()
+                + ", newBalance=" + pay.getNewBalance()
+                + ", newUnpaidWinningAmount=" + pay.getNewUnpaidWinningAmount()
+                + ", newAvailableBalance=" + pay.getNewAvailableBalance());
+    }
+
+    private static void winnerCannotPayPaidAuctionAgain(ManualClient client, int auctionId) throws Exception {
+        System.out.println("\n=== PAY PAID AUCTION AGAIN FLOW ===");
+
+        Response<?> response = client.send(new Request<>(
+                ActionType.PAY_AUCTION,
+                new PayAuctionRequest(auctionId)
+        ));
+
+        expectError(response, "Winner cannot pay PAID auction again");
+    }
 
     // =========================================================
     // ASSERT HELPERS

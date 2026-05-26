@@ -217,6 +217,57 @@ public class AuctionRepository {
         return auctions;
     }
 
+    public double getUnpaidWinningAmount(Connection conn, int userId) throws SQLException {
+        String sql = """
+                SELECT COALESCE(SUM(current_price), 0) AS unpaid_amount
+                FROM auctions
+                WHERE winner_id = ?
+                  AND status = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setString(2, AuctionStatus.FINISHED.name());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("unpaid_amount");
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    public double getActiveLeadingAmountExcludingAuction(
+            Connection conn,
+            int userId,
+            int excludedAuctionId
+    ) throws SQLException {
+        String sql = """
+                SELECT COALESCE(SUM(current_price), 0) AS active_leading_amount
+                FROM auctions
+                WHERE last_bidder_id = ?
+                  AND id <> ?
+                  AND status IN (?, ?)
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setInt(2, excludedAuctionId);
+            stmt.setString(3, AuctionStatus.OPEN.name());
+            stmt.setString(4, AuctionStatus.RUNNING.name());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("active_leading_amount");
+                }
+            }
+        }
+
+        return 0;
+    }
+
     public Auction mapResultSetToAuction(Connection conn, ResultSet rs) throws Exception {
         Item item = itemRepository.getItemById(conn, rs.getInt("item_id"));
         if (item == null) {

@@ -12,8 +12,9 @@ public class Server {
     private static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
     public static void main(String[] args) {
-        try (ServerSocket serverSocket = new ServerSocket(NetworkConfig.PORT)) {
-            System.out.println("Server đang chạy ở: "+NetworkConfig.PORT);
+        int port = Integer.getInteger("auction.server.port", NetworkConfig.PORT);
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Server đang chạy ở: "+port);
 
             while (true) {
                 try {

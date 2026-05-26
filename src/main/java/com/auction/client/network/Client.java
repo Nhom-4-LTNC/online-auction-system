@@ -5,7 +5,16 @@ import javafx.application.Platform;
 
 import java.io.*;
 import java.net.*;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
 
 public class Client {
     private static volatile Client instance;
@@ -14,6 +23,7 @@ public class Client {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private Consumer<Object> onMessageReceived;
+    private final Map<ActionType, BlockingQueue<Response<?>>> pendingResponses = new ConcurrentHashMap<>();
 
     private Client() {}
     public static Client getInstance() {
@@ -64,10 +74,36 @@ public class Client {
         }
     }
 
+    public Response<?> sendRequestAndWait(Request<?> request, long timeoutMillis) throws Exception {
+        connect();
+        if (!isConnected()) {
+            throw new IOException("Chua ket noi server");
+        }
+
+        BlockingQueue<Response<?>> queue = new ArrayBlockingQueue<>(1);
+        pendingResponses.put(request.getAction(), queue);
+        try {
+            sendMessage(request);
+            Response<?> response = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
+            if (response == null) {
+                throw new IOException("Qua thoi gian cho phan hoi tu server");
+            }
+            return response;
+        } finally {
+            pendingResponses.remove(request.getAction(), queue);
+        }
+    }
+
     private void listenForData() {
         try {
             while (true) {
                 Object receivedData = in.readObject();
+                if (receivedData instanceof Response<?> response) {
+                    BlockingQueue<Response<?>> queue = pendingResponses.get(response.getAction());
+                    if (queue != null) {
+                        queue.offer(response);
+                    }
+                }
                 if (onMessageReceived != null) {
                     Platform.runLater(() -> onMessageReceived.accept(receivedData));
                 }
