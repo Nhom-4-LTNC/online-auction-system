@@ -33,6 +33,7 @@ import java.net.Socket;
  */
 public class ClientHandler implements Runnable {
 
+    private volatile boolean closed = false;
     private final Socket socket;
 
     private ObjectInputStream in;
@@ -48,6 +49,7 @@ public class ClientHandler implements Runnable {
     private final AuctionController auctionController = new AuctionController();
     private final BidController bidController = new BidController();
     private final WalletController walletController = new WalletController();
+
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -201,8 +203,14 @@ public class ClientHandler implements Runnable {
      * Dùng cho cả response thường và server-push realtime.
      * Ví dụ: Response<>(ActionType.AUCTION_UPDATED, payload)
      */
+
     public synchronized void sendObject(Object object) {
-        if (object == null || out == null) {
+        if (object == null) {
+            return;
+        }
+
+        if (out == null || socket == null || socket.isClosed()) {
+            closeConnections();
             return;
         }
 
@@ -234,6 +242,12 @@ public class ClientHandler implements Runnable {
     }
 
     private void closeConnections() {
+        if (closed) {
+            return;
+        }
+
+        closed = true;
+
         try {
             if (in != null) {
                 in.close();
@@ -251,8 +265,7 @@ public class ClientHandler implements Runnable {
                 socket.close();
             }
         } catch (IOException ignored) {}
-        finally {
-            Server.removeClient(this);
-        }
+
+        Server.removeClient(this);
     }
 }
