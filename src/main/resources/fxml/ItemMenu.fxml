@@ -54,20 +54,20 @@
          <font>
             <Font name="Trebuchet MS" size="15.0" />
          </font></Button>
-      <VBox layoutX="409.0" layoutY="121.0" visible="false">
+      <VBox fx:id="artPane" layoutX="409.0" layoutY="121.0" visible="false">
          <children>
             <TextField fx:id="authorTF" promptText="Author" />
             <TextField fx:id="genreTF" promptText="Genre" />
          </children>
       </VBox>
-      <VBox layoutX="382.0" layoutY="121.0" visible="false">
+      <VBox fx:id="vehiclePane" layoutX="382.0" layoutY="121.0" visible="false">
          <children>
             <TextField fx:id="vehicleBrandTF" promptText="Brand" />
             <TextField fx:id="vinTF" prefHeight="26.0" prefWidth="204.0" promptText="Vehicle Identification Number (VIN)" />
             <TextField fx:id="mileageTF" promptText="Mileage" />
          </children>
       </VBox>
-      <VBox layoutX="409.0" layoutY="121.0" visible="false">
+      <VBox fx:id="electronicsPane" layoutX="409.0" layoutY="121.0" visible="false">
          <children>
             <TextField fx:id="electronicsBrandTF" promptText="Brand" />
             <TextField fx:id="warrantyTF" promptText="Warranty" />
