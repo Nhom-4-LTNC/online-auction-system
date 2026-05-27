@@ -10,7 +10,7 @@ import com.auction.server.controller.AuctionController;
 import com.auction.server.controller.AuthController;
 import com.auction.server.controller.BidController;
 import com.auction.server.controller.WalletController;
-
+import com.auction.server.controller.AdminController;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -49,9 +49,11 @@ public class ClientHandler implements Runnable {
     private final AuctionController auctionController = new AuctionController();
     private final BidController bidController = new BidController();
     private final WalletController walletController = new WalletController();
+    private final AdminController adminController = new AdminController();
 
 
     public ClientHandler(Socket socket) {
+
         this.socket = socket;
     }
 
@@ -159,6 +161,12 @@ public class ClientHandler implements Runnable {
                 case ADD_BALANCE -> walletController.handleAddBalance(this, request);
 
                 case PAY_AUCTION -> walletController.handlePayAuction(this, request);
+                // ===== ADMIN =====
+                case GET_ALL_USERS -> adminController.handleGetAllUsers(request, this);
+
+                case APPLY_BAN -> adminController.handleApplyBan(request, this);
+
+                case REMOVE_BAN -> adminController.handleRemoveBan(request, this);
 
                 // ===== REALTIME / SERVER PUSH =====
                 /*

@@ -1,19 +1,14 @@
 package com.auction.client.controller;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 import com.auction.client.network.Client;
 import com.auction.shared.dto.AuctionSummaryDTO;
-import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.enums.ItemType;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
 import com.auction.shared.protocol.Response;
-import com.auction.shared.protocol.auction.GetAllAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeRequest;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeResponse;
 import com.auction.shared.util.SceneUtils;
@@ -47,6 +42,7 @@ public class AuctionMenuController {
     @FXML private Button backButton;
 
     private ItemType currentType = ItemType.ELECTRONICS;
+    private boolean listenerRegistered = false;
 
     public void initialize() {
         ToggleGroup group = new ToggleGroup();
@@ -59,6 +55,14 @@ public class AuctionMenuController {
         artButton.setUserData(ItemType.ART);
         vehicleButton.setUserData(ItemType.VEHICLE);
 
+        // CellFactory dùng class riêng + handler click cố định => giảm anonymous/capture
+        auctionListView.setCellFactory(lv -> {
+            AuctionSummaryCell cell = new AuctionSummaryCell();
+            // Chỉ click vào ListCell => dùng item hiện tại thay vì capture cell instance.
+            cell.setOnMouseClicked(e -> handleCellClick(cell));
+            return cell;
+        });
+
         group.selectedToggleProperty().addListener((obs, oldV, newV) -> {
             if (newV == null) return;
             Object ud = ((RadioButton) newV.getToggleGroup().getSelectedToggle()).getUserData();
@@ -68,68 +72,98 @@ public class AuctionMenuController {
             }
         });
 
-        auctionListView.setCellFactory(lv -> {
-            ListCell<AuctionSummaryDTO> cell = new ListCell<>() {
-                @Override
-                protected void updateItem(AuctionSummaryDTO item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText(null);
-                    } else {
-                        AuctionStatus st = item.getStatus();
-                        setText("#" + item.getAuctionId() + " | " + item.getItemName() + " | "
-                                + item.getCurrentPrice() + " | " + (st == null ? "" : st));
-                    }
-                }
-            };
-
-            cell.setOnMouseClicked(e -> {
-                if (cell.isEmpty()) return;
-                AuctionSummaryDTO selected = cell.getItem();
-                if (selected == null) return;
-
-                try {
-                    var url = getClass().getResource("/fxml/ItemAuction.fxml");
-                    if (url == null) {
-                        System.err.println("[AuctionMenuController] Resource not found: /fxml/ItemAuction.fxml");
-                        return;
-                    }
-
-                    FXMLLoader loader = new FXMLLoader(url);
-                    Parent root = loader.load();
-                    Object controller = loader.getController();
-                    if (controller != null) {
-                        try {
-                            var m = controller.getClass().getMethod("setAuctionId", int.class);
-                            m.invoke(controller, selected.getAuctionId());
-                        } catch (Exception ignored) {
-                            // fallback: allow setAuctionId(Integer)
-                            try {
-                                var m = controller.getClass().getMethod("setAuctionId", Integer.class);
-                                m.invoke(controller, selected.getAuctionId());
-                            } catch (Exception ignored2) {
-                                // ignore if setter not found
-                            }
-                        }
-                    }
-
-
-                    Stage stage = (Stage) auctionListView.getScene().getWindow();
-                    stage.setScene(new Scene(root));
-                    stage.show();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            });
-
-            return cell;
-        });
-
         refreshButton.setOnAction(this::handleRefresh);
         backButton.setOnAction(this::handleBack);
 
+        // register handler once
+        if (!listenerRegistered) {
+            client.setOnMessageReceived(message -> {
+                if (!(message instanceof Response<?> response)) return;
+                if (response.getAction() != ActionType.GET_AUCTIONS_BY_TYPE) return;
+                if (!response.isSuccess()) {
+                    System.err.println("[AuctionMenuController] Failed: " + response.getErrorMessage());
+                    return;
+                }
+                if (!(response.getPayload() instanceof GetAuctionsByTypeResponse payload)) return;
+
+                Platform.runLater(() -> setData(payload.getAuctions()));
+            });
+            listenerRegistered = true;
+        }
+
         // load initial data
         load();
+    }
+
+    /**
+     * setData() để thay vì build/assign list trực tiếp trong listener.
+     */
+    private void setData(List<AuctionSummaryDTO> source) {
+        if (source == null) {
+            auctionListView.setItems(FXCollections.observableArrayList());
+            return;
+        }
+
+        // Tối ưu: tránh stream/sorted/collect tạo nhiều đối tượng trung gian.
+        // Chỉ filter theo currentType trước, sau đó sort theo endTimeMillis desc.
+        java.util.ArrayList<AuctionSummaryDTO> filtered = new java.util.ArrayList<>(source.size());
+        for (AuctionSummaryDTO a : source) {
+            if (a == null) continue;
+            var it = a.getItemType();
+            if (it != null && it.equals(currentType)) {
+                filtered.add(a);
+            }
+        }
+
+        filtered.sort((x, y) -> Long.compare(y.getEndTimeMillis(), x.getEndTimeMillis()));
+
+        // Nếu danh sách rỗng thì reset nhanh.
+        if (filtered.isEmpty()) {
+            auctionListView.setItems(FXCollections.observableArrayList());
+            return;
+        }
+
+        // ObservableList mới để ListView nhận thay đổi.
+        ObservableList<AuctionSummaryDTO> data = FXCollections.observableArrayList(filtered);
+        auctionListView.setItems(data);
+    }
+
+    private void handleCellClick(ListCell<AuctionSummaryDTO> cell) {
+        if (cell == null || cell.isEmpty()) return;
+        AuctionSummaryDTO selected = cell.getItem();
+        if (selected == null) return;
+
+        try {
+            var url = getClass().getResource("/fxml/ItemAuction.fxml");
+            if (url == null) {
+                System.err.println("[AuctionMenuController] Resource not found: /fxml/ItemAuction.fxml");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+            Object controller = loader.getController();
+            if (controller != null) {
+                try {
+                    var m = controller.getClass().getMethod("setAuctionId", int.class);
+                    m.invoke(controller, selected.getAuctionId());
+                } catch (Exception ignored) {
+                    // fallback: allow setAuctionId(Integer)
+                    try {
+                        var m = controller.getClass().getMethod("setAuctionId", Integer.class);
+                        m.invoke(controller, selected.getAuctionId());
+                    } catch (Exception ignored2) {
+                        // ignore if setter not found
+                    }
+                }
+            }
+
+            Stage stage = (Stage) auctionListView.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void handleRefresh(ActionEvent event) {
@@ -171,4 +205,6 @@ public class AuctionMenuController {
         client.sendMessage(request);
     }
 }
+
+
 
