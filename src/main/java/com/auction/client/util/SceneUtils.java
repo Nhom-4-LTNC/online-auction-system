@@ -26,6 +26,19 @@ public final class SceneUtils {
         stage.show();
     }
 
+    public static <T> T switchSceneAndGetController(ActionEvent event, String fxmlPath) throws IOException {
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        return switchSceneAndGetController(stage, fxmlPath);
+    }
+
+    public static <T> T switchSceneAndGetController(Stage stage, String fxmlPath) throws IOException {
+        FXMLLoader loader = new FXMLLoader(resolveFxml(fxmlPath));
+        Parent root = loader.load();
+        stage.setScene(new Scene(root));
+        stage.show();
+        return loader.getController();
+    }
+
     private static URL resolveFxml(String fxmlPath) throws IOException {
         URL resource = SceneUtils.class.getResource(fxmlPath);
         if (resource != null) {

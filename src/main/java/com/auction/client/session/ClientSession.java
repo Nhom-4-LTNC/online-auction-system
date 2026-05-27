@@ -2,6 +2,7 @@ package com.auction.client.session;
 
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.enums.Role;
+import com.auction.shared.util.SessionManager;
 
 public final class ClientSession {
 
@@ -12,29 +13,37 @@ public final class ClientSession {
 
     public static void setCurrentUser(UserDTO user) {
         currentUser = user;
+        SessionManager.getInstance().setCurrentUser(user);
     }
 
     public static UserDTO getCurrentUser() {
+        if (currentUser == null) {
+            currentUser = SessionManager.getInstance().getCurrentUser();
+        }
         return currentUser;
     }
 
     public static boolean isLoggedIn() {
-        return currentUser != null;
+        return getCurrentUser() != null;
     }
 
     public static void clear() {
         currentUser = null;
+        SessionManager.getInstance().logout();
     }
 
     public static boolean isAdmin() {
-        return currentUser != null && Role.ADMIN.equals(currentUser.getRole());
+        UserDTO user = getCurrentUser();
+        return user != null && Role.ADMIN.equals(user.getRole());
     }
 
     public static Integer getCurrentUserId() {
-        return currentUser == null ? null : currentUser.getId();
+        UserDTO user = getCurrentUser();
+        return user == null ? null : user.getId();
     }
 
     public static String getUsername() {
-        return currentUser == null ? "" : currentUser.getUsername();
+        UserDTO user = getCurrentUser();
+        return user == null ? "" : user.getUsername();
     }
 }

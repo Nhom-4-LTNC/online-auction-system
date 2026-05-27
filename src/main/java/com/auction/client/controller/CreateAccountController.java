@@ -1,23 +1,16 @@
 package com.auction.client.controller;
 
-import com.auction.client.network.Client;
+import com.auction.client.service.AuthClientService;
+import com.auction.client.service.ClientServiceException;
+import com.auction.client.session.ClientSession;
+import com.auction.client.util.AlertUtils;
+import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.UserDTO;
-import com.auction.shared.protocol.ActionType;
-import com.auction.shared.protocol.Request;
-import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auth.AuthResponse;
-import com.auction.shared.protocol.auth.RegisterRequest;
 import com.auction.shared.util.Check;
-import com.auction.shared.util.SceneUtils;
-import com.auction.shared.util.SessionManager;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -31,7 +24,7 @@ import java.util.ResourceBundle;
 
 public class CreateAccountController implements Initializable {
 
-    private final Client client = Client.getInstance();
+    private final AuthClientService authClientService = new AuthClientService();
 
     @FXML private Button Create;
     @FXML private Button signInButton;
@@ -53,9 +46,6 @@ public class CreateAccountController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        client.connect();
-
-        registerServerMessageHandler();
         registerPasswordValidationListener();
     }
 
@@ -69,23 +59,14 @@ public class CreateAccountController implements Initializable {
             return;
         }
 
-        if (!client.isConnected()) {
-            showAlert("Lỗi kết nối", "Không thể kết nối tới server. Vui lòng thử lại!");
-            return;
+        try {
+            AuthResponse authResponse = authClientService.register(username, email, password);
+            handleRegisterSuccess(authResponse);
+        } catch (ClientServiceException e) {
+            AlertUtils.showError("Register failed", e.getMessage());
+        } catch (IOException e) {
+            AlertUtils.showError("Navigation error", "Cannot open screen: " + e.getMessage());
         }
-
-        RegisterRequest registerRequest = new RegisterRequest(
-                username,
-                password,
-                email
-        );
-
-        Request<RegisterRequest> request = new Request<>(
-                ActionType.REGISTER,
-                registerRequest
-        );
-
-        client.sendMessage(request);
     }
 
     @FXML
@@ -93,48 +74,16 @@ public class CreateAccountController implements Initializable {
         SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
     }
 
-
-    private void registerServerMessageHandler() {
-        client.setOnMessageReceived(message -> {
-            if (!(message instanceof Response<?> response)) {
-                return;
-            }
-
-            if (response.getAction() != ActionType.REGISTER) {
-                return;
-            }
-
-            Platform.runLater(() -> handleRegisterResponse(response));
-        });
-    }
-
-    private void handleRegisterResponse(Response<?> response) {
-        if (!response.isSuccess()) {
-            showAlert("Đăng ký thất bại", response.getErrorMessage());
-            return;
-        }
-
-        Object payload = response.getPayload();
-
-        if (!(payload instanceof AuthResponse authResponse)) {
-            showAlert("Lỗi", "Phản hồi đăng ký không đúng định dạng.");
-            return;
-        }
-
+    private void handleRegisterSuccess(AuthResponse authResponse) throws IOException {
         UserDTO newUser = authResponse.getUser();
 
         if (newUser == null) {
-            showAlert("Lỗi", authResponse.getMessage());
+            AlertUtils.showError("Register failed", authResponse.getMessage());
             return;
         }
 
-        SessionManager.getInstance().setCurrentUser(newUser);
-
-        try {
-            navigateToHome(newUser);
-        } catch (IOException e) {
-            showAlert("Lỗi", "Không thể chuyển màn hình: " + e.getMessage());
-        }
+        ClientSession.setCurrentUser(newUser);
+        navigateToHome(newUser);
     }
 
     private void registerPasswordValidationListener() {
@@ -151,17 +100,17 @@ public class CreateAccountController implements Initializable {
 
     private boolean validateInput(String username, String email, String password) {
         if (username.isEmpty()) {
-            showAlert("Lỗi nhập liệu", "Vui lòng nhập tên người dùng!");
+            AlertUtils.showError("Input error", "Please enter username.");
             return false;
         }
 
         if (email.isEmpty()) {
-            showAlert("Lỗi nhập liệu", "Vui lòng nhập email!");
+            AlertUtils.showError("Input error", "Please enter email.");
             return false;
         }
 
         if (!Check.checkPass(password)) {
-            showAlert("Mật khẩu không hợp lệ", "Mật khẩu chưa đáp ứng đủ yêu cầu bảo mật!");
+            AlertUtils.showError("Invalid password", "Password does not meet the security requirements.");
             return false;
         }
 
@@ -169,23 +118,11 @@ public class CreateAccountController implements Initializable {
     }
 
     private void navigateToHome(UserDTO user) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
-        Parent root = loader.load();
-
         Stage stage = (Stage) Create.getScene().getWindow();
-        stage.setScene(new Scene(root));
-        stage.show();
-
-        HomeController homeController = loader.getController();
-        homeController.displayName(user.getUsername());
-    }
-
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        HomeController homeController = SceneUtils.switchSceneAndGetController(stage, "/fxml/HomeScreen.fxml");
+        if (homeController != null) {
+            homeController.displayName(user.getUsername());
+        }
     }
 
     private void setPwdReqImage(ImageView imgView, boolean valid) {
