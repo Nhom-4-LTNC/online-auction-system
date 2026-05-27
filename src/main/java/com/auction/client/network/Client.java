@@ -1,20 +1,21 @@
 package com.auction.client.network;
 
 import com.auction.shared.network.NetworkConfig;
-import javafx.application.Platform;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
 
-import java.io.*;
-import java.net.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import com.auction.shared.protocol.ActionType;
-import com.auction.shared.protocol.Request;
-import com.auction.shared.protocol.Response;
 
 public class Client {
     private static volatile Client instance;
@@ -24,22 +25,38 @@ public class Client {
     private ObjectInputStream in;
     private Consumer<Object> onMessageReceived;
     private final Map<ActionType, BlockingQueue<Response<?>>> pendingResponses = new ConcurrentHashMap<>();
+    private final ClientEventDispatcher eventDispatcher = ClientEventDispatcher.getInstance();
 
     private Client() {}
+
     public static Client getInstance() {
         if (instance == null) {
             synchronized (Client.class) {
-                if (instance == null) instance = new Client();
+                if (instance == null) {
+                    instance = new Client();
+                }
             }
         }
         return instance;
     }
+
+    @Deprecated
     public void setOnMessageReceived(Consumer<Object> onMessageReceived) {
         this.onMessageReceived = onMessageReceived;
     }
 
+    public void addEventListener(ActionType actionType, Consumer<Response<?>> listener) {
+        eventDispatcher.addListener(actionType, listener);
+    }
+
+    public void removeEventListener(ActionType actionType, Consumer<Response<?>> listener) {
+        eventDispatcher.removeListener(actionType, listener);
+    }
+
     public void connect() {
-        if (socket != null && !socket.isClosed()) {return;}
+        if (socket != null && !socket.isClosed()) {
+            return;
+        }
         try {
             socket = new Socket(NetworkConfig.SERVER_IP, NetworkConfig.PORT);
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -48,11 +65,11 @@ public class Client {
 
             System.out.println("Client da ket noi toi server thanh cong!");
 
-            Thread listenthread = new Thread(this::listenForData);
-            listenthread.setDaemon(true);
-            listenthread.start();
+            Thread listenThread = new Thread(this::listenForData, "auction-client-listener");
+            listenThread.setDaemon(true);
+            listenThread.start();
         } catch (Exception e) {
-            System.out.println("Loi ket loi toi server " + e.getMessage());
+            System.out.println("Loi ket noi toi server " + e.getMessage());
         }
     }
 
@@ -99,27 +116,49 @@ public class Client {
             while (true) {
                 Object receivedData = in.readObject();
                 if (receivedData instanceof Response<?> response) {
-                    BlockingQueue<Response<?>> queue = pendingResponses.get(response.getAction());
-                    if (queue != null) {
-                        queue.offer(response);
-                    }
-                }
-                if (onMessageReceived != null) {
-                    Platform.runLater(() -> onMessageReceived.accept(receivedData));
+                    handleIncomingResponse(response);
+                } else {
+                    notifyLegacyListener(receivedData);
                 }
             }
         } catch (EOFException e) {
             System.out.println("Server da dong ket noi");
         } catch (Exception e) {
             System.out.println("Server bi ngat ket noi khoi server");
-        }  finally {
-            try {
-                if (socket != null && !socket.isClosed()) {
-                    socket.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+        } finally {
+            closeSocketQuietly();
+        }
+    }
+
+    private void handleIncomingResponse(Response<?> response) {
+        if (response == null || response.getAction() == null) {
+            return;
+        }
+
+        BlockingQueue<Response<?>> queue = pendingResponses.get(response.getAction());
+        if (queue != null) {
+            queue.offer(response);
+            return;
+        }
+
+        eventDispatcher.dispatch(response);
+        notifyLegacyListener(response);
+    }
+
+    private void notifyLegacyListener(Object message) {
+        Consumer<Object> listener = onMessageReceived;
+        if (listener != null) {
+            listener.accept(message);
+        }
+    }
+
+    private void closeSocketQuietly() {
+        try {
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
             }
+        } catch (IOException e) {
+            System.err.println("Loi dong ket noi client: " + e.getMessage());
         }
     }
 }
