@@ -1,5 +1,9 @@
 package com.auction.client.controller;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import com.auction.client.network.Client;
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.protocol.ActionType;
@@ -9,6 +13,7 @@ import com.auction.shared.protocol.auth.AuthResponse;
 import com.auction.shared.protocol.auth.LoginRequest;
 import com.auction.shared.util.SceneUtils;
 import com.auction.shared.util.SessionManager;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,10 +26,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
@@ -107,11 +108,18 @@ public class LoginController implements Initializable {
                 return;
             }
 
-            Platform.runLater(() -> handleLoginResponse(response));
+            Platform.runLater(() -> {
+                try {
+                    handleLoginResponse(response);
+                } catch (IOException ex) {
+                    System.getLogger(LoginController.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+                }
+            });
         });
     }
 
-    private void handleLoginResponse(Response<?> response) {
+    private void handleLoginResponse(Response<?> response) throws IOException {
+
         if (!response.isSuccess()) {
             showErrorAlert("Đăng nhập thất bại", response.getErrorMessage());
             return;
@@ -133,11 +141,12 @@ public class LoginController implements Initializable {
 
         SessionManager.getInstance().setCurrentUser(user);
 
-        try {
-            navigateToHome(user);
-        } catch (IOException e) {
-            showErrorAlert("Lỗi", "Không thể chuyển màn hình: " + e.getMessage());
-        }
+        // Trong listener async không có ActionEvent để switch scene.
+        // Vẫn giữ UX role screen bằng cách điều hướng ngay theo role thực của user.
+        // (Nếu bạn muốn bắt buộc qua màn hình chọn role, cần refactor flow theo event từ UI.)
+        navigateToHome(user);
+
+
     }
 
     private String getPasswordFromFields() {
@@ -161,16 +170,26 @@ public class LoginController implements Initializable {
     }
 
     private void navigateToHome(UserDTO user) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomeScreen.fxml"));
+        // Admin/USER routing sẽ do màn hình Home (đã chọn role trước đó) hoặc server enforce
+        // Ở đây chỉ điều hướng theo role thật để tránh mismatch.
+        String fxml = (user.getRole() != null && user.getRole() == com.auction.shared.enums.Role.ADMIN)
+                ? "/fxml/AdminScreen.fxml"
+                : "/fxml/HomeScreen.fxml";
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
         Parent root = loader.load();
 
         Stage stage = (Stage) emailTextField.getScene().getWindow();
         stage.setScene(new Scene(root));
         stage.show();
 
-        HomeController homeController = loader.getController();
-        homeController.displayName(user.getUsername());
+        if ("/fxml/HomeScreen.fxml".equals(fxml)) {
+            HomeController homeController = loader.getController();
+            homeController.displayName(user.getUsername());
+        }
     }
+
+
 
     private void showErrorAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

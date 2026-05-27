@@ -1,20 +1,22 @@
 package com.auction.client.network;
 
 import com.auction.shared.network.NetworkConfig;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
 import javafx.application.Platform;
 
-import java.io.*;
-import java.net.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import com.auction.shared.protocol.ActionType;
-import com.auction.shared.protocol.Request;
-import com.auction.shared.protocol.Response;
 
 public class Client {
     private static volatile Client instance;
@@ -41,12 +43,16 @@ public class Client {
     public void connect() {
         if (socket != null && !socket.isClosed()) {return;}
         try {
+            // --- THÊM LOG Ở ĐÂY ---
+            System.out.println("[LOG NETWORK] Bắt đầu kết nối tới Server lúc: " + System.currentTimeMillis() + " ms");
+
             socket = new Socket(NetworkConfig.SERVER_IP, NetworkConfig.PORT);
             out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(socket.getInputStream());
 
-            System.out.println("Client da ket noi toi server thanh cong!");
+            // ---LOG---
+            System.out.println("Client da ket noi toi server thanh cong! Lúc: " + System.currentTimeMillis() + " ms");
 
             Thread listenthread = new Thread(this::listenForData);
             listenthread.setDaemon(true);
@@ -98,26 +104,32 @@ public class Client {
         try {
             while (true) {
                 Object receivedData = in.readObject();
+
+                System.out.println("[LOG NETWORK] Client received: "
+                        + receivedData.getClass().getSimpleName());
+
                 if (receivedData instanceof Response<?> response) {
                     BlockingQueue<Response<?>> queue = pendingResponses.get(response.getAction());
                     if (queue != null) {
                         queue.offer(response);
                     }
                 }
+
                 if (onMessageReceived != null) {
                     Platform.runLater(() -> onMessageReceived.accept(receivedData));
                 }
             }
         } catch (EOFException e) {
-            System.out.println("Server da dong ket noi");
+            System.out.println("Server đã đóng kết nối");
         } catch (Exception e) {
-            System.out.println("Server bi ngat ket noi khoi server");
-        }  finally {
+            System.err.println("Server bị ngắt kết nối khỏi server: " + e.getMessage());
+        } finally {
             try {
                 if (socket != null && !socket.isClosed()) {
                     socket.close();
                 }
             } catch (IOException e) {
+                System.err.println("Lỗi khi đóng kết nối với server: " + e.getMessage());
                 e.printStackTrace();
             }
         }

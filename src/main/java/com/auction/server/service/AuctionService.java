@@ -1,5 +1,13 @@
 package com.auction.server.service;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import com.auction.server.database.DatabaseConnection;
 import com.auction.server.model.auction.Auction;
 import com.auction.server.model.item.Item;
@@ -16,14 +24,6 @@ import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.exception.AuthorizationException;
 import com.auction.shared.exception.ResourceNotFoundException;
 import com.auction.shared.util.ItemFactory;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AuctionService {
 
@@ -149,12 +149,28 @@ public class AuctionService {
         return auctionRepository.getAuctionSummariesByType(itemType);
     }
     public List<AuctionSummaryDTO> getAllAuctions() throws Exception {
-        List<AuctionSummaryDTO> auctionDTOs = new ArrayList<>();
-        for (Integer auctionId : new ArrayList<>(auctions.keySet())) {
-            Auction auction = refreshAndPersistIfChanged(auctionId);
-            auctionDTOs.add(mapToAuctionSummaryDTO(auction));
+        // Reduce chatty DB: fetch all auctions with related Item+owner+winner/lastBidder in one query.
+        // (N+1 fix is handled at repository mapping level.)
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            List<Auction> models = auctionRepository.getAllAuctionsWithDetails(conn);
+            List<AuctionSummaryDTO> auctionDTOs = new ArrayList<>(models.size());
+            for (Auction auction : models) {
+                updateCachedAuction(auction);
+                auctionDTOs.add(mapToAuctionSummaryDTO(auction));
+            }
+            return auctionDTOs;
         }
-        return auctionDTOs;
+    }
+
+    public List<AuctionSummaryDTO> getAllAuctionSummaries() {
+
+        try {
+            // Gọi sang hàm Repository tối ưu vừa thêm ở Bước 1
+            return auctionRepository.getAllAuctionSummaries();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>(); // Trả về danh sách rỗng để tránh lỗi Null giao diện
+        }
     }
 
     public Auction refreshAndPersistIfChanged(int auctionId) throws Exception {
