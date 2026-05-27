@@ -2,6 +2,7 @@ package com.auction.client.controller;
 
 import com.auction.client.session.ClientSession;
 import com.auction.client.util.AlertUtils;
+import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.UserDTO;
 import javafx.application.Platform;
@@ -21,6 +22,7 @@ public class HomeController implements Initializable {
     @FXML private AnchorPane scenePane;
     @FXML private Label nameLabel;
     @FXML private Label roleLabel;
+    @FXML private Label balanceLabel;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -86,6 +88,9 @@ public class HomeController implements Initializable {
         if (roleLabel != null) {
             roleLabel.setText("Role: N/A");
         }
+        if (balanceLabel != null) {
+            balanceLabel.setText("Balance: N/A");
+        }
     }
 
     private void renderCurrentUser(UserDTO user) {
@@ -93,12 +98,19 @@ public class HomeController implements Initializable {
         if (roleLabel != null) {
             roleLabel.setText("Role: " + (user.getRole() == null ? "N/A" : user.getRole().name()));
         }
+        if (balanceLabel != null) {
+            Double balance = ClientSession.getBalance();
+            balanceLabel.setText("Balance: " + (balance == null ? "N/A" : FormatUtils.currency(balance)));
+        }
     }
 
     private void renderGuestState() {
         nameLabel.setText("Hello: Guest");
         if (roleLabel != null) {
             roleLabel.setText("Role: N/A");
+        }
+        if (balanceLabel != null) {
+            balanceLabel.setText("Balance: N/A");
         }
     }
 

@@ -21,21 +21,37 @@
          <font>
             <Font name="Trebuchet MS" size="15.0" />
          </font></Button>
-      <Label layoutX="64.0" layoutY="141.0" text="Increment/Decrement Balance">
+      <Label layoutX="64.0" layoutY="111.0" text="Wallet Summary">
          <font>
             <Font name="Trebuchet MS" size="14.0" />
          </font></Label>
-      <TextField fx:id="incrementBalanceTextField" layoutX="64.0" layoutY="171.0" promptText="e.g. 500, -123" />
-      <Button fx:id="incrementBalanceButton" layoutX="234.0" layoutY="171.0" mnemonicParsing="false" onAction="#incrementBalance" text="Change">
+      <Label fx:id="currentBalanceLabel" layoutX="64.0" layoutY="137.0" text="Balance: N/A">
+         <font>
+            <Font name="Trebuchet MS" size="13.0" />
+         </font></Label>
+      <Label fx:id="availableBalanceLabel" layoutX="64.0" layoutY="160.0" text="Available: N/A">
+         <font>
+            <Font name="Trebuchet MS" size="13.0" />
+         </font></Label>
+      <Label fx:id="unpaidWinningAmountLabel" layoutX="64.0" layoutY="183.0" text="Unpaid winning: N/A">
+         <font>
+            <Font name="Trebuchet MS" size="13.0" />
+         </font></Label>
+      <Label layoutX="64.0" layoutY="223.0" text="Add Balance">
+         <font>
+            <Font name="Trebuchet MS" size="14.0" />
+         </font></Label>
+      <TextField fx:id="incrementBalanceTextField" layoutX="64.0" layoutY="253.0" promptText="e.g. 500" />
+      <Button fx:id="incrementBalanceButton" layoutX="234.0" layoutY="253.0" mnemonicParsing="false" onAction="#incrementBalance" text="Add">
          <font>
             <Font name="Trebuchet MS" size="14.0" />
          </font></Button>
-      <Label layoutX="67.0" layoutY="213.0" text="Set Balance">
+      <Label layoutX="67.0" layoutY="295.0" text="Set Balance">
          <font>
             <Font name="Trebuchet MS" size="14.0" />
          </font></Label>
-      <TextField fx:id="setBalanceTextField" layoutX="67.0" layoutY="233.0" promptText="e.g. 350" />
-      <Button fx:id="setBalanceButton" layoutX="233.0" layoutY="232.0" mnemonicParsing="false" onAction="#setBalance" prefHeight="26.0" prefWidth="66.0" text="Set">
+      <TextField fx:id="setBalanceTextField" layoutX="67.0" layoutY="315.0" promptText="Unsupported" />
+      <Button fx:id="setBalanceButton" layoutX="233.0" layoutY="314.0" mnemonicParsing="false" onAction="#setBalance" prefHeight="26.0" prefWidth="66.0" text="Set">
          <font>
             <Font name="Trebuchet MS" size="14.0" />
          </font></Button>

@@ -37,6 +37,7 @@ public class AuthService {
             throw new UserBannedException(user.getBanEndTime());
         }
 
+        user.setBalance(userRepository.getUserBalance(user.getId()));
         return mapUserToDTO(user);
     }
 
@@ -57,6 +58,7 @@ public class AuthService {
         // Tạo mới
         User newUser = new User(cleanUsername, password, cleanEmail, Role.USER);
         userRepository.addUser(newUser);
+        newUser.setBalance(userRepository.getUserBalance(newUser.getId()));
 
         return mapUserToDTO(newUser);
     }
@@ -68,6 +70,14 @@ public class AuthService {
     }
 
     private UserDTO mapUserToDTO(User user) {
-        return new UserDTO(user.getId(), user.getUsername(), user.getEmail(), user.getRole());
+        return new UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                user.getBalance(),
+                user.getBanStartTime(),
+                user.getBanEndTime()
+        );
     }
 }

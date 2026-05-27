@@ -28,6 +28,7 @@ public class WalletController {
 
             int userId = clientHandler.getCurrentUser().getId();
             BalanceResponse response = walletService.addBalance(userId, addBalanceRequest.getAmount());
+            clientHandler.getCurrentUser().setBalance(response.getBalance());
             return Response.success(ActionType.ADD_BALANCE, response);
         } catch (Exception e) {
             return Response.error(ActionType.ADD_BALANCE, e.getMessage());
