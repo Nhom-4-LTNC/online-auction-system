@@ -34,6 +34,7 @@ public class CreateAccountController implements Initializable {
     private final Client client = Client.getInstance();
 
     @FXML private Button Create;
+    @FXML private Button signInButton;
     @FXML private TextField passTextField;
     @FXML private TextField emailTextField;
     @FXML private TextField nameTextField;
@@ -88,9 +89,10 @@ public class CreateAccountController implements Initializable {
     }
 
     @FXML
-    public void backToLogin(ActionEvent event) throws IOException {
-        SceneUtils.switchScene(event, "/fxml/login.fxml");
+    public void goToSignIn(ActionEvent event) throws IOException {
+        SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
     }
+
 
     private void registerServerMessageHandler() {
         client.setOnMessageReceived(message -> {

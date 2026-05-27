@@ -4,32 +4,82 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.ItemAuctionController">
    <children>
-      <Button fx:id="outButton" layoutX="69.0" layoutY="277.0" mnemonicParsing="false" onAction="#OutAuction" text="Back" />
-      <Label fx:id="titleLabel" layoutX="73.0" layoutY="39.0" text="Title" />
-      <Label fx:id="descLabel" layoutX="73.0" layoutY="65.0" text="Description: " />
-      <Label fx:id="miscLabel" layoutX="74.0" layoutY="162.0" text="Misc: " />
-      <Label fx:id="currentPriceLabel" layoutX="310.0" layoutY="33.0" text="CURRENT PRICE: ">
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="59.0" stroke="BLACK" strokeType="INSIDE" width="600.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="88.0" layoutX="310.0" layoutY="289.0" stroke="BLACK" strokeType="INSIDE" width="272.0" />
+      <Button fx:id="outButton" layoutX="504.0" layoutY="14.0" mnemonicParsing="false" onAction="#OutAuction" prefHeight="31.0" prefWidth="65.0" style="-fx-background-color: white;" text="Back" textFill="#e79316">
          <font>
-            <Font size="21.0" />
-         </font>
-      </Label>
-      <Label fx:id="endDateLabel" layoutX="310.0" layoutY="89.0" text="End Date: ">
+            <Font name="Trebuchet MS" size="16.0" />
+         </font></Button>
+      <Label fx:id="titleLabel" layoutX="14.0" layoutY="6.0" prefHeight="54.0" prefWidth="346.0" text="ItemName" textFill="WHITE">
          <font>
-            <Font size="18.0" />
-         </font>
-      </Label>
-      <Button fx:id="bidButton" layoutX="494.0" layoutY="277.0" mnemonicParsing="false" onAction="#onBidButtonPressed" text="Bid" />
-      <TextField fx:id="bidTextField" layoutX="336.0" layoutY="277.0" />
-      <Label layoutX="337.0" layoutY="252.0" text="BID VALUE" />
-      <Label fx:id="highestBidderLabel" layoutX="310.0" layoutY="130.0" text="Highest Bidder:">
+            <Font name="Trebuchet MS" size="37.0" />
+         </font></Label>
+      <Label fx:id="descLabel" alignment="TOP_LEFT" layoutX="22.0" layoutY="107.0" prefHeight="115.0" prefWidth="246.0" text="Description: ">
          <font>
-            <Font size="13.0" />
-         </font>
-      </Label>
-      <Label fx:id="notificationText" layoutX="337.0" layoutY="313.0" text="helo worl" />
+            <Font name="Trebuchet MS" size="14.0" />
+         </font></Label>
+      <Label fx:id="miscLabel" alignment="TOP_LEFT" layoutX="22.0" layoutY="243.0" prefHeight="74.0" prefWidth="233.0" text="Misc: ">
+         <font>
+            <Font name="Trebuchet MS" size="14.0" />
+         </font></Label>
+      <VBox alignment="CENTER_RIGHT" layoutX="314.0" layoutY="107.0" spacing="2.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" prefHeight="18.0" prefWidth="91.0" text="CURRENT PRICE" textFill="#e79316">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+            <Label fx:id="currentPriceLabel" alignment="TOP_RIGHT" prefHeight="31.0" prefWidth="246.0" text="\$[CurrentPrice]">
+               <font>
+                  <Font name="Trebuchet MS" size="25.0" />
+               </font>
+            </Label>
+            <Label alignment="CENTER_RIGHT" prefHeight="18.0" prefWidth="142.0" text="HIGHEST BIDDER" textFill="#e79316">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+            <Label fx:id="highestBidderLabel" alignment="TOP_RIGHT" text="[OnlyTwentyCharacters]">
+               <font>
+                  <Font name="Trebuchet MS" size="25.0" />
+               </font>
+            </Label>
+            <Label alignment="CENTER_RIGHT" prefHeight="18.0" prefWidth="142.0" text="END DATE" textFill="#e79316">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+            <Label fx:id="endDateLabel" alignment="TOP_RIGHT" prefHeight="30.0" prefWidth="246.0" text="[EndDate]">
+               <font>
+                  <Font name="Trebuchet MS" size="25.0" />
+               </font>
+            </Label>
+         </children>
+      </VBox>
+      <HBox layoutX="349.0" layoutY="333.0" spacing="10.0">
+         <children>
+            <TextField fx:id="bidTextField" />
+            <Button fx:id="bidButton" mnemonicParsing="false" onAction="#onBidButtonPressed" text="Bid">
+               <font>
+                  <Font name="Trebuchet MS" size="15.0" />
+               </font>
+            </Button>
+         </children>
+      </HBox>
+      <Label layoutX="349.0" layoutY="307.0" prefHeight="19.0" prefWidth="78.0" text="Bid Value" textFill="WHITE">
+         <font>
+            <Font name="Trebuchet MS" size="15.0" />
+         </font></Label>
+      <Label fx:id="notificationText" alignment="CENTER" layoutX="3.0" layoutY="70.0" prefHeight="20.0" prefWidth="594.0" text="Announcement Text" textFill="RED">
+         <font>
+            <Font name="Trebuchet MS Bold" size="16.0" />
+         </font></Label>
    </children>
 </AnchorPane>

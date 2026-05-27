@@ -6,63 +6,99 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.CreateAccountController">
    <children>
-      <Label layoutX="22.0" layoutY="97.0" text="Username: ">
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="215.0" layoutX="14.0" layoutY="112.0" stroke="BLACK" strokeType="INSIDE" width="281.0" />
+      <Label layoutX="26.0" layoutY="138.0" text="Username " textFill="WHITE">
          <font>
-            <Font size="14.0" />
+            <Font name="Trebuchet MS" size="15.0" />
          </font>
       </Label>
-      <Label layoutX="26.0" layoutY="199.0" text="Password: ">
+      <Label layoutX="26.0" layoutY="240.0" text="Password" textFill="WHITE">
          <font>
-            <Font size="14.0" />
+            <Font name="Trebuchet MS" size="15.0" />
          </font>
       </Label>
-      <Label layoutX="39.0" layoutY="150.0" text="Email: ">
+      <Label layoutX="39.0" layoutY="191.0" text="Email" textFill="WHITE">
          <font>
-            <Font size="14.0" />
+            <Font name="Trebuchet MS" size="15.0" />
          </font>
       </Label>
-      <TextField fx:id="nameTextField" layoutX="115.0" layoutY="94.0" prefHeight="26.0" prefWidth="164.0" />
-      <TextField fx:id="emailTextField" layoutX="115.0" layoutY="147.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: nguyenvanA@gmail.com" />
-      <TextField fx:id="passTextField" layoutX="116.0" layoutY="196.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: 12345aA@" />
-      <Button fx:id="Create" layoutX="164.0" layoutY="258.0" mnemonicParsing="false" onAction="#Create" text="Create" />
-      <Label layoutX="325.0" layoutY="78.0" text="Password requirements">
+      <TextField fx:id="nameTextField" layoutX="115.0" layoutY="135.0" prefHeight="26.0" prefWidth="164.0" />
+      <TextField fx:id="emailTextField" layoutX="115.0" layoutY="188.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: nguyenvanA@gmail.com" />
+      <TextField fx:id="passTextField" layoutX="116.0" layoutY="237.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: 12345aA@" />
+      <Button fx:id="Create" layoutX="120.0" layoutY="283.0" mnemonicParsing="false" onAction="#Create" style="-fx-background-color: white;" text="Create" textFill="#e79316">
          <font>
-            <Font size="21.0" />
+            <Font name="Trebuchet MS" size="16.0" />
+         </font></Button>
+      <Label layoutX="303.0" layoutY="112.0" text="Password requirements">
+         <font>
+            <Font name="Trebuchet MS" size="26.0" />
          </font>
       </Label>
-      <Label layoutX="342.0" layoutY="117.0" prefHeight="26.0" prefWidth="194.0" text="Must contain at least 1 number" />
-      <Label layoutX="342.0" layoutY="137.0" prefHeight="26.0" prefWidth="194.0" text="Must contain at least 1 uppercase" />
-      <Label layoutX="342.0" layoutY="157.0" prefHeight="26.0" prefWidth="194.0" text="Must contain at least 1 lowercase" />
-      <Label layoutX="342.0" layoutY="175.0" prefHeight="50.0" prefWidth="194.0" text="Must contain at least 1 special character" wrapText="true" />
-      <Label layoutX="342.0" layoutY="219.0" prefHeight="26.0" prefWidth="207.0" text="Minimum length of 8, no whitespaces" wrapText="true" />
-      <ImageView fx:id="pwdReqNumber" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="120.0" pickOnBounds="true" preserveRatio="true">
+      <Label layoutX="342.0" layoutY="158.0" prefHeight="26.0" prefWidth="207.0" text="Must contain at least 1 number">
+         <font>
+            <Font name="Trebuchet MS" size="14.0" />
+         </font></Label>
+      <Label layoutX="342.0" layoutY="178.0" prefHeight="26.0" prefWidth="224.0" text="Must contain at least 1 uppercase">
+         <font>
+            <Font name="Trebuchet MS" size="14.0" />
+         </font></Label>
+      <Label layoutX="342.0" layoutY="198.0" prefHeight="26.0" prefWidth="224.0" text="Must contain at least 1 lowercase">
+         <font>
+            <Font name="Trebuchet MS" size="14.0" />
+         </font></Label>
+      <Label layoutX="342.0" layoutY="216.0" prefHeight="50.0" prefWidth="194.0" text="Must contain at least 1 special character" wrapText="true">
+         <font>
+            <Font name="Trebuchet MS" size="14.0" />
+         </font></Label>
+      <Label layoutX="342.0" layoutY="260.0" prefHeight="26.0" prefWidth="244.0" text="Minimum length of 8, no whitespaces" wrapText="true">
+         <font>
+            <Font name="Trebuchet MS" size="14.0" />
+         </font></Label>
+      <ImageView fx:id="pwdReqNumber" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="161.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../picture/invalidIcon.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="pwdReqUpper" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="140.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="pwdReqUpper" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="181.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../picture/invalidIcon.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="pwdReqLower" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="160.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="pwdReqLower" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="201.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../picture/invalidIcon.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="pwdReqSpecialChar" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="180.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="pwdReqSpecialChar" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="221.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../picture/invalidIcon.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="pwdReqNoWhites" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="222.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="pwdReqNoWhites" fitHeight="20.0" fitWidth="20.0" layoutX="315.0" layoutY="263.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../picture/invalidIcon.png" />
          </image>
       </ImageView>
+      <Label layoutX="111.0" layoutY="73.0" text="Sign Up" textFill="#e79316">
+         <font>
+            <Font name="Trebuchet MS" size="26.0" />
+         </font>
+      </Label>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="63.0" layoutY="-3.0" stroke="BLACK" strokeType="INSIDE" width="600.0" />
+      <Label layoutX="26.0" layoutY="345.0" text="Already have an account?">
+         <font>
+            <Font name="Trebuchet MS" size="14.0" />
+         </font>
+      </Label>
+      <Button fx:id="signInButton" layoutX="198.0" layoutY="337.0" mnemonicParsing="false" onAction="#goToSignIn" prefHeight="16.0" prefWidth="68.0" style="-fx-background-color: #e79316;" text="Sign In" textFill="#fcfcfc">
+         <font>
+            <Font name="Trebuchet MS" size="16.0" />
+         </font>
+      </Button>
    </children>
 </AnchorPane>
