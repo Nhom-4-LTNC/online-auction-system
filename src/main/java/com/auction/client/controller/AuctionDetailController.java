@@ -7,10 +7,12 @@ import com.auction.client.service.ClientServiceException;
 import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.AuctionDetailDTO;
+import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BidDTO;
 import com.auction.shared.dto.ItemDTO;
 import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
@@ -71,6 +73,7 @@ public class AuctionDetailController {
     private int currentAuctionId;
     private Consumer<Response<?>> auctionUpdatedListener;
     private volatile boolean pageLoading = false;
+    private volatile boolean bidHistoryReloading = false;
 
     @FXML
     private void initialize() {
@@ -174,6 +177,48 @@ public class AuctionDetailController {
         loadAuctionDetailPageAsync(true);
     }
 
+    private void reloadBidHistoryForRealtime() {
+        if (bidHistoryReloading) {
+            return;
+        }
+        bidHistoryReloading = true;
+
+        int auctionIdSnapshot = currentAuctionId;
+        Thread thread = new Thread(() -> {
+            try {
+                List<BidDTO> bids = bidClientService.getBidHistoryByAuction(auctionIdSnapshot);
+                javafx.application.Platform.runLater(() -> {
+                    if (auctionIdSnapshot == currentAuctionId) {
+                        renderBidHistory(bids);
+                    }
+                });
+            } catch (Exception e) {
+                System.out.println("[AuctionDetailController] Failed to reload bid history after realtime update: "
+                        + e.getMessage());
+                e.printStackTrace();
+            } finally {
+                bidHistoryReloading = false;
+            }
+        }, "bid-history-realtime-loader");
+
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void applyRealtimeSummary(AuctionUpdatedEvent event) {
+        if (event == null || event.getSummary() == null) {
+            return;
+        }
+
+        AuctionSummaryDTO summary = event.getSummary();
+        currentPriceLabel.setText(FormatUtils.currency(summary.getCurrentPrice()));
+        statusLabel.setText(formatStatus(summary.getStatus()));
+        placeBidButton.setDisable(!isAuctionBiddable(summary.getStatus()));
+        bidAmountField.setDisable(!isAuctionBiddable(summary.getStatus()));
+        auctionTitleLabel.setText(safeText(summary.getItemName()));
+        endTimeLabel.setText(formatTime(summary.getEndTimeMillis()));
+    }
+
     private void renderAuctionDetail(AuctionDetailDTO detail) {
         if (detail == null) {
             showError("Auction detail not found.");
@@ -190,10 +235,10 @@ public class AuctionDetailController {
         bidStepLabel.setText(FormatUtils.currency(detail.getBidStep()));
         sellerLabel.setText(safeText(detail.getSellerUsername()));
         endTimeLabel.setText(formatTime(detail.getEndTimeMillis()));
-        statusLabel.setText("Status: " + (detail.getStatus() == null ? "N/A" : detail.getStatus().name()));
+        statusLabel.setText(formatStatus(detail.getStatus()));
         renderItemImage(item);
 
-        boolean bidOpen = detail.getStatus() == AuctionStatus.OPEN || detail.getStatus() == AuctionStatus.RUNNING;
+        boolean bidOpen = isAuctionBiddable(detail.getStatus());
         placeBidButton.setDisable(!bidOpen);
         bidAmountField.setDisable(!bidOpen);
     }
@@ -257,7 +302,12 @@ public class AuctionDetailController {
                 return;
             }
 
-            reloadAuctionDetailForRealtime();
+            applyRealtimeSummary(event);
+            if (event.getUpdateType() == AuctionUpdateType.BID_PLACED) {
+                reloadBidHistoryForRealtime();
+            } else {
+                reloadAuctionDetailForRealtime();
+            }
         };
 
         client.addEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
@@ -331,6 +381,14 @@ public class AuctionDetailController {
         } catch (Exception e) {
             return String.valueOf(epochMillis);
         }
+    }
+
+    private String formatStatus(AuctionStatus status) {
+        return "Status: " + (status == null ? "N/A" : status.name());
+    }
+
+    private boolean isAuctionBiddable(AuctionStatus status) {
+        return status == AuctionStatus.OPEN || status == AuctionStatus.RUNNING;
     }
 
     private String safeText(String value) {
