@@ -6,6 +6,7 @@ public enum AuctionUpdateType implements Serializable {
     BID_PLACED,
     AUCTION_CLOSED,
     PAYMENT_COMPLETED,
+    AUCTION_CANCELED,
     AUCTION_CANCELLED,
     AUCTION_CREATED
 }

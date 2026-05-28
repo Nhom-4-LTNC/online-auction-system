@@ -19,13 +19,17 @@ import java.util.List;
 public class AuctionClientService extends BaseClientService {
 
     public AuctionDetailDTO getAuctionDetail(int auctionId) {
+        GetAuctionResponse response = getAuctionResponse(auctionId);
+        return response == null ? null : response.getAuction();
+    }
+
+    public GetAuctionResponse getAuctionResponse(int auctionId) {
         Request<GetAuctionRequest> request = new Request<>(
                 ActionType.GET_AUCTION,
                 new GetAuctionRequest(auctionId)
         );
 
-        GetAuctionResponse response = sendAndExtract(request, GetAuctionResponse.class);
-        return response == null ? null : response.getAuction();
+        return sendAndExtract(request, GetAuctionResponse.class);
     }
 
     public CreateAuctionResponse createAuction(CreateAuctionRequest createAuctionRequest) {

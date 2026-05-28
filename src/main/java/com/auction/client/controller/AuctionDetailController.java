@@ -14,6 +14,7 @@ import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.auction.GetAuctionResponse;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
 import javafx.beans.property.SimpleStringProperty;
@@ -91,6 +92,19 @@ public class AuctionDetailController {
 
     public void setAuctionId(int auctionId) {
         currentAuctionId = auctionId;
+        showLoadingState();
+        loadAuctionDetailPageAsync(false);
+        registerRealtimeListener();
+    }
+
+    public void setInitialAuction(AuctionSummaryDTO summary) {
+        if (summary == null) {
+            return;
+        }
+
+        currentAuctionId = summary.getAuctionId();
+        renderSummaryImmediately(summary);
+        showLoadingState();
         loadAuctionDetailPageAsync(false);
         registerRealtimeListener();
     }
@@ -123,19 +137,25 @@ public class AuctionDetailController {
             return;
         }
         pageLoading = true;
+        refreshBidHistoryButton.setDisable(true);
 
         int auctionIdSnapshot = currentAuctionId;
         Task<AuctionDetailPage> task = new Task<>() {
             @Override
             protected AuctionDetailPage call() {
-                AuctionDetailDTO detail = auctionClientService.getAuctionDetail(auctionIdSnapshot);
-                List<BidDTO> bids = bidClientService.getBidHistoryByAuction(auctionIdSnapshot);
+                GetAuctionResponse response = auctionClientService.getAuctionResponse(auctionIdSnapshot);
+                AuctionDetailDTO detail = response == null ? null : response.getAuction();
+                List<BidDTO> bids = response == null ? null : response.getRecentBids();
+                if (bids == null) {
+                    bids = bidClientService.getBidHistoryByAuction(auctionIdSnapshot);
+                }
                 return new AuctionDetailPage(detail, bids);
             }
         };
 
         task.setOnSucceeded(event -> {
             pageLoading = false;
+            refreshBidHistoryButton.setDisable(false);
             if (auctionIdSnapshot == currentAuctionId) {
                 AuctionDetailPage page = task.getValue();
                 renderAuctionDetail(page.detail());
@@ -147,14 +167,19 @@ public class AuctionDetailController {
         });
         task.setOnFailed(event -> {
             pageLoading = false;
+            refreshBidHistoryButton.setDisable(false);
             showError("Cannot load auction detail page: " + errorMessage(task.getException()));
         });
-        task.setOnCancelled(event -> pageLoading = false);
+        task.setOnCancelled(event -> {
+            pageLoading = false;
+            refreshBidHistoryButton.setDisable(false);
+        });
 
         runDaemon(task, "auction-detail-page-loader");
     }
 
     private void loadBidHistoryAsync() {
+        refreshBidHistoryButton.setDisable(true);
         int auctionIdSnapshot = currentAuctionId;
         Task<List<BidDTO>> task = new Task<>() {
             @Override
@@ -164,11 +189,16 @@ public class AuctionDetailController {
         };
 
         task.setOnSucceeded(event -> {
+            refreshBidHistoryButton.setDisable(false);
             if (auctionIdSnapshot == currentAuctionId) {
                 renderBidHistory(task.getValue());
             }
         });
-        task.setOnFailed(event -> showError("Cannot load bid history: " + errorMessage(task.getException())));
+        task.setOnFailed(event -> {
+            refreshBidHistoryButton.setDisable(false);
+            showError("Cannot load bid history: " + errorMessage(task.getException()));
+        });
+        task.setOnCancelled(event -> refreshBidHistoryButton.setDisable(false));
 
         runDaemon(task, "bid-history-loader");
     }
@@ -210,13 +240,33 @@ public class AuctionDetailController {
             return;
         }
 
-        AuctionSummaryDTO summary = event.getSummary();
+        renderSummaryImmediately(event.getSummary());
+    }
+
+    private void renderSummaryImmediately(AuctionSummaryDTO summary) {
+        if (summary == null) {
+            return;
+        }
+
+        String itemName = safeText(summary.getItemName());
+        auctionTitleLabel.setText(itemName);
+        itemNameLabel.setText(itemName);
         currentPriceLabel.setText(FormatUtils.currency(summary.getCurrentPrice()));
         statusLabel.setText(formatStatus(summary.getStatus()));
-        placeBidButton.setDisable(!isAuctionBiddable(summary.getStatus()));
-        bidAmountField.setDisable(!isAuctionBiddable(summary.getStatus()));
-        auctionTitleLabel.setText(safeText(summary.getItemName()));
         endTimeLabel.setText(formatTime(summary.getEndTimeMillis()));
+
+        boolean bidOpen = isAuctionBiddable(summary.getStatus());
+        placeBidButton.setDisable(!bidOpen);
+        bidAmountField.setDisable(!bidOpen);
+    }
+
+    private void showLoadingState() {
+        descriptionArea.setText("Đang tải mô tả...");
+        sellerLabel.setText("Đang tải...");
+        bidStepLabel.setText("Đang tải...");
+        startingPriceLabel.setText("Đang tải...");
+        bidHistoryTable.setPlaceholder(new Label("Đang tải lịch sử trả giá..."));
+        refreshBidHistoryButton.setDisable(true);
     }
 
     private void renderAuctionDetail(AuctionDetailDTO detail) {

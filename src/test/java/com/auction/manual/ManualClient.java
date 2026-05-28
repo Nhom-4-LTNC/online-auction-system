@@ -22,6 +22,18 @@ public class ManualClient implements AutoCloseable{
         out.writeObject(request);
         out.flush();
 
+        while (true) {
+            Response<?> response = readResponse();
+            if (request.getAction() == null || response.getAction() == request.getAction()) {
+                return response;
+            }
+
+            System.out.println("[ManualClient] Received server-push while waiting for "
+                    + request.getAction() + ": " + response.getAction());
+        }
+    }
+
+    public Response<?> readResponse() throws Exception {
         Object obj = in.readObject();
 
         if (!(obj instanceof Response<?> response)) {

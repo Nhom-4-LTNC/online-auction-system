@@ -206,7 +206,7 @@ public class AuctionMenuController {
             Stage stage = (Stage) auctionListView.getScene().getWindow();
             AuctionDetailController controller =
                     SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionDetailView.fxml");
-            controller.setAuctionId(selected.getAuctionId());
+            controller.setInitialAuction(selected);
             cleanup();
         } catch (IOException e) {
             AlertUtils.showError("Navigation error", "Cannot open auction detail: " + e.getMessage());

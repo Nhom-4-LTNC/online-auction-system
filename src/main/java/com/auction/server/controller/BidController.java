@@ -60,7 +60,13 @@ public class BidController {
                     System.currentTimeMillis()
             );
 
-            auctionEventPublisher.publishAuctionUpdated(event);
+            auctionEventPublisher.publishAuctionUpdated(
+                    event.getAuctionId(),
+                    event.getUpdateType(),
+                    event.getSummary(),
+                    event.getLastestBid(),
+                    event.getMessage()
+            );
 
             return Response.success(
                     ActionType.PLACE_BID,

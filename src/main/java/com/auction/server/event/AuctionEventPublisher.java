@@ -1,7 +1,10 @@
 package com.auction.server.event;
 
 import com.auction.server.Server;
+import com.auction.shared.dto.AuctionSummaryDTO;
+import com.auction.shared.dto.BidDTO;
 import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
 
@@ -24,5 +27,22 @@ public class AuctionEventPublisher {
         );
         System.out.println("[AuctionEventPublisher] Publish AUCTION_UPDATED: " + event);
         Server.broadcastToLoggedIn(response);
+    }
+
+    public void publishAuctionUpdated(
+            int auctionId,
+            AuctionUpdateType updateType,
+            AuctionSummaryDTO summary,
+            BidDTO latestBid,
+            String message
+    ) {
+        publishAuctionUpdated(new AuctionUpdatedEvent(
+                auctionId,
+                updateType,
+                summary,
+                latestBid,
+                message,
+                System.currentTimeMillis()
+        ));
     }
 }

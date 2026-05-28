@@ -1,5 +1,6 @@
 package com.auction.server.controller;
 
+import com.auction.server.event.AuctionEventPublisher;
 import com.auction.server.handler.ClientHandler;
 import com.auction.server.model.auction.Auction;
 import com.auction.server.service.AuctionService;
@@ -9,6 +10,7 @@ import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BidDTO;
 import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.protocol.Request;
 import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auction.*;
@@ -19,6 +21,7 @@ public class AuctionController {
 
     private final AuctionService auctionService = AuctionService.getInstance();
     private final BidService bidService = BidService.getInstance();
+    private final AuctionEventPublisher auctionEventPublisher = AuctionEventPublisher.getInstance();
 
     public Response<?> handleGetAllAuctions() {
         try {
@@ -136,6 +139,15 @@ public class AuctionController {
             int requesterId = client.getCurrentUser().getId();
 
             auctionService.closeAuction(requesterId, req.getAuctionId());
+            Auction closedAuction = auctionService.getAuctionModelById(req.getAuctionId());
+            AuctionSummaryDTO summary = auctionService.mapToAuctionSummaryDTO(closedAuction);
+            auctionEventPublisher.publishAuctionUpdated(
+                    req.getAuctionId(),
+                    AuctionUpdateType.AUCTION_CLOSED,
+                    summary,
+                    null,
+                    "Phiên đấu giá đã được đóng."
+            );
 
             return Response.success(ActionType.CLOSE_AUCTION, "Đóng phiên đấu giá thành công!");
         } catch (AuctionAppException e) {
