@@ -1,11 +1,15 @@
 package com.auction.client.controller;
 
+import com.auction.client.network.Client;
 import com.auction.client.service.AuctionClientService;
 import com.auction.client.service.ClientServiceException;
 import com.auction.client.util.AlertUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.enums.ItemType;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.event.AuctionUpdatedEvent;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -22,10 +26,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class AuctionMenuController {
 
     private final AuctionClientService auctionClientService = new AuctionClientService();
+    private final Client client = Client.getInstance();
 
     @FXML private RadioButton electronicsButton;
     @FXML private RadioButton artButton;
@@ -35,6 +41,8 @@ public class AuctionMenuController {
     @FXML private Button backButton;
 
     private ItemType currentType = ItemType.ELECTRONICS;
+    private Consumer<Response<?>> auctionUpdatedListener;
+    private volatile boolean realtimeReloading = false;
 
     @FXML
     public void initialize() {
@@ -43,6 +51,13 @@ public class AuctionMenuController {
 
         refreshButton.setOnAction(this::handleRefresh);
         backButton.setOnAction(this::handleBack);
+
+        registerRealtimeListener();
+        auctionListView.sceneProperty().addListener((observable, oldScene, newScene) -> {
+            if (oldScene != null && newScene == null) {
+                cleanup();
+            }
+        });
 
         loadAuctions();
     }
@@ -56,6 +71,7 @@ public class AuctionMenuController {
     public void handleBack(ActionEvent event) {
         try {
             SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
+            cleanup();
         } catch (IOException e) {
             AlertUtils.showError("Navigation error", "Cannot open home screen: " + e.getMessage());
         }
@@ -123,6 +139,44 @@ public class AuctionMenuController {
         thread.start();
     }
 
+    private void reloadAuctionListForRealtime() {
+        if (realtimeReloading) {
+            return;
+        }
+        realtimeReloading = true;
+
+        ItemType requestedType = currentType;
+        Task<List<AuctionSummaryDTO>> task = new Task<>() {
+            @Override
+            protected List<AuctionSummaryDTO> call() {
+                return auctionClientService.getAuctionsByType(requestedType);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            realtimeReloading = false;
+            if (requestedType == currentType) {
+                setData(task.getValue(), requestedType);
+            }
+        });
+
+        task.setOnFailed(event -> {
+            realtimeReloading = false;
+            Throwable error = task.getException();
+            System.err.println("[AuctionMenuController] Failed to reload auctions after realtime update: "
+                    + (error == null ? "unknown error" : error.getMessage()));
+            if (error != null) {
+                error.printStackTrace();
+            }
+        });
+
+        task.setOnCancelled(event -> realtimeReloading = false);
+
+        Thread thread = new Thread(task, "auction-list-realtime-loader");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
     private void setData(List<AuctionSummaryDTO> source, ItemType type) {
         List<AuctionSummaryDTO> filtered = new ArrayList<>();
         if (source != null) {
@@ -153,9 +207,39 @@ public class AuctionMenuController {
             AuctionDetailController controller =
                     SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionDetailView.fxml");
             controller.setAuctionId(selected.getAuctionId());
+            cleanup();
         } catch (IOException e) {
             AlertUtils.showError("Navigation error", "Cannot open auction detail: " + e.getMessage());
         }
+    }
+
+    private void registerRealtimeListener() {
+        unregisterRealtimeListener();
+        auctionUpdatedListener = response -> {
+            if (response == null || response.getAction() != ActionType.AUCTION_UPDATED) {
+                return;
+            }
+
+            Object payload = response.getPayload();
+            if (!(payload instanceof AuctionUpdatedEvent)) {
+                return;
+            }
+
+            reloadAuctionListForRealtime();
+        };
+
+        client.addEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
+    }
+
+    private void unregisterRealtimeListener() {
+        if (auctionUpdatedListener != null) {
+            client.removeEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
+            auctionUpdatedListener = null;
+        }
+    }
+
+    public void cleanup() {
+        unregisterRealtimeListener();
     }
 
     private void setLoading(boolean loading) {
