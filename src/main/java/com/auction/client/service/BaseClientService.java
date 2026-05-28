@@ -15,7 +15,8 @@ public abstract class BaseClientService {
         try {
             response = client.sendRequestAndWait(request, DEFAULT_TIMEOUT_MILLIS);
         } catch (Exception e) {
-            throw new ClientServiceException("Failed to send request to server", e);
+            throw new ClientServiceException("Failed to send request to server");
+
         }
 
         if (response == null) {
