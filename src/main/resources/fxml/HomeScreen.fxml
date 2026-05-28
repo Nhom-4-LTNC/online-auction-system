@@ -1,35 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.ColorAdjust?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane fx:id="scenePane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.HomeController">
    <children>
-      <Label fx:id="nameLabel" layoutX="52.0" layoutY="40.0" text="Hello:">
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="78.0" layoutX="-4.0" layoutY="-1.0" stroke="BLACK" strokeType="INSIDE" width="607.0" />
+      <Label fx:id="nameLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="327.0" layoutY="321.0" prefHeight="20.0" prefWidth="259.0" text="Hello:" textFill="#e79316">
          <font>
-            <Font size="20.0" />
+            <Font name="Trebuchet MS Italic" size="16.0" />
          </font>
       </Label>
-      <Label layoutX="52.0" layoutY="99.0" text="Tham gia đấu giá">
+      <Label fx:id="roleLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="327.0" layoutY="347.0" prefHeight="20.0" prefWidth="259.0" text="Role: N/A" textFill="#e79316">
          <font>
-            <Font size="30.0" />
+            <Font name="Trebuchet MS Italic" size="14.0" />
          </font>
       </Label>
-      <Button fx:id="thamgiaBUtton" layoutX="52.0" layoutY="145.0" mnemonicParsing="false" onAction="#joinBid" text="Tham gia" />
-      <Button fx:id="logoutButton" layoutX="481.0" layoutY="27.0" mnemonicParsing="false" onAction="#logout" text="Logout" />
-      <Label layoutX="52.0" layoutY="180.0" text="Tạo sản phẩm">
+      <Label fx:id="balanceLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="327.0" layoutY="369.0" prefHeight="20.0" prefWidth="259.0" text="Balance: N/A" textFill="#e79316">
          <font>
-            <Font size="30.0" />
+            <Font name="Trebuchet MS Italic" size="14.0" />
          </font>
       </Label>
-      <Button fx:id="createButton" layoutX="52.0" layoutY="226.0" mnemonicParsing="false" onAction="#createItem" text="Tạo" />
-      <Label layoutX="52.0" layoutY="262.0" text="Tài chính">
+      <Button fx:id="thamgiaBUtton" layoutX="48.0" layoutY="145.0" mnemonicParsing="false" onAction="#joinBid" prefHeight="26.0" prefWidth="246.0" style="-fx-background-color: #e79316;" textFill="#e79316">
+         <graphic>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+               <children>
+                  <ImageView fitHeight="27.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../picture/magnifier.png" />
+                     </image>
+                     <effect>
+                        <ColorAdjust brightness="1.0" />
+                     </effect>
+                  </ImageView>
+                  <Label text="SEARCH AUCTIONS" textFill="#dfdfdf">
+                     <font>
+                        <Font name="Trebuchet MS" size="21.0" />
+                     </font>
+                     <padding>
+                        <Insets right="10.0" />
+                     </padding>
+                  </Label>
+               </children>
+            </HBox>
+         </graphic></Button>
+      <Label layoutX="31.0" layoutY="20.0" text="HOME" textFill="WHITE">
          <font>
-            <Font size="30.0" />
+            <Font name="Trebuchet MS" size="30.0" />
          </font>
       </Label>
-      <Button fx:id="financeButton" layoutX="52.0" layoutY="308.0" mnemonicParsing="false" onAction="#goToFinance" text="\$$$" />
+      <Button fx:id="createButton" layoutX="48.0" layoutY="190.0" mnemonicParsing="false" onAction="#createItem" prefHeight="26.0" prefWidth="246.0" style="-fx-background-color: white; -fx-border-color: #e79316;" textFill="#e79316">
+         <graphic>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+               <children>
+                  <Label text="CREATE AUCTION" textFill="#e79316">
+                     <font>
+                        <Font name="Trebuchet MS" size="21.0" />
+                     </font>
+                     <padding>
+                        <Insets right="10.0" />
+                     </padding>
+                  </Label>
+                  <ImageView fitHeight="27.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../picture/plus.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </HBox>
+         </graphic>
+      </Button>
+      <Button fx:id="financeButton" layoutX="48.0" layoutY="236.0" mnemonicParsing="false" onAction="#goToFinance" prefHeight="26.0" prefWidth="246.0" style="-fx-background-color: #e79316;" textFill="#e79316">
+         <graphic>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+               <children>
+                  <ImageView fitHeight="27.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../picture/financeIcon.png" />
+                     </image>
+                     <effect>
+                        <ColorAdjust brightness="1.0" />
+                     </effect>
+                  </ImageView>
+                  <Label text="FINANCE" textFill="#dfdfdf">
+                     <font>
+                        <Font name="Trebuchet MS" size="21.0" />
+                     </font>
+                     <padding>
+                        <Insets right="10.0" />
+                     </padding>
+                  </Label>
+               </children>
+            </HBox>
+         </graphic>
+      </Button>
+      <ImageView fitHeight="227.0" fitWidth="286.0" layoutX="343.0" layoutY="94.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../picture/Home_icon_orange.png" />
+         </image>
+      </ImageView>
+      <Button fx:id="logoutButton" layoutX="445.0" layoutY="20.0" mnemonicParsing="false" onAction="#logout" prefHeight="38.0" prefWidth="129.0" style="-fx-background-color: white; -fx-border-color: #e79316;" textFill="#e79316">
+         <graphic>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+               <children>
+                  <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" text="Logout" textFill="#e79316">
+                     <font>
+                        <Font name="Trebuchet MS" size="21.0" />
+                     </font>
+                     <padding>
+                        <Insets right="10.0" />
+                     </padding>
+                  </Label>
+                  <ImageView fitHeight="27.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../picture/exitIcon.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </HBox>
+         </graphic>
+      </Button>
    </children>
 </AnchorPane>

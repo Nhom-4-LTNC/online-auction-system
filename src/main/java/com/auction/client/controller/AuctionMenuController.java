@@ -1,26 +1,16 @@
 package com.auction.client.controller;
 
-import java.io.IOException;
-import java.util.List;
-
-import com.auction.client.network.Client;
+import com.auction.client.service.AuctionClientService;
+import com.auction.client.service.ClientServiceException;
+import com.auction.client.util.AlertUtils;
+import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.enums.ItemType;
-import com.auction.shared.protocol.ActionType;
-import com.auction.shared.protocol.Request;
-import com.auction.shared.protocol.Response;
-import com.auction.shared.protocol.auction.GetAuctionsByTypeRequest;
-import com.auction.shared.protocol.auction.GetAuctionsByTypeResponse;
-import com.auction.shared.util.SceneUtils;
-
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -28,183 +18,166 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 public class AuctionMenuController {
 
-    private final Client client = Client.getInstance();
+    private final AuctionClientService auctionClientService = new AuctionClientService();
 
     @FXML private RadioButton electronicsButton;
     @FXML private RadioButton artButton;
     @FXML private RadioButton vehicleButton;
-
     @FXML private ListView<AuctionSummaryDTO> auctionListView;
-
     @FXML private Button refreshButton;
     @FXML private Button backButton;
 
     private ItemType currentType = ItemType.ELECTRONICS;
-    private boolean listenerRegistered = false;
 
+    @FXML
     public void initialize() {
-        ToggleGroup group = new ToggleGroup();
-        electronicsButton.setToggleGroup(group);
-        artButton.setToggleGroup(group);
-        vehicleButton.setToggleGroup(group);
-        electronicsButton.setSelected(true);
-
-        electronicsButton.setUserData(ItemType.ELECTRONICS);
-        artButton.setUserData(ItemType.ART);
-        vehicleButton.setUserData(ItemType.VEHICLE);
-
-        // CellFactory dùng class riêng + handler click cố định => giảm anonymous/capture
-        auctionListView.setCellFactory(lv -> {
-            AuctionSummaryCell cell = new AuctionSummaryCell();
-            // Chỉ click vào ListCell => dùng item hiện tại thay vì capture cell instance.
-            cell.setOnMouseClicked(e -> handleCellClick(cell));
-            return cell;
-        });
-
-        group.selectedToggleProperty().addListener((obs, oldV, newV) -> {
-            if (newV == null) return;
-            Object ud = ((RadioButton) newV.getToggleGroup().getSelectedToggle()).getUserData();
-            if (ud instanceof ItemType t) {
-                currentType = t;
-                load();
-            }
-        });
+        setupTypeFilter();
+        setupAuctionList();
 
         refreshButton.setOnAction(this::handleRefresh);
         backButton.setOnAction(this::handleBack);
 
-        // register handler once
-        if (!listenerRegistered) {
-            client.setOnMessageReceived(message -> {
-                if (!(message instanceof Response<?> response)) return;
-                if (response.getAction() != ActionType.GET_AUCTIONS_BY_TYPE) return;
-                if (!response.isSuccess()) {
-                    System.err.println("[AuctionMenuController] Failed: " + response.getErrorMessage());
-                    return;
-                }
-                if (!(response.getPayload() instanceof GetAuctionsByTypeResponse payload)) return;
-
-                Platform.runLater(() -> setData(payload.getAuctions()));
-            });
-            listenerRegistered = true;
-        }
-
-        // load initial data
-        load();
+        loadAuctions();
     }
 
-    /**
-     * setData() để thay vì build/assign list trực tiếp trong listener.
-     */
-    private void setData(List<AuctionSummaryDTO> source) {
-        if (source == null) {
-            auctionListView.setItems(FXCollections.observableArrayList());
-            return;
-        }
+    @FXML
+    public void handleRefresh(ActionEvent event) {
+        loadAuctions();
+    }
 
-        // Tối ưu: tránh stream/sorted/collect tạo nhiều đối tượng trung gian.
-        // Chỉ filter theo currentType trước, sau đó sort theo endTimeMillis desc.
-        java.util.ArrayList<AuctionSummaryDTO> filtered = new java.util.ArrayList<>(source.size());
-        for (AuctionSummaryDTO a : source) {
-            if (a == null) continue;
-            var it = a.getItemType();
-            if (it != null && it.equals(currentType)) {
-                filtered.add(a);
+    @FXML
+    public void handleBack(ActionEvent event) {
+        try {
+            SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
+        } catch (IOException e) {
+            AlertUtils.showError("Navigation error", "Cannot open home screen: " + e.getMessage());
+        }
+    }
+
+    private void setupTypeFilter() {
+        ToggleGroup group = new ToggleGroup();
+        electronicsButton.setToggleGroup(group);
+        artButton.setToggleGroup(group);
+        vehicleButton.setToggleGroup(group);
+
+        electronicsButton.setUserData(ItemType.ELECTRONICS);
+        artButton.setUserData(ItemType.ART);
+        vehicleButton.setUserData(ItemType.VEHICLE);
+        electronicsButton.setSelected(true);
+
+        group.selectedToggleProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null || !(newValue.getUserData() instanceof ItemType selectedType)) {
+                return;
+            }
+
+            currentType = selectedType;
+            loadAuctions();
+        });
+    }
+
+    private void setupAuctionList() {
+        auctionListView.setCellFactory(listView -> {
+            AuctionSummaryCell cell = new AuctionSummaryCell();
+            cell.setOnMouseClicked(event -> handleCellClick(cell));
+            return cell;
+        });
+    }
+
+    private void loadAuctions() {
+        ItemType requestedType = currentType;
+        setLoading(true);
+
+        Task<List<AuctionSummaryDTO>> task = new Task<>() {
+            @Override
+            protected List<AuctionSummaryDTO> call() {
+                return auctionClientService.getAuctionsByType(requestedType);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            if (requestedType == currentType) {
+                setData(task.getValue(), requestedType);
+            }
+            setLoading(false);
+        });
+
+        task.setOnFailed(event -> {
+            setData(List.of(), requestedType);
+            setLoading(false);
+            Throwable error = task.getException();
+            String message = error instanceof ClientServiceException
+                    ? error.getMessage()
+                    : "Cannot load auctions.";
+            AlertUtils.showError("Load auctions failed", message);
+        });
+
+        Thread thread = new Thread(task, "auction-list-loader");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void setData(List<AuctionSummaryDTO> source, ItemType type) {
+        List<AuctionSummaryDTO> filtered = new ArrayList<>();
+        if (source != null) {
+            for (AuctionSummaryDTO auction : source) {
+                if (auction != null && type.equals(auction.getItemType())) {
+                    filtered.add(auction);
+                }
             }
         }
 
-        filtered.sort((x, y) -> Long.compare(y.getEndTimeMillis(), x.getEndTimeMillis()));
-
-        // Nếu danh sách rỗng thì reset nhanh.
-        if (filtered.isEmpty()) {
-            auctionListView.setItems(FXCollections.observableArrayList());
-            return;
-        }
-
-        // ObservableList mới để ListView nhận thay đổi.
+        filtered.sort(Comparator.comparingLong(AuctionSummaryDTO::getEndTimeMillis).reversed());
         ObservableList<AuctionSummaryDTO> data = FXCollections.observableArrayList(filtered);
         auctionListView.setItems(data);
     }
 
     private void handleCellClick(ListCell<AuctionSummaryDTO> cell) {
-        if (cell == null || cell.isEmpty()) return;
+        if (cell == null || cell.isEmpty()) {
+            return;
+        }
+
         AuctionSummaryDTO selected = cell.getItem();
-        if (selected == null) return;
+        if (selected == null) {
+            return;
+        }
 
         try {
-            var url = getClass().getResource("/fxml/ItemAuction.fxml");
-            if (url == null) {
-                System.err.println("[AuctionMenuController] Resource not found: /fxml/ItemAuction.fxml");
-                return;
-            }
-
-            FXMLLoader loader = new FXMLLoader(url);
-            Parent root = loader.load();
-            Object controller = loader.getController();
-            if (controller != null) {
-                try {
-                    var m = controller.getClass().getMethod("setAuctionId", int.class);
-                    m.invoke(controller, selected.getAuctionId());
-                } catch (Exception ignored) {
-                    // fallback: allow setAuctionId(Integer)
-                    try {
-                        var m = controller.getClass().getMethod("setAuctionId", Integer.class);
-                        m.invoke(controller, selected.getAuctionId());
-                    } catch (Exception ignored2) {
-                        // ignore if setter not found
-                    }
-                }
-            }
-
             Stage stage = (Stage) auctionListView.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void handleRefresh(ActionEvent event) {
-        load();
-    }
-
-    public void handleBack(ActionEvent event) {
-        try {
-            SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
+            Object controller = SceneUtils.switchSceneAndGetController(stage, "/fxml/ItemAuction.fxml");
+            applyAuctionId(controller, selected.getAuctionId());
         } catch (IOException e) {
-            e.printStackTrace();
+            AlertUtils.showError("Navigation error", "Cannot open auction detail: " + e.getMessage());
         }
     }
 
-    private void load() {
-        // Ensure connected
-        if (!client.isConnected()) {
-            client.connect();
+    private void applyAuctionId(Object controller, int auctionId) {
+        if (controller == null) {
+            return;
         }
 
-        client.setOnMessageReceived(message -> {
-            if (!(message instanceof Response<?> response)) return;
-            if (response.getAction() != ActionType.GET_AUCTIONS_BY_TYPE) return;
-            if (!response.isSuccess()) {
-                System.err.println("[AuctionMenuController] Failed: " + response.getErrorMessage());
-                return;
-            }
-            if (!(response.getPayload() instanceof GetAuctionsByTypeResponse payload)) return;
+        try {
+            controller.getClass().getMethod("setAuctionId", int.class).invoke(controller, auctionId);
+            return;
+        } catch (ReflectiveOperationException ignored) {
+            // Try Integer overload below for compatibility with the current detail controller.
+        }
 
-            List<AuctionSummaryDTO> filtered = payload.getAuctions();
+        try {
+            controller.getClass().getMethod("setAuctionId", Integer.class).invoke(controller, auctionId);
+        } catch (ReflectiveOperationException ignored) {
+            // The current detail controller may not support receiving an id yet.
+        }
+    }
 
-            ObservableList<AuctionSummaryDTO> data = FXCollections.observableArrayList(filtered);
-            Platform.runLater(() -> auctionListView.setItems(data));
-        });
-
-        // Request all auctions then filter client-side by currentType
-        Request<java.io.Serializable> request = new Request<>(ActionType.GET_AUCTIONS_BY_TYPE, new GetAuctionsByTypeRequest(currentType));
-
-        client.sendMessage(request);
+    private void setLoading(boolean loading) {
+        refreshButton.setDisable(loading);
+        auctionListView.setDisable(loading);
     }
 }
-
-
-

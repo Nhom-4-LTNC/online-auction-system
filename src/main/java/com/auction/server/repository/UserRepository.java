@@ -159,6 +159,12 @@ public class UserRepository {
         throw new SQLException("Không tìm thấy balance cho User với ID = " + userId);
     }
 
+    public double getUserBalance(int userId) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return getUserBalance(conn, userId);
+        }
+    }
+
     public double getUserBalanceForUpdate(Connection conn, int userId) throws SQLException {
         String sql = "SELECT balance FROM users WHERE id = ? FOR UPDATE";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -13,6 +13,7 @@ public class UserDTO implements Serializable {
     private final String username;
     private final String email;
     private Role role;
+    private double balance;
 
     // BAN ATTRIBUTES
     private final long banStartTime;
@@ -27,10 +28,16 @@ public class UserDTO implements Serializable {
     }
 
     public UserDTO(int userId, String username, String email, Role role, long banStartTime, long banEndTime) {
+        this(userId, username, email, role, 0.0, banStartTime, banEndTime);
+    }
+
+    public UserDTO(int userId, String username, String email, Role role, double balance,
+                   long banStartTime, long banEndTime) {
         this.userId = userId;
         this.username = username;
         this.email = email;
         this.role = role;
+        this.balance = balance;
         this.banStartTime = banStartTime;
         this.banEndTime = banEndTime;
     }
@@ -51,6 +58,14 @@ public class UserDTO implements Serializable {
         return role;
     }
 
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
     public long getBanStartTime() {
         return banStartTime;
     }
@@ -62,11 +77,12 @@ public class UserDTO implements Serializable {
     @Override
     public String toString() {
         return String.format(
-                "UserDTO{userId=%d, username='%s', email='%s', role='%s', banEndTime=%d}",
+                "UserDTO{userId=%d, username='%s', email='%s', role='%s', balance=%.2f, banEndTime=%d}",
                 userId,
                 username,
                 email,
                 role == null ? "N/A" : role.name(),
+                balance,
                 banEndTime
         );
     }

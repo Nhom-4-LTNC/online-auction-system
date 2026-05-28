@@ -241,6 +241,7 @@ public class UserService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole(),
+                user.getBalance(),
                 user.getBanStartTime(),
                 user.getBanEndTime()
         );

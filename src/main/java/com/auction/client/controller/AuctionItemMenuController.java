@@ -1,66 +1,58 @@
 package com.auction.client.controller;
 
+import com.auction.client.service.AuctionClientService;
+import com.auction.client.service.ClientServiceException;
+import com.auction.client.util.AlertUtils;
+import com.auction.client.util.SceneUtils;
+import com.auction.shared.dto.ArtDTO;
+import com.auction.shared.dto.ElectronicsDTO;
+import com.auction.shared.dto.ItemDTO;
+import com.auction.shared.dto.VehicleDTO;
+import com.auction.shared.enums.ItemType;
+import com.auction.shared.protocol.auction.CreateAuctionRequest;
+import com.auction.shared.protocol.auction.CreateAuctionResponse;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ResourceBundle;
 
-import com.auction.client.network.Client;
-import com.auction.shared.dto.ArtDTO;
-import com.auction.shared.dto.ElectronicsDTO;
-import com.auction.shared.dto.ItemDTO;
-import com.auction.shared.dto.VehicleDTO;
-import com.auction.shared.enums.ItemType;
-import com.auction.shared.protocol.ActionType;
-import com.auction.shared.protocol.Request;
-import com.auction.shared.protocol.Response;
-import com.auction.shared.protocol.auction.CreateAuctionRequest;
-import com.auction.shared.protocol.auction.CreateAuctionResponse;
-import com.auction.shared.util.SceneUtils;
-
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
-import javafx.stage.FileChooser;
-
 public class AuctionItemMenuController implements Initializable {
 
     private static final long DEFAULT_AUCTION_DURATION_MILLIS = 60L * 60 * 1000;
     private static final int DEFAULT_AUCTION_EXTENSION_SECONDS = 10;
 
-    private final Client client = Client.getInstance();
+    private final AuctionClientService auctionClientService = new AuctionClientService();
 
     @FXML private TextField startingPriceTF;
     @FXML private TextField descriptionTF;
-    // Nếu có thể, nên thêm nameTF trong FXML.
-    // @FXML private TextField nameTF;
-
     @FXML private Label itemTypeLabel;
-    @FXML private Button backButton;
     @FXML private Button auctionButton;
 
     @FXML private RadioButton electronicsButton;
     @FXML private RadioButton artButton;
     @FXML private RadioButton vehicleButton;
-    @FXML private RadioButton otherButton;
 
-    @FXML private AnchorPane electronicsPane;
+    @FXML private VBox electronicsPane;
     @FXML private TextField electronicsBrandTF;
     @FXML private TextField warrantyTF;
 
-    @FXML private AnchorPane artPane;
+    @FXML private VBox artPane;
     @FXML private TextField authorTF;
     @FXML private TextField genreTF;
 
-    @FXML private AnchorPane vehiclePane;
+    @FXML private VBox vehiclePane;
     @FXML private TextField vehicleBrandTF;
     @FXML private TextField vinTF;
     @FXML private TextField mileageTF;
@@ -70,9 +62,6 @@ public class AuctionItemMenuController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        client.connect();
-        registerServerMessageHandler();
-
         currentType = null;
         updateItemTypePanels();
     }
@@ -95,13 +84,12 @@ public class AuctionItemMenuController implements Initializable {
     @FXML
     public void chooseImage(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Chọn ảnh sản phẩm");
+        fileChooser.setTitle("Choose item image");
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
         );
 
         File file = fileChooser.showOpenDialog(auctionButton.getScene().getWindow());
-
         if (file != null) {
             selectedImageFile = file;
         }
@@ -109,38 +97,18 @@ public class AuctionItemMenuController implements Initializable {
 
     @FXML
     public void createAuction(ActionEvent event) {
-        if (!client.isConnected()) {
-            showAlert("Lỗi kết nối", "Không thể kết nối tới server. Vui lòng thử lại!");
+        CreateAuctionRequest request;
+        try {
+            request = buildCreateAuctionRequest();
+        } catch (IllegalArgumentException e) {
+            AlertUtils.showError("Input error", e.getMessage());
+            return;
+        } catch (IOException e) {
+            AlertUtils.showError("Image error", "Cannot read item image: " + e.getMessage());
             return;
         }
 
-        try {
-            ItemDTO itemDto = buildItemDTO();
-
-            long now = System.currentTimeMillis();
-            long endTime = now + DEFAULT_AUCTION_DURATION_MILLIS;
-
-            CreateAuctionRequest payload = new CreateAuctionRequest(
-                    itemDto,
-                    itemDto.getStartingPrice(),
-                    DEFAULT_AUCTION_EXTENSION_SECONDS,
-                    now,
-                    endTime
-            );
-
-            Request<CreateAuctionRequest> request = new Request<>(
-                    ActionType.CREATE_AUCTION,
-                    payload
-            );
-
-            client.sendMessage(request);
-
-        } catch (IllegalArgumentException e) {
-            showAlert("Lỗi nhập liệu", e.getMessage());
-
-        } catch (IOException e) {
-            showAlert("Lỗi ảnh", "Không thể đọc ảnh sản phẩm: " + e.getMessage());
-        }
+        submitCreateAuction(event, request);
     }
 
     @FXML
@@ -148,54 +116,64 @@ public class AuctionItemMenuController implements Initializable {
         SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
     }
 
-    private void registerServerMessageHandler() {
-        client.setOnMessageReceived(message -> {
-            if (!(message instanceof Response<?> response)) {
-                return;
-            }
+    private void submitCreateAuction(ActionEvent event, CreateAuctionRequest request) {
+        setSubmitting(true);
 
-            if (response.getAction() != ActionType.CREATE_AUCTION) {
-                return;
+        Task<CreateAuctionResponse> task = new Task<>() {
+            @Override
+            protected CreateAuctionResponse call() {
+                return auctionClientService.createAuction(request);
             }
+        };
 
-            Platform.runLater(() -> handleCreateAuctionResponse(response));
+        task.setOnSucceeded(workerEvent -> {
+            setSubmitting(false);
+            CreateAuctionResponse response = task.getValue();
+            AlertUtils.showInfo("Create auction success", response == null ? "Auction created." : response.getMessage());
+            try {
+                SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
+            } catch (IOException e) {
+                AlertUtils.showError("Navigation error", "Cannot open auction list: " + e.getMessage());
+            }
         });
+
+        task.setOnFailed(workerEvent -> {
+            setSubmitting(false);
+            Throwable error = task.getException();
+            String message = error instanceof ClientServiceException
+                    ? error.getMessage()
+                    : "Cannot create auction.";
+            AlertUtils.showError("Create auction failed", message);
+        });
+
+        Thread thread = new Thread(task, "create-auction-submit");
+        thread.setDaemon(true);
+        thread.start();
     }
 
-    private void handleCreateAuctionResponse(Response<?> response) {
-        if (!response.isSuccess()) {
-            showAlert("Tạo phiên thất bại", response.getErrorMessage());
-            return;
-        }
+    private CreateAuctionRequest buildCreateAuctionRequest() throws IOException {
+        ItemDTO itemDto = buildItemDTO();
 
-        Object payload = response.getPayload();
+        long now = System.currentTimeMillis();
+        long endTime = now + DEFAULT_AUCTION_DURATION_MILLIS;
 
-        if (!(payload instanceof CreateAuctionResponse createAuctionResponse)) {
-            showAlert("Lỗi", "Phản hồi tạo phiên không đúng định dạng.");
-            return;
-        }
-
-        showInfo("Tạo phiên thành công", createAuctionResponse.getMessage());
+        return new CreateAuctionRequest(
+                itemDto,
+                itemDto.getStartingPrice(),
+                DEFAULT_AUCTION_EXTENSION_SECONDS,
+                now,
+                endTime
+        );
     }
 
     private ItemDTO buildItemDTO() throws IOException {
         if (currentType == null) {
-            throw new IllegalArgumentException("Vui lòng chọn loại sản phẩm!");
+            throw new IllegalArgumentException("Please select item type.");
         }
 
-        double startingPrice = parsePositiveDouble(
-                startingPriceTF.getText(),
-                "Giá khởi đầu"
-        );
-
+        double startingPrice = parsePositiveDouble(startingPriceTF.getText(), "Starting price");
         String description = descriptionTF.getText().trim();
-
-        /*
-         * Tốt nhất nên có nameTF riêng.
-         * Nếu chưa có, tạm đặt name theo loại sản phẩm.
-         */
         String name = currentType.name();
-
         ImagePayload imagePayload = readSelectedImage();
 
         return switch (currentType) {
@@ -205,8 +183,8 @@ public class AuctionItemMenuController implements Initializable {
                     startingPrice,
                     imagePayload.imageData(),
                     imagePayload.imageFileName(),
-                    requireText(electronicsBrandTF, "Thương hiệu"),
-                    parsePositiveInt(warrantyTF.getText(), "Thời gian bảo hành")
+                    requireText(electronicsBrandTF, "Brand"),
+                    parsePositiveInt(warrantyTF.getText(), "Warranty")
             );
 
             case ART -> new ArtDTO(
@@ -215,8 +193,8 @@ public class AuctionItemMenuController implements Initializable {
                     startingPrice,
                     imagePayload.imageData(),
                     imagePayload.imageFileName(),
-                    requireText(authorTF, "Tác giả"),
-                    parsePositiveInt(genreTF.getText(), "Năm sáng tác")
+                    requireText(authorTF, "Author"),
+                    parsePositiveInt(genreTF.getText(), "Year")
             );
 
             case VEHICLE -> new VehicleDTO(
@@ -225,9 +203,9 @@ public class AuctionItemMenuController implements Initializable {
                     startingPrice,
                     imagePayload.imageData(),
                     imagePayload.imageFileName(),
-                    requireText(vehicleBrandTF, "Thương hiệu xe"),
+                    requireText(vehicleBrandTF, "Vehicle brand"),
                     requireText(vinTF, "VIN"),
-                    parsePositiveInt(mileageTF.getText(), "Số km đã đi")
+                    parsePositiveInt(mileageTF.getText(), "Mileage")
             );
         };
     }
@@ -238,9 +216,7 @@ public class AuctionItemMenuController implements Initializable {
         }
 
         byte[] imageData = Files.readAllBytes(selectedImageFile.toPath());
-        String imageFileName = selectedImageFile.getName();
-
-        return new ImagePayload(imageData, imageFileName);
+        return new ImagePayload(imageData, selectedImageFile.getName());
     }
 
     private void updateItemTypePanels() {
@@ -248,75 +224,54 @@ public class AuctionItemMenuController implements Initializable {
         boolean isArt = currentType == ItemType.ART;
         boolean isVehicle = currentType == ItemType.VEHICLE;
 
-        electronicsPane.setVisible(isElectronics);
-        electronicsPane.setManaged(isElectronics);
+        setPanelVisible(electronicsPane, isElectronics);
+        setPanelVisible(artPane, isArt);
+        setPanelVisible(vehiclePane, isVehicle);
 
-        artPane.setVisible(isArt);
-        artPane.setManaged(isArt);
+        itemTypeLabel.setText(currentType == null ? "Choose a Type!" : currentType.name());
+    }
 
-        vehiclePane.setVisible(isVehicle);
-        vehiclePane.setManaged(isVehicle);
-
-        itemTypeLabel.setText(currentType == null ? "CHƯA CHỌN" : currentType.name());
+    private void setPanelVisible(VBox panel, boolean visible) {
+        panel.setVisible(visible);
+        panel.setManaged(visible);
     }
 
     private double parsePositiveDouble(String rawValue, String fieldName) {
         try {
             double value = Double.parseDouble(rawValue.trim());
-
             if (value <= 0) {
                 throw new NumberFormatException();
             }
-
             return value;
-
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(fieldName + " phải là số dương!");
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException(fieldName + " must be a positive number.");
         }
     }
 
     private int parsePositiveInt(String rawValue, String fieldName) {
         try {
             int value = Integer.parseInt(rawValue.trim());
-
             if (value <= 0) {
                 throw new NumberFormatException();
             }
-
             return value;
-
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(fieldName + " phải là số nguyên dương!");
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException(fieldName + " must be a positive integer.");
         }
     }
 
     private String requireText(TextField textField, String fieldName) {
         String value = textField.getText().trim();
-
         if (value.isEmpty()) {
-            throw new IllegalArgumentException(fieldName + " không được để trống!");
+            throw new IllegalArgumentException(fieldName + " is required.");
         }
-
         return value;
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void showInfo(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void setSubmitting(boolean submitting) {
+        auctionButton.setDisable(submitting);
     }
 
     private record ImagePayload(byte[] imageData, String imageFileName) {
     }
 }
-
