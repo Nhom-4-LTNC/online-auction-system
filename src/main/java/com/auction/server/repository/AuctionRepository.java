@@ -100,6 +100,23 @@ public class AuctionRepository {
         }
     }
 
+    public int finalizeExpiredAuctionsForRead(Connection conn, long nowMillis) throws SQLException {
+        String sql = """
+            UPDATE auctions
+            SET status = ?, winner_id = COALESCE(winner_id, last_bidder_id)
+            WHERE status IN (?, ?)
+              AND end_time < ?
+            """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, AuctionStatus.FINISHED.name());
+            stmt.setString(2, AuctionStatus.OPEN.name());
+            stmt.setString(3, AuctionStatus.RUNNING.name());
+            stmt.setTimestamp(4, new Timestamp(nowMillis));
+            return stmt.executeUpdate();
+        }
+    }
+
     public Auction getAuctionById(int id) throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return getAuctionById(conn, id);

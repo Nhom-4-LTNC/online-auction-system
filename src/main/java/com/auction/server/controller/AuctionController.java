@@ -22,7 +22,9 @@ public class AuctionController {
 
     public Response<?> handleGetAllAuctions() {
         try {
+            System.out.println("[AuctionController] Received GET_ALL_AUCTIONS");
             List<AuctionSummaryDTO> summaries = auctionService.getAllAuctions();
+            System.out.println("[AuctionController] GET_ALL_AUCTIONS success, count=" + summaries.size());
             return Response.success(
                     ActionType.GET_ALL_AUCTIONS,
                     new GetAllAuctionResponse(summaries, "Lấy danh sách phòng đấu giá thành công")
@@ -88,6 +90,7 @@ public class AuctionController {
     }
     public Response<?> handleGetAuctionsByType(Request<?> request) {
         try {
+            System.out.println("[AuctionController] Received GET_AUCTIONS_BY_TYPE");
             Object payload = request.getPayload();
 
             if (!(payload instanceof GetAuctionsByTypeRequest getRequest)) {
@@ -99,6 +102,8 @@ public class AuctionController {
 
             List<AuctionSummaryDTO> auctions =
                     auctionService.getAuctionSummariesByType(getRequest.getItemType());
+            System.out.println("[AuctionController] GET_AUCTIONS_BY_TYPE success, type="
+                    + getRequest.getItemType() + ", count=" + auctions.size());
 
             GetAuctionsByTypeResponse responsePayload =
                     new GetAuctionsByTypeResponse(

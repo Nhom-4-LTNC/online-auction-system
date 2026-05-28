@@ -1,5 +1,6 @@
 package com.auction.client.network;
 
+import com.auction.client.event.ClientEventDispatcher;
 import com.auction.shared.network.NetworkConfig;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
@@ -9,6 +10,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.UncheckedIOException;
 import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -24,6 +26,7 @@ public class Client {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private Consumer<Object> onMessageReceived;
+    private final Object writeLock = new Object();
     private final Map<ActionType, BlockingQueue<Response<?>>> pendingResponses = new ConcurrentHashMap<>();
     private final ClientEventDispatcher eventDispatcher = ClientEventDispatcher.getInstance();
 
@@ -79,30 +82,48 @@ public class Client {
 
     public void sendMessage(Object message) {
         if (out == null) {
-            System.err.println("Loi gui tin nhan toi server: chua ket noi");
-            return;
+            throw new IllegalStateException("Chua ket noi server");
         }
-        try {
-            out.writeObject(message);
-            out.flush();
-            out.reset();
-        } catch (IOException e) {
-            System.err.println("Loi gui tin nhan toi server: " + e.getMessage());
+
+        synchronized (writeLock) {
+            try {
+                out.writeObject(message);
+                out.flush();
+                out.reset();
+            } catch (IOException e) {
+                closeSocketQuietly();
+                throw new UncheckedIOException("Loi gui tin nhan toi server", e);
+            }
         }
     }
 
     public Response<?> sendRequestAndWait(Request<?> request, long timeoutMillis) throws Exception {
+        if (request == null || request.getAction() == null) {
+            throw new IllegalArgumentException("Request/action khong hop le");
+        }
+
         connect();
         if (!isConnected()) {
             throw new IOException("Chua ket noi server");
         }
 
         BlockingQueue<Response<?>> queue = new ArrayBlockingQueue<>(1);
-        pendingResponses.put(request.getAction(), queue);
+        BlockingQueue<Response<?>> existingQueue = pendingResponses.putIfAbsent(request.getAction(), queue);
+        if (existingQueue != null) {
+            throw new IOException("Dang cho phan hoi cho action " + request.getAction());
+        }
         try {
+            if (request.getAction() == ActionType.GET_AUCTIONS_BY_TYPE
+                    || request.getAction() == ActionType.GET_ALL_AUCTIONS) {
+                System.out.println("[Client] Sending request action=" + request.getAction());
+            }
             sendMessage(request);
             Response<?> response = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
             if (response == null) {
+                if (request.getAction() == ActionType.GET_AUCTIONS_BY_TYPE
+                        || request.getAction() == ActionType.GET_ALL_AUCTIONS) {
+                    System.err.println("[Client] Timeout waiting response action=" + request.getAction());
+                }
                 throw new IOException("Qua thoi gian cho phan hoi tu server");
             }
             return response;

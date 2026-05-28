@@ -150,29 +150,11 @@ public class AuctionMenuController {
 
         try {
             Stage stage = (Stage) auctionListView.getScene().getWindow();
-            Object controller = SceneUtils.switchSceneAndGetController(stage, "/fxml/ItemAuction.fxml");
-            applyAuctionId(controller, selected.getAuctionId());
+            AuctionDetailController controller =
+                    SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionDetailView.fxml");
+            controller.setAuctionId(selected.getAuctionId());
         } catch (IOException e) {
             AlertUtils.showError("Navigation error", "Cannot open auction detail: " + e.getMessage());
-        }
-    }
-
-    private void applyAuctionId(Object controller, int auctionId) {
-        if (controller == null) {
-            return;
-        }
-
-        try {
-            controller.getClass().getMethod("setAuctionId", int.class).invoke(controller, auctionId);
-            return;
-        } catch (ReflectiveOperationException ignored) {
-            // Try Integer overload below for compatibility with the current detail controller.
-        }
-
-        try {
-            controller.getClass().getMethod("setAuctionId", Integer.class).invoke(controller, auctionId);
-        } catch (ReflectiveOperationException ignored) {
-            // The current detail controller may not support receiving an id yet.
         }
     }
 

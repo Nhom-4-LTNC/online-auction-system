@@ -1,5 +1,341 @@
 package com.auction.client.controller;
 
+import com.auction.client.network.Client;
+import com.auction.client.service.AuctionClientService;
+import com.auction.client.service.BidClientService;
+import com.auction.client.service.ClientServiceException;
+import com.auction.client.util.FormatUtils;
+import com.auction.client.util.SceneUtils;
+import com.auction.shared.dto.AuctionDetailDTO;
+import com.auction.shared.dto.BidDTO;
+import com.auction.shared.dto.ItemDTO;
+import com.auction.shared.enums.AuctionStatus;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.bid.PlaceBidResponse;
+import com.auction.shared.protocol.event.AuctionUpdatedEvent;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.function.Consumer;
+
 public class AuctionDetailController {
 
+    @FXML private BorderPane root;
+    @FXML private Button backButton;
+    @FXML private Label auctionTitleLabel;
+    @FXML private Label statusLabel;
+    @FXML private ImageView itemImageView;
+    @FXML private Label itemNameLabel;
+    @FXML private TextArea descriptionArea;
+    @FXML private Label currentPriceLabel;
+    @FXML private Label startingPriceLabel;
+    @FXML private Label bidStepLabel;
+    @FXML private Label sellerLabel;
+    @FXML private Label endTimeLabel;
+    @FXML private TextField bidAmountField;
+    @FXML private Button placeBidButton;
+    @FXML private Button closeAuctionButton;
+    @FXML private Label messageLabel;
+    @FXML private Button refreshBidHistoryButton;
+    @FXML private TableView<BidDTO> bidHistoryTable;
+    @FXML private TableColumn<BidDTO, String> bidderColumn;
+    @FXML private TableColumn<BidDTO, String> amountColumn;
+    @FXML private TableColumn<BidDTO, String> timeColumn;
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy").withZone(ZoneId.systemDefault());
+
+    private final AuctionClientService auctionClientService = new AuctionClientService();
+    private final BidClientService bidClientService = new BidClientService();
+    private final Client client = Client.getInstance();
+
+    private int currentAuctionId;
+    private Consumer<Response<?>> auctionUpdatedListener;
+    private volatile boolean pageLoading = false;
+
+    @FXML
+    private void initialize() {
+        setupBidHistoryTable();
+        setupButtonActions();
+        closeAuctionButton.setDisable(true);
+        messageLabel.setText("");
+
+        root.sceneProperty().addListener((observable, oldScene, newScene) -> {
+            if (oldScene != null && newScene == null) {
+                cleanup();
+            }
+        });
+    }
+
+    public void setAuctionId(int auctionId) {
+        currentAuctionId = auctionId;
+        loadAuctionDetailPageAsync(false);
+        registerRealtimeListener();
+    }
+
+    private void setupBidHistoryTable() {
+        bidderColumn.setCellValueFactory(data ->
+                new SimpleStringProperty(safeText(data.getValue().getBidderUsername())));
+        amountColumn.setCellValueFactory(data ->
+                new SimpleStringProperty(FormatUtils.currency(data.getValue().getAmount())));
+        timeColumn.setCellValueFactory(data ->
+                new SimpleStringProperty(formatTime(data.getValue().getBidTime())));
+    }
+
+    private void setupButtonActions() {
+        backButton.setOnAction(event -> {
+            cleanup();
+            try {
+                SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
+            } catch (IOException e) {
+                showError("Cannot return to auction list: " + e.getMessage());
+            }
+        });
+        placeBidButton.setOnAction(event -> handlePlaceBid());
+        closeAuctionButton.setOnAction(event -> handleCloseAuction());
+        refreshBidHistoryButton.setOnAction(event -> loadBidHistoryAsync());
+    }
+
+    private void loadAuctionDetailPageAsync(boolean showRealtimeMessage) {
+        if (pageLoading) {
+            return;
+        }
+        pageLoading = true;
+
+        int auctionIdSnapshot = currentAuctionId;
+        Task<AuctionDetailPage> task = new Task<>() {
+            @Override
+            protected AuctionDetailPage call() {
+                AuctionDetailDTO detail = auctionClientService.getAuctionDetail(auctionIdSnapshot);
+                List<BidDTO> bids = bidClientService.getBidHistoryByAuction(auctionIdSnapshot);
+                return new AuctionDetailPage(detail, bids);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            pageLoading = false;
+            if (auctionIdSnapshot == currentAuctionId) {
+                AuctionDetailPage page = task.getValue();
+                renderAuctionDetail(page.detail());
+                renderBidHistory(page.bids());
+                if (showRealtimeMessage) {
+                    showInfo("Auction updated.");
+                }
+            }
+        });
+        task.setOnFailed(event -> {
+            pageLoading = false;
+            showError("Cannot load auction detail page: " + errorMessage(task.getException()));
+        });
+        task.setOnCancelled(event -> pageLoading = false);
+
+        runDaemon(task, "auction-detail-page-loader");
+    }
+
+    private void loadBidHistoryAsync() {
+        int auctionIdSnapshot = currentAuctionId;
+        Task<List<BidDTO>> task = new Task<>() {
+            @Override
+            protected List<BidDTO> call() {
+                return bidClientService.getBidHistoryByAuction(auctionIdSnapshot);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            if (auctionIdSnapshot == currentAuctionId) {
+                renderBidHistory(task.getValue());
+            }
+        });
+        task.setOnFailed(event -> showError("Cannot load bid history: " + errorMessage(task.getException())));
+
+        runDaemon(task, "bid-history-loader");
+    }
+
+    private void reloadAuctionDetailForRealtime() {
+        loadAuctionDetailPageAsync(true);
+    }
+
+    private void renderAuctionDetail(AuctionDetailDTO detail) {
+        if (detail == null) {
+            showError("Auction detail not found.");
+            return;
+        }
+
+        ItemDTO item = detail.getItem();
+        String itemName = item == null ? "N/A" : safeText(item.getName());
+        auctionTitleLabel.setText(itemName);
+        itemNameLabel.setText(itemName);
+        descriptionArea.setText(item == null ? "" : safeText(item.getDescription()));
+        currentPriceLabel.setText(FormatUtils.currency(detail.getCurrentPrice()));
+        startingPriceLabel.setText(FormatUtils.currency(detail.getStartingPrice()));
+        bidStepLabel.setText(FormatUtils.currency(detail.getBidStep()));
+        sellerLabel.setText(safeText(detail.getSellerUsername()));
+        endTimeLabel.setText(formatTime(detail.getEndTimeMillis()));
+        statusLabel.setText("Status: " + (detail.getStatus() == null ? "N/A" : detail.getStatus().name()));
+        renderItemImage(item);
+
+        boolean bidOpen = detail.getStatus() == AuctionStatus.OPEN || detail.getStatus() == AuctionStatus.RUNNING;
+        placeBidButton.setDisable(!bidOpen);
+        bidAmountField.setDisable(!bidOpen);
+    }
+
+    private void renderBidHistory(List<BidDTO> bids) {
+        if (bids == null) {
+            bidHistoryTable.getItems().clear();
+            return;
+        }
+        bidHistoryTable.setItems(FXCollections.observableArrayList(bids));
+    }
+
+    private void handlePlaceBid() {
+        BigDecimal amount;
+        try {
+            amount = parseBidAmount();
+        } catch (IllegalArgumentException e) {
+            showError(e.getMessage());
+            return;
+        }
+
+        placeBidButton.setDisable(true);
+
+        Task<PlaceBidResponse> task = new Task<>() {
+            @Override
+            protected PlaceBidResponse call() {
+                return bidClientService.placeBid(currentAuctionId, amount);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            placeBidButton.setDisable(false);
+            bidAmountField.clear();
+            PlaceBidResponse response = task.getValue();
+            showInfo(response == null ? "Bid placed successfully." : response.getMessage());
+            loadAuctionDetailPageAsync(false);
+        });
+        task.setOnFailed(event -> {
+            placeBidButton.setDisable(false);
+            showError(errorMessage(task.getException()));
+        });
+
+        runDaemon(task, "place-bid-submit");
+    }
+
+    private void handleCloseAuction() {
+        showInfo("Close auction is not enabled for this screen yet.");
+    }
+
+    private void registerRealtimeListener() {
+        unregisterRealtimeListener();
+        auctionUpdatedListener = response -> {
+            if (response == null || response.getAction() != ActionType.AUCTION_UPDATED) {
+                return;
+            }
+            Object payload = response.getPayload();
+            if (!(payload instanceof AuctionUpdatedEvent event)) {
+                return;
+            }
+            if (event.getAuctionId() != currentAuctionId) {
+                return;
+            }
+
+            reloadAuctionDetailForRealtime();
+        };
+
+        client.addEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
+    }
+
+    private void unregisterRealtimeListener() {
+        if (auctionUpdatedListener != null) {
+            client.removeEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
+            auctionUpdatedListener = null;
+        }
+    }
+
+    public void cleanup() {
+        unregisterRealtimeListener();
+    }
+
+    private BigDecimal parseBidAmount() {
+        String rawAmount = bidAmountField.getText();
+        if (rawAmount == null || rawAmount.trim().isEmpty()) {
+            throw new IllegalArgumentException("Please enter a bid amount.");
+        }
+
+        try {
+            BigDecimal amount = new BigDecimal(rawAmount.trim());
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new NumberFormatException();
+            }
+            return amount;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Bid amount must be a positive number.");
+        }
+    }
+
+    private void renderItemImage(ItemDTO item) {
+        if (item == null || item.getImageData() == null || item.getImageData().length == 0) {
+            itemImageView.setImage(null);
+            return;
+        }
+
+        try {
+            itemImageView.setImage(new Image(new ByteArrayInputStream(item.getImageData())));
+        } catch (Exception ignored) {
+            itemImageView.setImage(null);
+        }
+    }
+
+    private void runDaemon(Runnable runnable, String threadName) {
+        Thread thread = new Thread(runnable, threadName);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void showError(String message) {
+        messageLabel.setText(safeText(message));
+    }
+
+    private void showInfo(String message) {
+        messageLabel.setText(safeText(message));
+    }
+
+    private String errorMessage(Throwable error) {
+        if (error instanceof ClientServiceException && error.getMessage() != null) {
+            return error.getMessage();
+        }
+        return error == null || error.getMessage() == null ? "Unexpected error." : error.getMessage();
+    }
+
+    private String formatTime(long epochMillis) {
+        try {
+            return DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(epochMillis));
+        } catch (Exception e) {
+            return String.valueOf(epochMillis);
+        }
+    }
+
+    private String safeText(String value) {
+        return value == null || value.isBlank() ? "N/A" : value;
+    }
+
+    private record AuctionDetailPage(AuctionDetailDTO detail, List<BidDTO> bids) {}
 }

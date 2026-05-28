@@ -146,12 +146,20 @@ public class AuctionService {
             throw new AuctionAppException("Loại sản phẩm không hợp lệ.");
         }
 
-        return auctionRepository.getAuctionSummariesByType(itemType);
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            System.out.println("[AuctionService] GET_AUCTIONS_BY_TYPE finalize expired before query. type=" + itemType);
+            int finalized = auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
+            System.out.println("[AuctionService] GET_AUCTIONS_BY_TYPE finalized expired auctions=" + finalized);
+            return auctionRepository.getAuctionSummariesByType(conn, itemType);
+        }
     }
     public List<AuctionSummaryDTO> getAllAuctions() throws Exception {
         // Reduce chatty DB: fetch all auctions with related Item+owner+winner/lastBidder in one query.
         // (N+1 fix is handled at repository mapping level.)
         try (Connection conn = DatabaseConnection.getConnection()) {
+            System.out.println("[AuctionService] GET_ALL_AUCTIONS finalize expired before query.");
+            int finalized = auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
+            System.out.println("[AuctionService] GET_ALL_AUCTIONS finalized expired auctions=" + finalized);
             List<Auction> models = auctionRepository.getAllAuctionsWithDetails(conn);
             List<AuctionSummaryDTO> auctionDTOs = new ArrayList<>(models.size());
             for (Auction auction : models) {

@@ -1,4 +1,4 @@
-package com.auction.client.network;
+package com.auction.client.event;
 
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Response;

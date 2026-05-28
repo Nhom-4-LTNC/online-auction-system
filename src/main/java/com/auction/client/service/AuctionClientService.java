@@ -1,11 +1,15 @@
 package com.auction.client.service;
 
 import com.auction.shared.dto.AuctionSummaryDTO;
+import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.enums.ItemType;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.auction.CloseAuctionRequest;
 import com.auction.shared.protocol.auction.CreateAuctionRequest;
 import com.auction.shared.protocol.auction.CreateAuctionResponse;
+import com.auction.shared.protocol.auction.GetAuctionRequest;
+import com.auction.shared.protocol.auction.GetAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeRequest;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeResponse;
 
@@ -13,6 +17,16 @@ import java.util.Collections;
 import java.util.List;
 
 public class AuctionClientService extends BaseClientService {
+
+    public AuctionDetailDTO getAuctionDetail(int auctionId) {
+        Request<GetAuctionRequest> request = new Request<>(
+                ActionType.GET_AUCTION,
+                new GetAuctionRequest(auctionId)
+        );
+
+        GetAuctionResponse response = sendAndExtract(request, GetAuctionResponse.class);
+        return response == null ? null : response.getAuction();
+    }
 
     public CreateAuctionResponse createAuction(CreateAuctionRequest createAuctionRequest) {
         Request<CreateAuctionRequest> request = new Request<>(
@@ -34,5 +48,14 @@ public class AuctionClientService extends BaseClientService {
             return Collections.emptyList();
         }
         return response.getAuctions();
+    }
+
+    public String closeAuction(int auctionId) {
+        Request<CloseAuctionRequest> request = new Request<>(
+                ActionType.CLOSE_AUCTION,
+                new CloseAuctionRequest(auctionId)
+        );
+
+        return sendAndExtract(request, String.class);
     }
 }
