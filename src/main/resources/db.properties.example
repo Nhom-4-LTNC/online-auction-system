@@ -2,3 +2,11 @@
 db.url=jdbc:mysql://[host]:4000/auction_db?sslMode=VERIFY_IDENTITY&sslTrustStoreLocation=...
 db.user=your_username_here
 db.password=your_password_here
+
+# Optional HikariCP pool config. Defaults are OK for this coursework app.
+db.pool.name=AuctionDbPool
+db.pool.maximumPoolSize=10
+db.pool.minimumIdle=2
+db.pool.connectionTimeoutMs=10000
+db.pool.idleTimeoutMs=600000
+db.pool.maxLifetimeMs=1800000

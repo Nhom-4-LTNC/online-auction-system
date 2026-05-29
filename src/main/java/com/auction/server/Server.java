@@ -1,20 +1,50 @@
 package com.auction.server;
 
+import com.auction.server.database.DatabaseConnection;
 import com.auction.server.handler.ClientHandler;
+import com.auction.server.repository.AuctionRepository;
+import com.auction.server.repository.BidRepository;
+import com.auction.server.repository.ItemRepository;
+import com.auction.server.repository.UserRepository;
+import com.auction.server.service.*;
 import com.auction.shared.network.NetworkConfig;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Server {
 
     private static final List<ClientHandler> connectedClients = new CopyOnWriteArrayList<>();
+    private static void warmUpApplication() {
+        System.out.println("[Server] Khởi động application...");
 
+        AuthService.getInstance();
+        AuctionService.getInstance();
+        UserService.getInstance();
+        ItemService.getInstance();
+        BidService.getInstance();
+        PaymentService.getInstance();
+        WalletService.getInstance();
+
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            System.out.println("[Server] Khởi động Database OK.");
+        } catch (SQLException e) {
+            System.err.println("[Server] Lỗi khởi động Database: " + e.getMessage());
+            System.exit(1);
+        }
+
+        System.out.println("[Server] Hoàn tất khởi động.");
+    }
     public static void main(String[] args) {
+
         int port = Integer.getInteger("auction.server.port", NetworkConfig.PORT);
+
+        warmUpApplication();
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("[Server] Đang chạy ở port: " + port);
