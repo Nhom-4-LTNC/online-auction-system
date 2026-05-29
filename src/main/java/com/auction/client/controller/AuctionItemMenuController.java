@@ -9,16 +9,16 @@ import com.auction.shared.dto.ElectronicsDTO;
 import com.auction.shared.dto.ItemDTO;
 import com.auction.shared.dto.VehicleDTO;
 import com.auction.shared.enums.ItemType;
+import com.auction.shared.exception.InvalidAuctionDate;
 import com.auction.shared.protocol.auction.CreateAuctionRequest;
 import com.auction.shared.protocol.auction.CreateAuctionResponse;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.time.*;
+import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
 
 public class AuctionItemMenuController implements Initializable {
@@ -35,10 +37,12 @@ public class AuctionItemMenuController implements Initializable {
 
     private final AuctionClientService auctionClientService = new AuctionClientService();
 
+    @FXML private TextField itemNameTF;
     @FXML private TextField startingPriceTF;
     @FXML private TextField descriptionTF;
     @FXML private Label itemTypeLabel;
     @FXML private Button auctionButton;
+    @FXML private Button importImageButton;
 
     @FXML private RadioButton electronicsButton;
     @FXML private RadioButton artButton;
@@ -50,12 +54,19 @@ public class AuctionItemMenuController implements Initializable {
 
     @FXML private VBox artPane;
     @FXML private TextField authorTF;
-    @FXML private TextField genreTF;
+    @FXML private TextField yearTF;
 
     @FXML private VBox vehiclePane;
     @FXML private TextField vehicleBrandTF;
     @FXML private TextField vinTF;
     @FXML private TextField mileageTF;
+
+    @FXML private ImageView previewImage;
+
+    @FXML private DatePicker startTime;
+    @FXML private TextField HHMMSSstartTime;
+    @FXML private DatePicker endTime;
+    @FXML private TextField HHMMSSendTime;
 
     private ItemType currentType;
     private File selectedImageFile;
@@ -82,7 +93,7 @@ public class AuctionItemMenuController implements Initializable {
     }
 
     @FXML
-    public void chooseImage(ActionEvent event) {
+    public void importImage(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose item image");
         fileChooser.getExtensionFilters().add(
@@ -91,7 +102,10 @@ public class AuctionItemMenuController implements Initializable {
 
         File file = fileChooser.showOpenDialog(auctionButton.getScene().getWindow());
         if (file != null) {
+            // file exists!
             selectedImageFile = file;
+            Image image = new Image(file.toURI().toString());
+            previewImage.setImage(image);
         }
     }
 
@@ -154,16 +168,55 @@ public class AuctionItemMenuController implements Initializable {
     private CreateAuctionRequest buildCreateAuctionRequest() throws IOException {
         ItemDTO itemDto = buildItemDTO();
 
-        long now = System.currentTimeMillis();
-        long endTime = now + DEFAULT_AUCTION_DURATION_MILLIS;
+        //long now = System.currentTimeMillis();
+        //long endTime = now + DEFAULT_AUCTION_DURATION_MILLIS;
 
-        return new CreateAuctionRequest(
-                itemDto,
-                itemDto.getStartingPrice(),
-                DEFAULT_AUCTION_EXTENSION_SECONDS,
-                now,
-                endTime
-        );
+        // 1. Explicitly check for null dates to prevent NullPointerException
+        if (startTime.getValue() == null || endTime.getValue() == null) {
+            // Stop execution and tell the user they missed a field
+            throw new InvalidAuctionDate("Please select both a start and end date.");
+        }
+
+        try {
+            // 2. Attempt to parse the text fields.
+            // This is where DateTimeParseException can happen.
+            LocalTime exactStartLocalTime = LocalTime.parse(HHMMSSstartTime.getText().trim());
+            LocalTime exactEndLocalTime = LocalTime.parse(HHMMSSendTime.getText().trim());
+
+            // 3. Combine the Date (from DatePicker) and Time (from parsing) cleanly
+            long startLong = LocalDateTime.of(startTime.getValue(), exactStartLocalTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
+
+            long endLong = LocalDateTime.of(endTime.getValue(), exactEndLocalTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
+
+            long currentMillis = Instant.now().toEpochMilli();
+
+            if  (!( // NOT
+                    (currentMillis < startLong)
+                            && (startLong < endLong)
+            )) {
+                throw new InvalidAuctionDate("Invalid auction date.");
+            }
+
+
+            return new CreateAuctionRequest(
+                    itemDto,
+                    itemDto.getStartingPrice(),
+                    DEFAULT_AUCTION_EXTENSION_SECONDS,
+                    startLong,
+                    endLong
+            );
+
+        } catch (DateTimeParseException e) {
+            // 4. Catch the error if the user typed something like "hello" or "12:0"
+            throw new InvalidAuctionDate("Invalid time format. Please use HH:mm:ss");
+            // e.g., AlertUtils.showError("Input error", "Please use valid 24-hour time formats.");
+        }
     }
 
     private ItemDTO buildItemDTO() throws IOException {
@@ -171,9 +224,12 @@ public class AuctionItemMenuController implements Initializable {
             throw new IllegalArgumentException("Please select item type.");
         }
 
+        String name = itemNameTF.getText();
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Please enter an item name.");
+        }
         double startingPrice = parsePositiveDouble(startingPriceTF.getText(), "Starting price");
         String description = descriptionTF.getText().trim();
-        String name = currentType.name();
         ImagePayload imagePayload = readSelectedImage();
 
         return switch (currentType) {
@@ -194,7 +250,7 @@ public class AuctionItemMenuController implements Initializable {
                     imagePayload.imageData(),
                     imagePayload.imageFileName(),
                     requireText(authorTF, "Author"),
-                    parsePositiveInt(genreTF.getText(), "Year")
+                    parsePositiveInt(yearTF.getText(), "Year")
             );
 
             case VEHICLE -> new VehicleDTO(
@@ -227,6 +283,8 @@ public class AuctionItemMenuController implements Initializable {
         setPanelVisible(electronicsPane, isElectronics);
         setPanelVisible(artPane, isArt);
         setPanelVisible(vehiclePane, isVehicle);
+
+        previewImage.setImage(null);
 
         itemTypeLabel.setText(currentType == null ? "Choose a Type!" : currentType.name());
     }
