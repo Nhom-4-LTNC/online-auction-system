@@ -76,6 +76,9 @@ public class AuctionDetailController {
     private boolean realtimeListenerRegistered = false;
     private volatile boolean pageLoading = false;
     private volatile boolean bidHistoryReloading = false;
+    private volatile boolean loadingBidHistory = false;
+    private volatile boolean placingBid = false;
+    private volatile boolean auctionBiddable = false;
 
     @FXML
     private void initialize() {
@@ -156,7 +159,7 @@ public class AuctionDetailController {
 
         task.setOnSucceeded(event -> {
             pageLoading = false;
-            refreshBidHistoryButton.setDisable(false);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
             if (auctionIdSnapshot == currentAuctionId) {
                 AuctionDetailPage page = task.getValue();
                 renderAuctionDetail(page.detail());
@@ -168,19 +171,24 @@ public class AuctionDetailController {
         });
         task.setOnFailed(event -> {
             pageLoading = false;
-            refreshBidHistoryButton.setDisable(false);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
             showError("Không thể tải chi tiết phiên đấu giá: " + errorMessage(task.getException()));
         });
         task.setOnCancelled(event -> {
             pageLoading = false;
-            refreshBidHistoryButton.setDisable(false);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
         });
 
         runDaemon(task, "auction-detail-page-loader");
     }
 
     private void loadBidHistoryAsync() {
+        if (loadingBidHistory) {
+            return;
+        }
+        loadingBidHistory = true;
         refreshBidHistoryButton.setDisable(true);
+        showInfo("Đang tải lịch sử bid...");
         int auctionIdSnapshot = currentAuctionId;
         Task<List<BidDTO>> task = new Task<>() {
             @Override
@@ -190,16 +198,21 @@ public class AuctionDetailController {
         };
 
         task.setOnSucceeded(event -> {
+            loadingBidHistory = false;
             refreshBidHistoryButton.setDisable(false);
             if (auctionIdSnapshot == currentAuctionId) {
                 renderBidHistory(task.getValue());
             }
         });
         task.setOnFailed(event -> {
+            loadingBidHistory = false;
             refreshBidHistoryButton.setDisable(false);
             showError("Không thể tải lịch sử bid: " + errorMessage(task.getException()));
         });
-        task.setOnCancelled(event -> refreshBidHistoryButton.setDisable(false));
+        task.setOnCancelled(event -> {
+            loadingBidHistory = false;
+            refreshBidHistoryButton.setDisable(false);
+        });
 
         runDaemon(task, "bid-history-loader");
     }
@@ -256,7 +269,8 @@ public class AuctionDetailController {
         endTimeLabel.setText(formatTime(summary.getEndTimeMillis()));
 
         boolean bidOpen = isAuctionBiddable(summary.getStatus());
-        placeBidButton.setDisable(!bidOpen);
+        auctionBiddable = bidOpen;
+        placeBidButton.setDisable(!bidOpen || placingBid);
         bidAmountField.setDisable(!bidOpen);
     }
 
@@ -289,7 +303,8 @@ public class AuctionDetailController {
         renderItemImage(item);
 
         boolean bidOpen = isAuctionBiddable(detail.getStatus());
-        placeBidButton.setDisable(!bidOpen);
+        auctionBiddable = bidOpen;
+        placeBidButton.setDisable(!bidOpen || placingBid);
         bidAmountField.setDisable(!bidOpen);
     }
 
@@ -302,6 +317,9 @@ public class AuctionDetailController {
     }
 
     private void handlePlaceBid() {
+        if (placingBid) {
+            return;
+        }
         BigDecimal amount;
         try {
             amount = parseBidAmount();
@@ -310,7 +328,10 @@ public class AuctionDetailController {
             return;
         }
 
+        placingBid = true;
         placeBidButton.setDisable(true);
+        refreshBidHistoryButton.setDisable(true);
+        showInfo("Đang xử lý đặt giá...");
 
         Task<PlaceBidResponse> task = new Task<>() {
             @Override
@@ -320,15 +341,24 @@ public class AuctionDetailController {
         };
 
         task.setOnSucceeded(event -> {
-            placeBidButton.setDisable(false);
+            placingBid = false;
+            placeBidButton.setDisable(!auctionBiddable);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
             bidAmountField.clear();
             PlaceBidResponse response = task.getValue();
             showInfo(response == null ? "Đặt giá thành công." : response.getMessage());
             loadAuctionDetailPageAsync(false);
         });
         task.setOnFailed(event -> {
-            placeBidButton.setDisable(false);
+            placingBid = false;
+            placeBidButton.setDisable(!auctionBiddable);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
             showError(errorMessage(task.getException()));
+        });
+        task.setOnCancelled(event -> {
+            placingBid = false;
+            placeBidButton.setDisable(!auctionBiddable);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
         });
 
         runDaemon(task, "place-bid-submit");

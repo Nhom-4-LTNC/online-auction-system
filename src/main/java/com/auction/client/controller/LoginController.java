@@ -8,9 +8,11 @@ import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.enums.Role;
 import com.auction.shared.protocol.auth.AuthResponse;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -24,10 +26,12 @@ public class LoginController implements Initializable {
 
     private final AuthClientService authClientService = new AuthClientService();
 
+    @FXML private Button loginButton;
     @FXML private TextField emailTextField;
     @FXML private TextField visiblePasswordField;
     @FXML private PasswordField hiddenPasswordField;
     @FXML private CheckBox showPasswordCheckBox;
+    private volatile boolean loggingIn = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -36,6 +40,9 @@ public class LoginController implements Initializable {
 
     @FXML
     public void login(ActionEvent event) {
+        if (loggingIn) {
+            return;
+        }
         String email = emailTextField.getText().trim();
         String password = getPasswordFromFields();
 
@@ -43,14 +50,44 @@ public class LoginController implements Initializable {
             return;
         }
 
-        try {
-            AuthResponse authResponse = authClientService.login(email, password);
-            handleLoginSuccess(authResponse);
-        } catch (ClientServiceException e) {
-            AlertUtils.showError("Đăng nhập thất bại", e.getMessage());
-        } catch (IOException e) {
-            AlertUtils.showError("Lỗi điều hướng", "Không thể mở màn hình tiếp theo.");
-        }
+        loggingIn = true;
+        setLoginSubmitting(true);
+
+        Task<AuthResponse> task = new Task<>() {
+            @Override
+            protected AuthResponse call() {
+                return authClientService.login(email, password);
+            }
+        };
+
+        task.setOnSucceeded(workerEvent -> {
+            try {
+                handleLoginSuccess(task.getValue());
+            } catch (IOException e) {
+                loggingIn = false;
+                setLoginSubmitting(false);
+                AlertUtils.showError("Lỗi điều hướng", "Không thể mở màn hình tiếp theo.");
+            }
+        });
+
+        task.setOnFailed(workerEvent -> {
+            loggingIn = false;
+            setLoginSubmitting(false);
+            Throwable error = task.getException();
+            String message = error instanceof ClientServiceException
+                    ? error.getMessage()
+                    : "Không thể đăng nhập.";
+            AlertUtils.showError("Đăng nhập thất bại", message);
+        });
+
+        task.setOnCancelled(workerEvent -> {
+            loggingIn = false;
+            setLoginSubmitting(false);
+        });
+
+        Thread thread = new Thread(task, "login-submit");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     @FXML
@@ -66,6 +103,9 @@ public class LoginController implements Initializable {
 
     @FXML
     public void createAccount(ActionEvent event) throws IOException {
+        if (loggingIn) {
+            return;
+        }
         SceneUtils.switchScene(event, "/fxml/createAccount.fxml");
     }
 
@@ -81,9 +121,18 @@ public class LoginController implements Initializable {
     }
 
     private void handleLoginSuccess(AuthResponse authResponse) throws IOException {
+        if (authResponse == null) {
+            loggingIn = false;
+            setLoginSubmitting(false);
+            AlertUtils.showError("Đăng nhập thất bại", "Không nhận được phản hồi đăng nhập.");
+            return;
+        }
+
         UserDTO user = authResponse.getUser();
 
         if (user == null) {
+            loggingIn = false;
+            setLoginSubmitting(false);
             AlertUtils.showError("Đăng nhập thất bại", authResponse.getMessage());
             return;
         }
@@ -123,5 +172,14 @@ public class LoginController implements Initializable {
         if (controller instanceof HomeController homeController) {
             homeController.displayName(user.getUsername());
         }
+    }
+
+    private void setLoginSubmitting(boolean submitting) {
+        loginButton.setDisable(submitting);
+        emailTextField.setDisable(submitting);
+        visiblePasswordField.setDisable(submitting);
+        hiddenPasswordField.setDisable(submitting);
+        showPasswordCheckBox.setDisable(submitting);
+        loginButton.setText(submitting ? "Đang xử lý..." : "Login");
     }
 }

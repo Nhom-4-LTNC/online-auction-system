@@ -43,6 +43,7 @@ public class AuctionMenuController {
     private ItemType currentType = ItemType.ELECTRONICS;
     private Consumer<Response<?>> auctionUpdatedListener;
     private boolean realtimeListenerRegistered = false;
+    private volatile boolean loadingAuctions = false;
     private volatile boolean realtimeReloading = false;
 
     @FXML
@@ -108,6 +109,10 @@ public class AuctionMenuController {
     }
 
     private void loadAuctions() {
+        if (loadingAuctions) {
+            return;
+        }
+        loadingAuctions = true;
         ItemType requestedType = currentType;
         setLoading(true);
 
@@ -122,17 +127,24 @@ public class AuctionMenuController {
             if (requestedType == currentType) {
                 setData(task.getValue(), requestedType);
             }
+            loadingAuctions = false;
             setLoading(false);
         });
 
         task.setOnFailed(event -> {
             setData(List.of(), requestedType);
+            loadingAuctions = false;
             setLoading(false);
             Throwable error = task.getException();
             String message = error instanceof ClientServiceException
                     ? error.getMessage()
                     : "Không thể tải danh sách đấu giá.";
             AlertUtils.showError("Tải danh sách thất bại", message);
+        });
+
+        task.setOnCancelled(event -> {
+            loadingAuctions = false;
+            setLoading(false);
         });
 
         Thread thread = new Thread(task, "auction-list-loader");
@@ -249,5 +261,8 @@ public class AuctionMenuController {
     private void setLoading(boolean loading) {
         refreshButton.setDisable(loading);
         auctionListView.setDisable(loading);
+        electronicsButton.setDisable(loading);
+        artButton.setDisable(loading);
+        vehicleButton.setDisable(loading);
     }
 }

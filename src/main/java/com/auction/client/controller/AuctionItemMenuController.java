@@ -41,6 +41,7 @@ public class AuctionItemMenuController implements Initializable {
     @FXML private Label itemTypeLabel;
     @FXML private Label selectedImageFileLabel;
     @FXML private Button auctionButton;
+    @FXML private Button importImageButton;
 
     @FXML private RadioButton electronicsButton;
     @FXML private RadioButton artButton;
@@ -68,6 +69,7 @@ public class AuctionItemMenuController implements Initializable {
 
     private ItemType currentType;
     private File selectedImageFile;
+    private volatile boolean creatingAuction = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -93,6 +95,9 @@ public class AuctionItemMenuController implements Initializable {
 
     @FXML
     public void importImage(ActionEvent event) {
+        if (creatingAuction) {
+            return;
+        }
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose item image");
         fileChooser.getExtensionFilters().add(
@@ -108,6 +113,9 @@ public class AuctionItemMenuController implements Initializable {
 
     @FXML
     public void createAuction(ActionEvent event) {
+        if (creatingAuction) {
+            return;
+        }
         CreateAuctionRequest request;
         try {
             request = buildCreateAuctionRequest();
@@ -124,10 +132,14 @@ public class AuctionItemMenuController implements Initializable {
 
     @FXML
     public void back(ActionEvent event) throws IOException {
+        if (creatingAuction) {
+            return;
+        }
         SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
     }
 
     private void submitCreateAuction(ActionEvent event, CreateAuctionRequest request) {
+        creatingAuction = true;
         setSubmitting(true);
 
         Task<CreateAuctionResponse> task = new Task<>() {
@@ -138,6 +150,7 @@ public class AuctionItemMenuController implements Initializable {
         };
 
         task.setOnSucceeded(workerEvent -> {
+            creatingAuction = false;
             setSubmitting(false);
             CreateAuctionResponse response = task.getValue();
             AlertUtils.showInfo("Create auction success", response == null ? "Auction created." : response.getMessage());
@@ -149,12 +162,18 @@ public class AuctionItemMenuController implements Initializable {
         });
 
         task.setOnFailed(workerEvent -> {
+            creatingAuction = false;
             setSubmitting(false);
             Throwable error = task.getException();
             String message = error instanceof ClientServiceException
                     ? error.getMessage()
                     : "Không thể tạo phiên đấu giá.";
             AlertUtils.showError("Tạo phiên thất bại", message);
+        });
+
+        task.setOnCancelled(workerEvent -> {
+            creatingAuction = false;
+            setSubmitting(false);
         });
 
         Thread thread = new Thread(task, "create-auction-submit");
@@ -346,6 +365,7 @@ public class AuctionItemMenuController implements Initializable {
 
     private void setSubmitting(boolean submitting) {
         auctionButton.setDisable(submitting);
+        importImageButton.setDisable(submitting);
     }
 
     private record ImagePayload(byte[] imageData, String imageFileName) {

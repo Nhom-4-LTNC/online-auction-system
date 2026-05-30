@@ -31,6 +31,7 @@ public class FinanceMenuController implements Initializable {
     @FXML private Label currentBalanceLabel;
     @FXML private Label availableBalanceLabel;
     @FXML private Label unpaidWinningAmountLabel;
+    private volatile boolean addingBalance = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -41,6 +42,9 @@ public class FinanceMenuController implements Initializable {
 
     @FXML
     public void incrementBalance(ActionEvent event) {
+        if (addingBalance) {
+            return;
+        }
         if (!ClientSession.isLoggedIn()) {
             AlertUtils.showError("Ví tiền", "Vui lòng đăng nhập trước.");
             return;
@@ -68,6 +72,7 @@ public class FinanceMenuController implements Initializable {
     }
 
     private void submitAddBalance(double amount) {
+        addingBalance = true;
         setSubmitting(true);
 
         Task<BalanceResponse> task = new Task<>() {
@@ -78,6 +83,7 @@ public class FinanceMenuController implements Initializable {
         };
 
         task.setOnSucceeded(event -> {
+            addingBalance = false;
             setSubmitting(false);
             BalanceResponse response = task.getValue();
             updateSessionWallet(response);
@@ -87,12 +93,18 @@ public class FinanceMenuController implements Initializable {
         });
 
         task.setOnFailed(event -> {
+            addingBalance = false;
             setSubmitting(false);
             Throwable error = task.getException();
             String message = error instanceof ClientServiceException
                     ? error.getMessage()
                     : "Không thể cập nhật số dư.";
             AlertUtils.showError("Ví tiền", message);
+        });
+
+        task.setOnCancelled(event -> {
+            addingBalance = false;
+            setSubmitting(false);
         });
 
         Thread thread = new Thread(task, "wallet-add-balance");
