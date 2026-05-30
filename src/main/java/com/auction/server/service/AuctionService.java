@@ -56,7 +56,11 @@ public class AuctionService {
     }
 
     public synchronized Auction createAuction(int sellerId, ItemDTO itemDto, double bidStep, long endTimeMillis) throws Exception {
-        long startTimeMillis = System.currentTimeMillis();
+        return createAuction(sellerId, itemDto, bidStep, System.currentTimeMillis(), endTimeMillis);
+    }
+
+    public synchronized Auction createAuction(int sellerId, ItemDTO itemDto, double bidStep,
+                                              long startTimeMillis, long endTimeMillis) throws Exception {
         AuctionValidator.validateAuctionParams(startTimeMillis, endTimeMillis, bidStep);
 
         String imageUrl = ItemService.getInstance().saveImage(

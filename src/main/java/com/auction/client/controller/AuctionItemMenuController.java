@@ -12,13 +12,12 @@ import com.auction.shared.enums.ItemType;
 import com.auction.shared.exception.InvalidAuctionDate;
 import com.auction.shared.protocol.auction.CreateAuctionRequest;
 import com.auction.shared.protocol.auction.CreateAuctionResponse;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
@@ -27,22 +26,21 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.time.*;
-import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
 
 public class AuctionItemMenuController implements Initializable {
 
-    private static final long DEFAULT_AUCTION_DURATION_MILLIS = 60L * 60 * 1000;
-    private static final int DEFAULT_AUCTION_EXTENSION_SECONDS = 10;
+    private static final double DEFAULT_BID_STEP = 10.0;
 
     private final AuctionClientService auctionClientService = new AuctionClientService();
 
     @FXML private TextField itemNameTF;
     @FXML private TextField startingPriceTF;
+    @FXML private TextField bidStepTF;
     @FXML private TextField descriptionTF;
     @FXML private Label itemTypeLabel;
+    @FXML private Label selectedImageFileLabel;
     @FXML private Button auctionButton;
-    @FXML private Button importImageButton;
 
     @FXML private RadioButton electronicsButton;
     @FXML private RadioButton artButton;
@@ -61,12 +59,12 @@ public class AuctionItemMenuController implements Initializable {
     @FXML private TextField vinTF;
     @FXML private TextField mileageTF;
 
-    @FXML private ImageView previewImage;
-
     @FXML private DatePicker startTime;
-    @FXML private TextField HHMMSSstartTime;
+    @FXML private ComboBox<String> startHourComboBox;
+    @FXML private ComboBox<String> startMinuteComboBox;
     @FXML private DatePicker endTime;
-    @FXML private TextField HHMMSSendTime;
+    @FXML private ComboBox<String> endHourComboBox;
+    @FXML private ComboBox<String> endMinuteComboBox;
 
     private ItemType currentType;
     private File selectedImageFile;
@@ -74,6 +72,7 @@ public class AuctionItemMenuController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         currentType = null;
+        setupTimeComboBoxes();
         updateItemTypePanels();
     }
 
@@ -102,10 +101,8 @@ public class AuctionItemMenuController implements Initializable {
 
         File file = fileChooser.showOpenDialog(auctionButton.getScene().getWindow());
         if (file != null) {
-            // file exists!
             selectedImageFile = file;
-            Image image = new Image(file.toURI().toString());
-            previewImage.setImage(image);
+            selectedImageFileLabel.setText(file.getName());
         }
     }
 
@@ -167,56 +164,22 @@ public class AuctionItemMenuController implements Initializable {
 
     private CreateAuctionRequest buildCreateAuctionRequest() throws IOException {
         ItemDTO itemDto = buildItemDTO();
+        double bidStep = parseOptionalPositiveDouble(bidStepTF.getText(), DEFAULT_BID_STEP, "Bid step");
 
-        //long now = System.currentTimeMillis();
-        //long endTime = now + DEFAULT_AUCTION_DURATION_MILLIS;
+        long startLong = resolveStartTimeMillis();
+        long endLong = resolveEndTimeMillis();
 
-        // 1. Explicitly check for null dates to prevent NullPointerException
-        if (startTime.getValue() == null || endTime.getValue() == null) {
-            // Stop execution and tell the user they missed a field
-            throw new InvalidAuctionDate("Please select both a start and end date.");
+        if (endLong <= startLong) {
+            throw new InvalidAuctionDate("End time must be after the start time.");
         }
 
-        try {
-            // 2. Attempt to parse the text fields.
-            // This is where DateTimeParseException can happen.
-            LocalTime exactStartLocalTime = LocalTime.parse(HHMMSSstartTime.getText().trim());
-            LocalTime exactEndLocalTime = LocalTime.parse(HHMMSSendTime.getText().trim());
-
-            // 3. Combine the Date (from DatePicker) and Time (from parsing) cleanly
-            long startLong = LocalDateTime.of(startTime.getValue(), exactStartLocalTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli();
-
-            long endLong = LocalDateTime.of(endTime.getValue(), exactEndLocalTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli();
-
-            long currentMillis = Instant.now().toEpochMilli();
-
-            if  (!( // NOT
-                    (currentMillis < startLong)
-                            && (startLong < endLong)
-            )) {
-                throw new InvalidAuctionDate("Invalid auction date.");
-            }
-
-
-            return new CreateAuctionRequest(
-                    itemDto,
-                    itemDto.getStartingPrice(),
-                    DEFAULT_AUCTION_EXTENSION_SECONDS,
-                    startLong,
-                    endLong
-            );
-
-        } catch (DateTimeParseException e) {
-            // 4. Catch the error if the user typed something like "hello" or "12:0"
-            throw new InvalidAuctionDate("Invalid time format. Please use HH:mm:ss");
-            // e.g., AlertUtils.showError("Input error", "Please use valid 24-hour time formats.");
-        }
+        return new CreateAuctionRequest(
+                itemDto,
+                itemDto.getStartingPrice(),
+                bidStep,
+                startLong,
+                endLong
+        );
     }
 
     private ItemDTO buildItemDTO() throws IOException {
@@ -284,9 +247,57 @@ public class AuctionItemMenuController implements Initializable {
         setPanelVisible(artPane, isArt);
         setPanelVisible(vehiclePane, isVehicle);
 
-        previewImage.setImage(null);
-
         itemTypeLabel.setText(currentType == null ? "Choose a Type!" : currentType.name());
+    }
+
+    private void setupTimeComboBoxes() {
+        startHourComboBox.setItems(FXCollections.observableArrayList(formatRange(0, 23)));
+        endHourComboBox.setItems(FXCollections.observableArrayList(formatRange(0, 23)));
+        startMinuteComboBox.setItems(FXCollections.observableArrayList(formatRange(0, 59)));
+        endMinuteComboBox.setItems(FXCollections.observableArrayList(formatRange(0, 59)));
+    }
+
+    private String[] formatRange(int start, int end) {
+        String[] values = new String[end - start + 1];
+        for (int value = start; value <= end; value++) {
+            values[value - start] = String.format("%02d", value);
+        }
+        return values;
+    }
+
+    private long resolveStartTimeMillis() {
+        if (startTime.getValue() == null
+                || startHourComboBox.getValue() == null
+                || startMinuteComboBox.getValue() == null) {
+            return Instant.now().toEpochMilli();
+        }
+
+        return toEpochMillis(
+                startTime.getValue(),
+                startHourComboBox.getValue(),
+                startMinuteComboBox.getValue()
+        );
+    }
+
+    private long resolveEndTimeMillis() {
+        if (endTime.getValue() == null
+                || endHourComboBox.getValue() == null
+                || endMinuteComboBox.getValue() == null) {
+            throw new InvalidAuctionDate("Please select an end date, hour, and minute.");
+        }
+
+        return toEpochMillis(
+                endTime.getValue(),
+                endHourComboBox.getValue(),
+                endMinuteComboBox.getValue()
+        );
+    }
+
+    private long toEpochMillis(LocalDate date, String hour, String minute) {
+        return LocalDateTime.of(date, LocalTime.of(Integer.parseInt(hour), Integer.parseInt(minute)))
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
     }
 
     private void setPanelVisible(VBox panel, boolean visible) {
@@ -304,6 +315,13 @@ public class AuctionItemMenuController implements Initializable {
         } catch (RuntimeException e) {
             throw new IllegalArgumentException(fieldName + " must be a positive number.");
         }
+    }
+
+    private double parseOptionalPositiveDouble(String rawValue, double defaultValue, String fieldName) {
+        if (rawValue == null || rawValue.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return parsePositiveDouble(rawValue, fieldName);
     }
 
     private int parsePositiveInt(String rawValue, String fieldName) {

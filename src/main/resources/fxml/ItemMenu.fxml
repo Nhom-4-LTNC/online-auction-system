@@ -1,135 +1,140 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="495.0" prefWidth="738.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AuctionItemMenuController">
+<AnchorPane prefHeight="550.0" prefWidth="760.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AuctionItemMenuController">
    <children>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="66.0" layoutX="-4.0" stroke="BLACK" strokeType="INSIDE" width="744.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="66.0" layoutX="-4.0" stroke="BLACK" strokeType="INSIDE" width="766.0" />
       <Label layoutX="20.0" layoutY="5.0" prefHeight="51.0" prefWidth="334.0" text="CREATE AUCTION" textFill="WHITE">
          <font>
             <Font name="Trebuchet MS" size="40.0" />
          </font>
       </Label>
-      <VBox layoutX="249.0" layoutY="95.0" spacing="10.0">
-         <children>
-            <Label prefHeight="26.0" prefWidth="38.0" text="Type">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Label>
-            <RadioButton fx:id="electronicsButton" mnemonicParsing="false" onAction="#onItemSelected" text="Electronics">
-               <toggleGroup>
-                  <ToggleGroup fx:id="itemType" />
-               </toggleGroup>
-               <font>
-                  <Font name="Trebuchet MS" size="12.0" />
-               </font>
-            </RadioButton>
-            <RadioButton fx:id="artButton" mnemonicParsing="false" onAction="#onItemSelected" text="Art" toggleGroup="$itemType">
-               <font>
-                  <Font name="Trebuchet MS" size="12.0" />
-               </font>
-            </RadioButton>
-            <RadioButton fx:id="vehicleButton" mnemonicParsing="false" onAction="#onItemSelected" text="Vehicle" toggleGroup="$itemType">
-               <font>
-                  <Font name="Trebuchet MS" size="12.0" />
-               </font>
-            </RadioButton>
-            <RadioButton fx:id="otherButton" mnemonicParsing="false" onAction="#onItemSelected" text="Other" toggleGroup="$itemType">
-               <font>
-                  <Font name="Trebuchet MS" size="12.0" />
-               </font>
-            </RadioButton>
-         </children>
-      </VBox>
-      <Button fx:id="auctionButton" layoutX="483.0" layoutY="429.0" mnemonicParsing="false" onAction="#createAuction" prefHeight="31.0" prefWidth="150.0" style="-fx-background-color: #e79316;" text="AUCTION ITEM" textFill="WHITE">
-         <font>
-            <Font name="Trebuchet MS" size="15.0" />
-         </font></Button>
-      <VBox fx:id="artPane" layoutX="409.0" layoutY="121.0">
-         <children>
-            <TextField fx:id="authorTF" promptText="Author" />
-            <TextField fx:id="yearTF" promptText="Year" />
-         </children>
-      </VBox>
-      <VBox fx:id="vehiclePane" layoutX="382.0" layoutY="121.0" visible="false">
-         <children>
-            <TextField fx:id="vehicleBrandTF" promptText="Brand" />
-            <TextField fx:id="vinTF" prefHeight="26.0" prefWidth="204.0" promptText="Vehicle Identification Number (VIN)" />
-            <TextField fx:id="mileageTF" promptText="Mileage" />
-         </children>
-      </VBox>
-      <VBox fx:id="electronicsPane" layoutX="409.0" layoutY="121.0" visible="false">
-         <children>
-            <TextField fx:id="electronicsBrandTF" promptText="Brand" />
-            <TextField fx:id="warrantyTF" promptText="Warranty" />
-         </children>
-      </VBox>
-      <VBox layoutX="51.0" layoutY="95.0">
-         <children>
-            <Label prefHeight="26.0" prefWidth="62.0" text="General">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Label>
-            <TextField fx:id="itemNameTF" layoutX="10.0" layoutY="36.0" promptText="Name" />
-            <TextField fx:id="startingPriceTF" promptText="Starting Price" />
-            <TextField fx:id="descriptionTF" alignment="TOP_LEFT" prefHeight="94.0" prefWidth="150.0" promptText="Description" />
-            <Button fx:id="auctionButton1" mnemonicParsing="false" onAction="#importImage" prefHeight="31.0" prefWidth="150.0" style="-fx-background-color: white;" text="Add Image..." textFill="#848484">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Button>
-         </children>
-      </VBox>
-      <Label fx:id="itemTypeLabel" alignment="CENTER" layoutX="382.0" layoutY="95.0" prefHeight="26.0" prefWidth="204.0" text="Choose a Type!">
-         <font>
-            <Font name="Trebuchet MS" size="15.0" />
-         </font>
-      </Label>
-      <Button fx:id="backButton" layoutX="645.0" layoutY="17.0" mnemonicParsing="false" onAction="#back" prefHeight="31.0" prefWidth="71.0" style="-fx-background-color: white;" text="Back" textFill="#e79316">
+      <Button fx:id="backButton" layoutX="660.0" layoutY="17.0" mnemonicParsing="false" onAction="#back" prefHeight="31.0" prefWidth="71.0" style="-fx-background-color: white; -fx-cursor: hand;" text="Back" textFill="#e79316">
          <font>
             <Font name="Trebuchet MS" size="16.0" />
-         </font></Button>
-      <ImageView fitHeight="132.0" fitWidth="172.0" layoutX="51.0" layoutY="319.0" pickOnBounds="true" preserveRatio="true">
-      </ImageView>
-      <ImageView fx:id="previewImage" fitHeight="150.0" fitWidth="200.0" layoutX="51.0" layoutY="310.0" pickOnBounds="true" preserveRatio="true" />
-      <VBox layoutX="242.0" layoutY="310.0">
+         </font>
+      </Button>
+
+      <VBox layoutX="40.0" layoutY="90.0" spacing="25.0">
          <children>
-            <Label prefHeight="26.0" prefWidth="130.0" text="Start Time">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Label>
-            <HBox spacing="15.0">
+            <VBox spacing="10.0">
                <children>
-                  <DatePicker fx:id="startTime" />
-                  <TextField fx:id="HHMMSSstartTime" promptText="hh:mm:ss" />
+                  <Label text="General">
+                     <font><Font name="Trebuchet MS Bold" size="16.0" /></font>
+                  </Label>
+                  <TextField fx:id="itemNameTF" prefWidth="330.0" promptText="Name" />
+                  <TextField fx:id="startingPriceTF" prefWidth="330.0" promptText="Starting Price" />
+                  <TextField fx:id="bidStepTF" prefWidth="330.0" promptText="Bid Step (default 10)" />
+                  <TextField fx:id="descriptionTF" alignment="TOP_LEFT" prefHeight="80.0" prefWidth="330.0" promptText="Description" />
+
+                  <HBox alignment="CENTER_LEFT" spacing="15.0">
+                     <children>
+                        <Button fx:id="importImageButton" mnemonicParsing="false" onAction="#importImage" prefHeight="30.0" prefWidth="110.0" style="-fx-background-color: #e0e0e0; -fx-cursor: hand;" text="Add Image..." textFill="#4d4d4d">
+                           <font><Font name="Trebuchet MS" size="14.0" /></font>
+                        </Button>
+                        <Label fx:id="selectedImageFileLabel" text="No image selected" textFill="#666666">
+                           <font><Font name="Trebuchet MS Italic" size="13.0" /></font>
+                        </Label>
+                     </children>
+                  </HBox>
                </children>
-            </HBox>
-            <Label prefHeight="26.0" prefWidth="130.0" text="End Time">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Label>
-            <HBox spacing="15.0">
+            </VBox>
+
+            <VBox spacing="10.0">
                <children>
-                  <DatePicker fx:id="endTime" />
-                  <TextField fx:id="HHMMSSendTime" promptText="hh:mm:ss" />
+                  <Label text="Auction Duration">
+                     <font><Font name="Trebuchet MS Bold" size="16.0" /></font>
+                  </Label>
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label prefWidth="70.0" text="Start Time"><font><Font name="Trebuchet MS" size="13.0" /></font></Label>
+                        <DatePicker fx:id="startTime" prefWidth="120.0" />
+                        <ComboBox fx:id="startHourComboBox" prefWidth="60.0" promptText="HH" />
+                        <ComboBox fx:id="startMinuteComboBox" prefWidth="60.0" promptText="MM" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label prefWidth="70.0" text="End Time"><font><Font name="Trebuchet MS" size="13.0" /></font></Label>
+                        <DatePicker fx:id="endTime" prefWidth="120.0" />
+                        <ComboBox fx:id="endHourComboBox" prefWidth="60.0" promptText="HH" />
+                        <ComboBox fx:id="endMinuteComboBox" prefWidth="60.0" promptText="MM" />
+                     </children>
+                  </HBox>
                </children>
-            </HBox>
+            </VBox>
          </children>
       </VBox>
+
+      <VBox layoutX="410.0" layoutY="90.0" spacing="15.0">
+         <children>
+            <Label text="Type">
+               <font><Font name="Trebuchet MS Bold" size="16.0" /></font>
+            </Label>
+            <RadioButton fx:id="electronicsButton" mnemonicParsing="false" onAction="#onItemSelected" text="Electronics">
+               <toggleGroup><ToggleGroup fx:id="itemType" /></toggleGroup>
+               <font><Font name="Trebuchet MS" size="14.0" /></font>
+            </RadioButton>
+            <RadioButton fx:id="artButton" mnemonicParsing="false" onAction="#onItemSelected" text="Art" toggleGroup="$itemType">
+               <font><Font name="Trebuchet MS" size="14.0" /></font>
+            </RadioButton>
+            <RadioButton fx:id="vehicleButton" mnemonicParsing="false" onAction="#onItemSelected" text="Vehicle" toggleGroup="$itemType">
+               <font><Font name="Trebuchet MS" size="14.0" /></font>
+            </RadioButton>
+            <RadioButton fx:id="otherButton" mnemonicParsing="false" onAction="#onItemSelected" text="Other" toggleGroup="$itemType">
+               <font><Font name="Trebuchet MS" size="14.0" /></font>
+            </RadioButton>
+         </children>
+      </VBox>
+
+      <VBox layoutX="540.0" layoutY="90.0" prefWidth="180.0" spacing="15.0">
+         <children>
+            <Label fx:id="itemTypeLabel" text="Choose a Type!">
+               <font><Font name="Trebuchet MS Bold" size="16.0" /></font>
+            </Label>
+            <AnchorPane>
+               <children>
+                  <VBox fx:id="artPane" spacing="12.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                     <children>
+                        <TextField fx:id="authorTF" promptText="Author" />
+                        <TextField fx:id="yearTF" promptText="Year" />
+                     </children>
+                  </VBox>
+                  <VBox fx:id="vehiclePane" spacing="12.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                     <children>
+                        <TextField fx:id="vehicleBrandTF" promptText="Brand" />
+                        <TextField fx:id="vinTF" promptText="VIN" />
+                        <TextField fx:id="mileageTF" promptText="Mileage" />
+                     </children>
+                  </VBox>
+                  <VBox fx:id="electronicsPane" spacing="12.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                     <children>
+                        <TextField fx:id="electronicsBrandTF" promptText="Brand" />
+                        <TextField fx:id="warrantyTF" promptText="Warranty" />
+                     </children>
+                  </VBox>
+               </children>
+            </AnchorPane>
+         </children>
+      </VBox>
+
+      <Button fx:id="auctionButton" layoutX="570.0" layoutY="480.0" mnemonicParsing="false" onAction="#createAuction" prefHeight="35.0" prefWidth="150.0" style="-fx-background-color: #e79316; -fx-cursor: hand; -fx-background-radius: 5;" text="AUCTION ITEM" textFill="WHITE">
+         <font>
+            <Font name="Trebuchet MS Bold" size="15.0" />
+         </font>
+      </Button>
+
    </children>
 </AnchorPane>

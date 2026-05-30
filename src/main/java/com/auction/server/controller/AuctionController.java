@@ -71,6 +71,7 @@ public class AuctionController {
                     sellerId,
                     req.getItemDto(),
                     req.getBidStep(),
+                    req.getStartTime(),
                     req.getEndTime()
             );
             AuctionDetailDTO createdAuctionDetail = auctionService.mapToAuctionDetailDTO(createdAuction);
