@@ -38,6 +38,8 @@ public class AdminMenuController {
     @FXML private Button unbanButton;
     @FXML private Button refreshButton;
     @FXML private Button backButton;
+    @FXML private Button viewAuctionsButton;
+
 
     @FXML
     public void initialize() {
@@ -153,9 +155,18 @@ public class AdminMenuController {
     }
 
     @FXML
+    public void viewAuctions(ActionEvent event) throws IOException {
+        SceneUtils.switchScene(event, "/fxml/AdminAuctionMenu.fxml");
+    }
+
+    @FXML
     public void back(ActionEvent event) throws IOException {
+<<<<<<< Updated upstream
         // Quay lại Home và logout cả client-side lẫn server-side để tránh tái dùng socket/session.
         // Nếu chỉ logout client-side thì server vẫn giữ currentUser trong ClientHandler.
+=======
+
+>>>>>>> Stashed changes
         try {
             client.sendMessage(new Request<>(ActionType.LOGOUT, null));
         } catch (Exception ignored) {
@@ -174,4 +185,5 @@ public class AdminMenuController {
         alert.showAndWait();
     }
 }
+
 

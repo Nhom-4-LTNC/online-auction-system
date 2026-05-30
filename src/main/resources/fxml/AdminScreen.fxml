@@ -26,7 +26,9 @@
         <Button fx:id="unbanButton" layoutX="600.0" layoutY="315.0" mnemonicParsing="false" onAction="#removeBan" prefWidth="240.0" text="Unban" />
 
         <Button fx:id="refreshButton" layoutX="600.0" layoutY="380.0" mnemonicParsing="false" onAction="#refresh" prefWidth="240.0" text="Refresh users" />
-<Button fx:id="backButton" layoutX="40.0" layoutY="525.0" mnemonicParsing="false" onAction="#back" prefWidth="160.0" text="Back" />
+
+        <Button fx:id="viewAuctionsButton" layoutX="600.0" layoutY="430.0" mnemonicParsing="false" onAction="#viewAuctions" prefWidth="240.0" text="View auctions" />
+        <Button fx:id="backButton" layoutX="40.0" layoutY="525.0" mnemonicParsing="false" onAction="#back" prefWidth="160.0" text="Back" />
 
 <!-- Lưu ý: Logout hiện do HomeController thực hiện. Admin back không logout server-session. -->
     </children>
