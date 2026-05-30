@@ -264,8 +264,6 @@ public class AuctionRepository {
         }
         return auctions;
     }
-
-<<<<<<< Updated upstream
     public double getUnpaidWinningAmount(Connection conn, int userId) throws SQLException {
         String sql = """
                 SELECT COALESCE(SUM(current_price), 0) AS unpaid_amount
@@ -315,7 +313,7 @@ public class AuctionRepository {
         }
 
         return 0;
-=======
+    }
     private Item mapJoinedRowToItem(Connection conn, ResultSet rs) throws Exception {
         // item columns
         ItemType type = ItemType.valueOf(rs.getString("item_type"));
@@ -435,7 +433,6 @@ public class AuctionRepository {
             }
         }
         return result;
->>>>>>> Stashed changes
     }
 
     public Auction mapResultSetToAuction(Connection conn, ResultSet rs) throws Exception {
