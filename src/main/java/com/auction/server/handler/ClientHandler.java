@@ -148,6 +148,14 @@ public class ClientHandler implements Runnable {
 
                 case GET_AUCTIONS_BY_TYPE -> auctionController.handleGetAuctionsByType(request);
 
+                case GET_MY_CREATED_AUCTIONS -> auctionController.handleGetMyCreatedAuctions(this);
+
+                case GET_MY_PARTICIPATED_AUCTIONS,
+                     GET_MY_WON_AUCTIONS -> Response.error(
+                        action,
+                        "Action chưa được triển khai."
+                );
+
                 // ===== BID =====
                 case PLACE_BID -> bidController.handlePlaceBid(request, this);
 

@@ -119,6 +119,31 @@ public class AuctionController {
             );
         }
     }
+
+    public Response<?> handleGetMyCreatedAuctions(ClientHandler client) {
+        try {
+            if (client == null || client.getCurrentUser() == null) {
+                return Response.error(
+                        ActionType.GET_MY_CREATED_AUCTIONS,
+                        "Người dùng chưa đăng nhập."
+                );
+            }
+
+            List<AuctionSummaryDTO> auctions =
+                    auctionService.getAuctionsCreatedByUser(client.getCurrentUser().getId());
+
+            return Response.success(ActionType.GET_MY_CREATED_AUCTIONS, auctions);
+        } catch (AuctionAppException e) {
+            return Response.error(ActionType.GET_MY_CREATED_AUCTIONS, e.getMessage());
+        } catch (Exception e) {
+            logUnexpected(ActionType.GET_MY_CREATED_AUCTIONS, e);
+            return Response.error(
+                    ActionType.GET_MY_CREATED_AUCTIONS,
+                    "Lỗi máy chủ khi lấy danh sách phiên đấu giá đã tạo."
+            );
+        }
+    }
+
     public Response<?> handleCloseAuction(Request<?> request, ClientHandler client) {
         try {
             if (client.getCurrentUser() == null) {

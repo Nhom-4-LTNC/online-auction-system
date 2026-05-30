@@ -217,6 +217,37 @@ public class AuctionRepository {
         return result;
     }
 
+    public List<AuctionSummaryDTO> findSummariesBySellerId(Connection conn, int sellerId) throws SQLException {
+        String sql = """
+            SELECT
+                a.id AS auction_id,
+                i.id AS item_id,
+                i.name AS item_name,
+                i.item_type AS item_type,
+                a.current_price AS current_price,
+                a.end_time AS end_time,
+                a.status AS status
+            FROM auctions a
+            JOIN items i ON a.item_id = i.id
+            WHERE i.owner_id = ?
+            ORDER BY a.start_time DESC
+            """;
+
+        List<AuctionSummaryDTO> result = new ArrayList<>();
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, sellerId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapResultSetToAuctionSummaryDTO(rs));
+                }
+            }
+        }
+
+        return result;
+    }
+
     public List<AuctionSummaryDTO> getAllAuctionSummaries() throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return getAllAuctionSummaries(conn);
@@ -505,5 +536,17 @@ public class AuctionRepository {
         } else {
             pstmt.setInt(index, user.getId());
         }
+    }
+
+    private AuctionSummaryDTO mapResultSetToAuctionSummaryDTO(ResultSet rs) throws SQLException {
+        return new AuctionSummaryDTO(
+                rs.getInt("auction_id"),
+                rs.getInt("item_id"),
+                rs.getString("item_name"),
+                ItemType.valueOf(rs.getString("item_type")),
+                rs.getDouble("current_price"),
+                rs.getTimestamp("end_time").getTime(),
+                AuctionStatus.valueOf(rs.getString("status"))
+        );
     }
 }
