@@ -112,10 +112,10 @@ public class AuctionItemMenuController implements Initializable {
         try {
             request = buildCreateAuctionRequest();
         } catch (IllegalArgumentException e) {
-            AlertUtils.showError("Input error", e.getMessage());
+            AlertUtils.showError("Dữ liệu không hợp lệ", e.getMessage());
             return;
         } catch (IOException e) {
-            AlertUtils.showError("Image error", "Cannot read item image: " + e.getMessage());
+            AlertUtils.showError("Lỗi ảnh", "Không thể đọc ảnh sản phẩm.");
             return;
         }
 
@@ -144,7 +144,7 @@ public class AuctionItemMenuController implements Initializable {
             try {
                 SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
             } catch (IOException e) {
-                AlertUtils.showError("Navigation error", "Cannot open auction list: " + e.getMessage());
+                AlertUtils.showError("Lỗi điều hướng", "Không thể mở danh sách đấu giá.");
             }
         });
 
@@ -153,8 +153,8 @@ public class AuctionItemMenuController implements Initializable {
             Throwable error = task.getException();
             String message = error instanceof ClientServiceException
                     ? error.getMessage()
-                    : "Cannot create auction.";
-            AlertUtils.showError("Create auction failed", message);
+                    : "Không thể tạo phiên đấu giá.";
+            AlertUtils.showError("Tạo phiên thất bại", message);
         });
 
         Thread thread = new Thread(task, "create-auction-submit");
@@ -170,7 +170,7 @@ public class AuctionItemMenuController implements Initializable {
         long endLong = resolveEndTimeMillis();
 
         if (endLong <= startLong) {
-            throw new InvalidAuctionDate("End time must be after the start time.");
+            throw new InvalidAuctionDate("Thời gian kết thúc phải sau thời gian bắt đầu.");
         }
 
         return new CreateAuctionRequest(
@@ -184,12 +184,12 @@ public class AuctionItemMenuController implements Initializable {
 
     private ItemDTO buildItemDTO() throws IOException {
         if (currentType == null) {
-            throw new IllegalArgumentException("Please select item type.");
+            throw new IllegalArgumentException("Vui lòng chọn loại sản phẩm.");
         }
 
         String name = itemNameTF.getText();
         if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Please enter an item name.");
+            throw new IllegalArgumentException("Vui lòng nhập tên sản phẩm.");
         }
         double startingPrice = parsePositiveDouble(startingPriceTF.getText(), "Starting price");
         String description = descriptionTF.getText().trim();
@@ -283,7 +283,7 @@ public class AuctionItemMenuController implements Initializable {
         if (endTime.getValue() == null
                 || endHourComboBox.getValue() == null
                 || endMinuteComboBox.getValue() == null) {
-            throw new InvalidAuctionDate("Please select an end date, hour, and minute.");
+            throw new InvalidAuctionDate("Vui lòng chọn ngày, giờ và phút kết thúc.");
         }
 
         return toEpochMillis(
@@ -313,7 +313,7 @@ public class AuctionItemMenuController implements Initializable {
             }
             return value;
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException(fieldName + " must be a positive number.");
+            throw new IllegalArgumentException(fieldName + " phải là số dương.");
         }
     }
 
@@ -332,14 +332,14 @@ public class AuctionItemMenuController implements Initializable {
             }
             return value;
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException(fieldName + " must be a positive integer.");
+            throw new IllegalArgumentException(fieldName + " phải là số nguyên dương.");
         }
     }
 
     private String requireText(TextField textField, String fieldName) {
         String value = textField.getText().trim();
         if (value.isEmpty()) {
-            throw new IllegalArgumentException(fieldName + " is required.");
+            throw new IllegalArgumentException("Vui lòng nhập " + fieldName + ".");
         }
         return value;
     }

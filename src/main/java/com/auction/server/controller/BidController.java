@@ -76,7 +76,7 @@ public class BidController {
         } catch (AuctionAppException e) {
             return Response.error(ActionType.PLACE_BID, e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.PLACE_BID, e);
             return Response.error(ActionType.PLACE_BID, "Lỗi không xác định khi đặt giá.");
         }
     }
@@ -137,7 +137,7 @@ public class BidController {
                             "Lấy lịch sử bid theo người tham gia thành công!")
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.GET_BIDS_BY_BIDDER, e);
             return Response.error(
                     ActionType.GET_BIDS_BY_BIDDER,
                     "Lỗi không xác định khi lấy lịch sử bid theo người tham gia."
@@ -157,5 +157,10 @@ public class BidController {
                     new GetBidHistoryResponse(bidDTOs,
                             "Lấy lịch sử bid thành công!")
             );
+    }
+
+    private void logUnexpected(ActionType actionType, Exception e) {
+        System.err.println("[BidController] Unexpected error action=" + actionType
+                + ": " + e.getMessage());
     }
 }

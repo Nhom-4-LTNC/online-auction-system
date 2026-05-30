@@ -125,7 +125,7 @@ public class AuctionDetailController {
             try {
                 SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
             } catch (IOException e) {
-                showError("Cannot return to auction list: " + e.getMessage());
+                showError("Không thể quay lại danh sách đấu giá.");
             }
         });
         placeBidButton.setOnAction(event -> handlePlaceBid());
@@ -162,14 +162,14 @@ public class AuctionDetailController {
                 renderAuctionDetail(page.detail());
                 renderBidHistory(page.bids());
                 if (showRealtimeMessage) {
-                    showInfo("Auction updated.");
+                    showInfo("Phiên đấu giá đã được cập nhật.");
                 }
             }
         });
         task.setOnFailed(event -> {
             pageLoading = false;
             refreshBidHistoryButton.setDisable(false);
-            showError("Cannot load auction detail page: " + errorMessage(task.getException()));
+            showError("Không thể tải chi tiết phiên đấu giá: " + errorMessage(task.getException()));
         });
         task.setOnCancelled(event -> {
             pageLoading = false;
@@ -197,7 +197,7 @@ public class AuctionDetailController {
         });
         task.setOnFailed(event -> {
             refreshBidHistoryButton.setDisable(false);
-            showError("Cannot load bid history: " + errorMessage(task.getException()));
+            showError("Không thể tải lịch sử bid: " + errorMessage(task.getException()));
         });
         task.setOnCancelled(event -> refreshBidHistoryButton.setDisable(false));
 
@@ -224,9 +224,8 @@ public class AuctionDetailController {
                     }
                 });
             } catch (Exception e) {
-                System.out.println("[AuctionDetailController] Failed to reload bid history after realtime update: "
+                System.err.println("[AuctionDetailController] Failed to reload bid history after realtime update: "
                         + e.getMessage());
-                e.printStackTrace();
             } finally {
                 bidHistoryReloading = false;
             }
@@ -272,7 +271,7 @@ public class AuctionDetailController {
 
     private void renderAuctionDetail(AuctionDetailDTO detail) {
         if (detail == null) {
-            showError("Auction detail not found.");
+            showError("Không tìm thấy chi tiết phiên đấu giá.");
             return;
         }
 
@@ -324,7 +323,7 @@ public class AuctionDetailController {
             placeBidButton.setDisable(false);
             bidAmountField.clear();
             PlaceBidResponse response = task.getValue();
-            showInfo(response == null ? "Bid placed successfully." : response.getMessage());
+            showInfo(response == null ? "Đặt giá thành công." : response.getMessage());
             loadAuctionDetailPageAsync(false);
         });
         task.setOnFailed(event -> {
@@ -336,7 +335,7 @@ public class AuctionDetailController {
     }
 
     private void handleCloseAuction() {
-        showInfo("Close auction is not enabled for this screen yet.");
+        showInfo("Màn hình này chưa hỗ trợ đóng phiên đấu giá.");
     }
 
     private void registerRealtimeListener() {
@@ -384,7 +383,7 @@ public class AuctionDetailController {
     private BigDecimal parseBidAmount() {
         String rawAmount = bidAmountField.getText();
         if (rawAmount == null || rawAmount.trim().isEmpty()) {
-            throw new IllegalArgumentException("Please enter a bid amount.");
+            throw new IllegalArgumentException("Vui lòng nhập số tiền đặt giá.");
         }
 
         try {
@@ -394,7 +393,7 @@ public class AuctionDetailController {
             }
             return amount;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Bid amount must be a positive number.");
+            throw new IllegalArgumentException("Số tiền đặt giá phải là số dương.");
         }
     }
 
@@ -429,7 +428,7 @@ public class AuctionDetailController {
         if (error instanceof ClientServiceException && error.getMessage() != null) {
             return error.getMessage();
         }
-        return error == null || error.getMessage() == null ? "Unexpected error." : error.getMessage();
+        return error == null || error.getMessage() == null ? "Lỗi không xác định." : error.getMessage();
     }
 
     private String formatTime(long epochMillis) {
@@ -441,7 +440,7 @@ public class AuctionDetailController {
     }
 
     private String formatStatus(AuctionStatus status) {
-        return "Status: " + (status == null ? "N/A" : status.name());
+        return "Trạng thái: " + (status == null ? "N/A" : status.name());
     }
 
     private boolean isAuctionBiddable(AuctionStatus status) {

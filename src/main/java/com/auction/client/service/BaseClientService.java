@@ -15,17 +15,17 @@ public abstract class BaseClientService {
         try {
             response = client.sendRequestAndWait(request, DEFAULT_TIMEOUT_MILLIS);
         } catch (Exception e) {
-            throw new ClientServiceException("Failed to send request to server");
+            throw new ClientServiceException("Không thể gửi yêu cầu tới server.");
 
         }
 
         if (response == null) {
-            throw new ClientServiceException("No response from server");
+            throw new ClientServiceException("Không nhận được phản hồi từ server.");
         }
         if (!response.isSuccess()) {
             String message = response.getErrorMessage();
             throw new ClientServiceException(message == null || message.isBlank()
-                    ? "Server returned an error"
+                    ? "Server trả về lỗi."
                     : message);
         }
 
@@ -37,7 +37,7 @@ public abstract class BaseClientService {
             return null;
         }
         if (!payloadType.isInstance(payload)) {
-            throw new ClientServiceException("Invalid response payload type");
+            throw new ClientServiceException("Dữ liệu phản hồi không hợp lệ.");
         }
         return payloadType.cast(payload);
     }

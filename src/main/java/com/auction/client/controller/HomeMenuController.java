@@ -33,11 +33,10 @@ public class HomeMenuController extends Application {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Exit");
-        alert.setHeaderText("You're exiting");
-        alert.setContentText("Do you really want to exit?: ");
+        alert.setHeaderText("Thoát ứng dụng");
+        alert.setContentText("Bạn có chắc muốn thoát không?");
 
         if(alert.showAndWait().get() == ButtonType.OK){
-            System.out.println("You logout successful");
             stage.close();
         }
     }

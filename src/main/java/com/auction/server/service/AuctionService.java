@@ -151,9 +151,7 @@ public class AuctionService {
         }
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            System.out.println("[AuctionService] GET_AUCTIONS_BY_TYPE finalize expired before query. type=" + itemType);
-            int finalized = auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
-            System.out.println("[AuctionService] GET_AUCTIONS_BY_TYPE finalized expired auctions=" + finalized);
+            auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
             return auctionRepository.getAuctionSummariesByType(conn, itemType);
         }
     }
@@ -161,9 +159,7 @@ public class AuctionService {
         // Reduce chatty DB: fetch all auctions with related Item+owner+winner/lastBidder in one query.
         // (N+1 fix is handled at repository mapping level.)
         try (Connection conn = DatabaseConnection.getConnection()) {
-            System.out.println("[AuctionService] GET_ALL_AUCTIONS finalize expired before query.");
-            int finalized = auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
-            System.out.println("[AuctionService] GET_ALL_AUCTIONS finalized expired auctions=" + finalized);
+            auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
             List<Auction> models = auctionRepository.getAllAuctionsWithDetails(conn);
             List<AuctionSummaryDTO> auctionDTOs = new ArrayList<>(models.size());
             for (Auction auction : models) {
@@ -180,7 +176,7 @@ public class AuctionService {
             // Gọi sang hàm Repository tối ưu vừa thêm ở Bước 1
             return auctionRepository.getAllAuctionSummaries();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("[AuctionService] Cannot load auction summaries: " + e.getMessage());
             return new ArrayList<>(); // Trả về danh sách rỗng để tránh lỗi Null giao diện
         }
     }
@@ -252,14 +248,10 @@ public class AuctionService {
                     throw new AuctionAppException("Phòng đấu giá này đã được đóng từ trước!");
                 }
 
-                System.out.println("[closeAuction] before close status = " + auction.getStatus());
                 auction.close();
-                System.out.println("[closeAuction] after close status = " + auction.getStatus());
                 auctionRepository.updateAuction(conn, auction);
 
                 Auction reloaded = auctionRepository.findByIdForUpdate(conn, auctionId);
-                System.out.println("[closeAuction] after update reload status = "
-                        + (reloaded != null ? reloaded.getStatus() : null));
                 if (reloaded != null) {
                     auction = reloaded;
                 }

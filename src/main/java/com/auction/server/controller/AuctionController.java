@@ -25,15 +25,13 @@ public class AuctionController {
 
     public Response<?> handleGetAllAuctions() {
         try {
-            System.out.println("[AuctionController] Received GET_ALL_AUCTIONS");
             List<AuctionSummaryDTO> summaries = auctionService.getAllAuctions();
-            System.out.println("[AuctionController] GET_ALL_AUCTIONS success, count=" + summaries.size());
             return Response.success(
                     ActionType.GET_ALL_AUCTIONS,
                     new GetAllAuctionResponse(summaries, "Lấy danh sách phòng đấu giá thành công")
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.GET_ALL_AUCTIONS, e);
             return Response.error(ActionType.GET_ALL_AUCTIONS, "Lỗi máy chủ khi lấy danh sách phòng!");
         }
     }
@@ -50,7 +48,7 @@ public class AuctionController {
         } catch (AuctionAppException e) {
             return Response.error(ActionType.GET_AUCTION, e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.GET_AUCTION, e);
             return Response.error(ActionType.GET_AUCTION, "Lỗi máy chủ khi lấy chi tiết phòng đấu giá!");
         }
     }
@@ -86,13 +84,12 @@ public class AuctionController {
         } catch (AuctionAppException e) {
             return Response.error(ActionType.CREATE_AUCTION, e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.CREATE_AUCTION, e);
             return Response.error(ActionType.CREATE_AUCTION, "Lỗi máy chủ khi tạo phòng đấu giá!");
         }
     }
     public Response<?> handleGetAuctionsByType(Request<?> request) {
         try {
-            System.out.println("[AuctionController] Received GET_AUCTIONS_BY_TYPE");
             Object payload = request.getPayload();
 
             if (!(payload instanceof GetAuctionsByTypeRequest getRequest)) {
@@ -104,9 +101,6 @@ public class AuctionController {
 
             List<AuctionSummaryDTO> auctions =
                     auctionService.getAuctionSummariesByType(getRequest.getItemType());
-            System.out.println("[AuctionController] GET_AUCTIONS_BY_TYPE success, type="
-                    + getRequest.getItemType() + ", count=" + auctions.size());
-
             GetAuctionsByTypeResponse responsePayload =
                     new GetAuctionsByTypeResponse(
                             auctions,
@@ -118,7 +112,7 @@ public class AuctionController {
         } catch (AuctionAppException e) {
             return Response.error(ActionType.GET_AUCTIONS_BY_TYPE, e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.GET_AUCTIONS_BY_TYPE, e);
             return Response.error(
                     ActionType.GET_AUCTIONS_BY_TYPE,
                     "Lỗi máy chủ khi lấy danh sách đấu giá theo loại."
@@ -152,8 +146,13 @@ public class AuctionController {
         } catch (AuctionAppException e) {
             return Response.error(ActionType.CLOSE_AUCTION, e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.CLOSE_AUCTION, e);
             return Response.error(ActionType.CLOSE_AUCTION, "Lỗi máy chủ khi đóng phòng!");
         }
+    }
+
+    private void logUnexpected(ActionType actionType, Exception e) {
+        System.err.println("[AuctionController] Unexpected error action=" + actionType
+                + ": " + e.getMessage());
     }
 }

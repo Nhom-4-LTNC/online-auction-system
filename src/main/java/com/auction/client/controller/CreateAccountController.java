@@ -63,9 +63,9 @@ public class CreateAccountController implements Initializable {
             AuthResponse authResponse = authClientService.register(username, email, password);
             handleRegisterSuccess(authResponse);
         } catch (ClientServiceException e) {
-            AlertUtils.showError("Register failed", e.getMessage());
+            AlertUtils.showError("Đăng ký thất bại", e.getMessage());
         } catch (IOException e) {
-            AlertUtils.showError("Navigation error", "Cannot open screen: " + e.getMessage());
+            AlertUtils.showError("Lỗi điều hướng", "Không thể mở màn hình tiếp theo.");
         }
     }
 
@@ -78,7 +78,7 @@ public class CreateAccountController implements Initializable {
         UserDTO newUser = authResponse.getUser();
 
         if (newUser == null) {
-            AlertUtils.showError("Register failed", authResponse.getMessage());
+            AlertUtils.showError("Đăng ký thất bại", authResponse.getMessage());
             return;
         }
 
@@ -100,17 +100,17 @@ public class CreateAccountController implements Initializable {
 
     private boolean validateInput(String username, String email, String password) {
         if (username.isEmpty()) {
-            AlertUtils.showError("Input error", "Please enter username.");
+            AlertUtils.showError("Dữ liệu không hợp lệ", "Vui lòng nhập username.");
             return false;
         }
 
         if (email.isEmpty()) {
-            AlertUtils.showError("Input error", "Please enter email.");
+            AlertUtils.showError("Dữ liệu không hợp lệ", "Vui lòng nhập email.");
             return false;
         }
 
         if (!Check.checkPass(password)) {
-            AlertUtils.showError("Invalid password", "Password does not meet the security requirements.");
+            AlertUtils.showError("Mật khẩu không hợp lệ", "Mật khẩu chưa đáp ứng yêu cầu bảo mật.");
             return false;
         }
 

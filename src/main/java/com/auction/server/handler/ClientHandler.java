@@ -187,9 +187,11 @@ public class ClientHandler implements Runnable {
             );
 
         } catch (Exception e) {
+            System.err.println("[ClientHandler] Unexpected error action=" + action
+                    + ", client=" + getClientAddress() + ": " + e.getMessage());
             return Response.error(
                     action,
-                    e.getMessage()
+                    "Lỗi máy chủ khi xử lý yêu cầu."
             );
         }
     }
@@ -204,12 +206,6 @@ public class ClientHandler implements Runnable {
     }
 
     public synchronized void sendResponse(Response<?> response) {
-        if (response != null
-                && (response.getAction() == ActionType.GET_AUCTIONS_BY_TYPE
-                || response.getAction() == ActionType.GET_ALL_AUCTIONS)) {
-            System.out.println("[ClientHandler] Sending response action=" + response.getAction()
-                    + ", success=" + response.isSuccess());
-        }
         sendObject(response);
     }
 

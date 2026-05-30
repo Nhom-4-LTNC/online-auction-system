@@ -47,9 +47,9 @@ public class LoginController implements Initializable {
             AuthResponse authResponse = authClientService.login(email, password);
             handleLoginSuccess(authResponse);
         } catch (ClientServiceException e) {
-            AlertUtils.showError("Login failed", e.getMessage());
+            AlertUtils.showError("Đăng nhập thất bại", e.getMessage());
         } catch (IOException e) {
-            AlertUtils.showError("Navigation error", "Cannot open screen: " + e.getMessage());
+            AlertUtils.showError("Lỗi điều hướng", "Không thể mở màn hình tiếp theo.");
         }
     }
 
@@ -84,7 +84,7 @@ public class LoginController implements Initializable {
         UserDTO user = authResponse.getUser();
 
         if (user == null) {
-            AlertUtils.showError("Login failed", authResponse.getMessage());
+            AlertUtils.showError("Đăng nhập thất bại", authResponse.getMessage());
             return;
         }
 
@@ -100,12 +100,12 @@ public class LoginController implements Initializable {
 
     private boolean validateInput(String email, String password) {
         if (email == null || email.isBlank()) {
-            AlertUtils.showError("Input error", "Please enter email.");
+            AlertUtils.showError("Dữ liệu không hợp lệ", "Vui lòng nhập email.");
             return false;
         }
 
         if (password == null || password.isBlank()) {
-            AlertUtils.showError("Input error", "Please enter password.");
+            AlertUtils.showError("Dữ liệu không hợp lệ", "Vui lòng nhập mật khẩu.");
             return false;
         }
 

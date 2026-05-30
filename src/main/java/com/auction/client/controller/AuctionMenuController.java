@@ -74,7 +74,7 @@ public class AuctionMenuController {
             SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
             cleanup();
         } catch (IOException e) {
-            AlertUtils.showError("Navigation error", "Cannot open home screen: " + e.getMessage());
+            AlertUtils.showError("Lỗi điều hướng", "Không thể mở màn hình chính.");
         }
     }
 
@@ -131,8 +131,8 @@ public class AuctionMenuController {
             Throwable error = task.getException();
             String message = error instanceof ClientServiceException
                     ? error.getMessage()
-                    : "Cannot load auctions.";
-            AlertUtils.showError("Load auctions failed", message);
+                    : "Không thể tải danh sách đấu giá.";
+            AlertUtils.showError("Tải danh sách thất bại", message);
         });
 
         Thread thread = new Thread(task, "auction-list-loader");
@@ -166,9 +166,6 @@ public class AuctionMenuController {
             Throwable error = task.getException();
             System.err.println("[AuctionMenuController] Failed to reload auctions after realtime update: "
                     + (error == null ? "unknown error" : error.getMessage()));
-            if (error != null) {
-                error.printStackTrace();
-            }
         });
 
         task.setOnCancelled(event -> realtimeReloading = false);
@@ -210,7 +207,7 @@ public class AuctionMenuController {
             controller.setInitialAuction(selected);
             cleanup();
         } catch (IOException e) {
-            AlertUtils.showError("Navigation error", "Cannot open auction detail: " + e.getMessage());
+            AlertUtils.showError("Lỗi điều hướng", "Không thể mở chi tiết phiên đấu giá.");
         }
     }
 
