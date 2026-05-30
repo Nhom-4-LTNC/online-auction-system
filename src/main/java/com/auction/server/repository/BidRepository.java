@@ -138,6 +138,42 @@ public class BidRepository {
         return bids;
     }
 
+    public List<BidDTO> getRecentBidDTOsByAuctionId(int auctionId, int limit) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return getRecentBidDTOsByAuctionId(conn, auctionId, limit);
+        }
+    }
+
+    public List<BidDTO> getRecentBidDTOsByAuctionId(Connection conn, int auctionId, int limit) throws SQLException {
+        String sql = """
+                SELECT
+                    b.id,
+                    b.auction_id,
+                    b.bidder_id,
+                    u.username AS bidder_username,
+                    b.bid_amount,
+                    b.bid_time
+                FROM bids b
+                JOIN users u ON b.bidder_id = u.id
+                WHERE b.auction_id = ?
+                ORDER BY b.bid_time DESC
+                LIMIT ?
+                """;
+        List<BidDTO> bids = new ArrayList<>();
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, auctionId);
+            stmt.setInt(2, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    bids.add(mapResultSetToBidDTO(rs));
+                }
+            }
+        }
+        return bids;
+    }
+
     public Bid findHighestBidByAuctionId(int auctionId) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return findHighestBidByAuctionId(conn, auctionId);

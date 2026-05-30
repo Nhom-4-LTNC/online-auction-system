@@ -42,9 +42,7 @@ public class AuctionController {
         try {
             GetAuctionRequest req = (GetAuctionRequest) request.getPayload();
             AuctionDetailDTO detailDTO = auctionService.getAuctionDetail(req.getAuctionId());
-            List<BidDTO> recentBids = bidService.mapToBidDTOList(
-                    bidService.getBidsByAuctionId(req.getAuctionId())
-            );
+            List<BidDTO> recentBids = bidService.getRecentBidHistoryByAuction(req.getAuctionId());
             return Response.success(
                     ActionType.GET_AUCTION,
                     new GetAuctionResponse(detailDTO, recentBids, "Lấy thông tin phiên đấu giá thành công")

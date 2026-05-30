@@ -19,6 +19,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class BidService {
+    private static final int RECENT_BID_LIMIT = 20;
+
     private static volatile BidService instance;
 
     private final BidRepository bidRepository = BidRepository.getInstance();
@@ -130,6 +132,10 @@ public class BidService {
 
     public List<BidDTO> getBidHistoryByAuction(int auctionId) throws Exception {
         return bidRepository.getBidDTOsByAuctionId(auctionId);
+    }
+
+    public List<BidDTO> getRecentBidHistoryByAuction(int auctionId) throws Exception {
+        return bidRepository.getRecentBidDTOsByAuctionId(auctionId, RECENT_BID_LIMIT);
     }
 
     public Bid getHighestBidByAuctionId(int auctionId) throws Exception {
