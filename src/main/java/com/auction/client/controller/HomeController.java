@@ -1,10 +1,15 @@
 package com.auction.client.controller;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import com.auction.client.session.ClientSession;
 import com.auction.client.util.AlertUtils;
 import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.UserDTO;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -12,10 +17,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class HomeController implements Initializable {
 

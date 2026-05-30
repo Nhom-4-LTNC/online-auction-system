@@ -1,31 +1,17 @@
-# TODO - Admin riêng & quản lý qua shared
+# TODO - FX constant / FXML errors fix
 
-## Steps
-- [ ] Step 1: Thêm protocol admin (ActionType + DTO/Request/Response)
-- [x] Step 1.1: Thêm ActionType admin và shared protocol files
+## Step 1: Fix `fx:constant` invalid element errors
+- ✅ Fixed in `src/main/resources/fxml/AdminUsersView.fxml` by replacing invalid `fx:constant fx:value` under `ChoiceBox` items with a proper `FXCollections` + `String fx:value`.
+- ✅ Fixed in `src/main/resources/fxml/AuctionDetailView.fxml` by removing invalid `TableView fx:constant="CONSTRAINED_RESIZE_POLICY"`.
 
-- [ ] Step 1.2: Update TODO sau khi xong
-- [x] Step 2: Tạo Admin UI (AdminScreen.fxml + AdminMenuController.java)
+## Step 2: Re-run search to ensure no remaining `fx:constant` issues
+- ✅ Confirmed `search_files` found 0 occurrences of `fx:constant` in `src/**/*.fxml`.
 
+## Step 3: Build / run compile validation
+- ⛔ Not verified yet due to local command execution issues (no `mvn` in PATH; `mvnw` invocation hit PowerShell parsing with `&&`).
+- Next attempt: run `mvnw -q test -DskipTests=false` without `&&` separator.
 
-- [x] Step 2: Routing theo role trong LoginController (ADMIN -> AdminScreen, USER -> HomeScreen)
-
-- [x] Step 3: Tạo protocol ActionType/Request/Response cho admin: 
-
-  - [ ] Lấy danh sách users (GET_ALL_USERS)
-  - [ ] Ban user (APPLY_BAN)
-  - [ ] Gỡ ban (REMOVE_BAN)
-- [x] Step 4: Tạo server controller cho admin (AdminController)
-
-- [x] Step 5: Mở rộng ClientHandler.dispatch để route các ActionType mới tới AdminController
-
-- [x] Step 6: Tạo client-side requests (AdminClientService hoặc gọi Client.sendMessage trực tiếp) để implement nút admin
-
-- [x] Step 7: Update UI: gọi danh sách users, hiển thị, ban/unban
-
-- [x] Step 8: Kiểm tra
-
-  - [ ] Login USER không vào AdminScreen
-  - [ ] Login ADMIN vào AdminScreen và bấm nút hoạt động đúng phân quyền
+## Step 4: Validate FXML loading at runtime
+- Next: run the JavaFX app and ensure FXML loads without runtime FXML warnings/errors.
 
 

@@ -1,5 +1,14 @@
 package com.auction.client.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.function.Consumer;
+
 import com.auction.client.network.Client;
 import com.auction.client.service.AuctionClientService;
 import com.auction.client.service.BidClientService;
@@ -17,6 +26,7 @@ import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auction.GetAuctionResponse;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
+
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -32,15 +42,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.function.Consumer;
 
 public class AuctionDetailController {
 

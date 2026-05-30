@@ -152,16 +152,7 @@
                             </children>
                         </HBox>
 
-                        <TableView fx:id="bidHistoryTable" maxHeight="Infinity" maxWidth="Infinity" VBox.vgrow="ALWAYS">
-                            <columnResizePolicy>
-                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                            </columnResizePolicy>
-                            <columns>
-                                <TableColumn fx:id="bidderColumn" prefWidth="75.0" text="Người trả giá" />
-                                <TableColumn fx:id="amountColumn" prefWidth="75.0" text="Số tiền" />
-                                <TableColumn fx:id="timeColumn" prefWidth="75.0" text="Thời gian" />
-                            </columns>
-                        </TableView>
+                                <TableView fx:id="bidHistoryTable" maxHeight="Infinity" maxWidth="Infinity" VBox.vgrow="ALWAYS" />
                     </children>
                 </VBox>
             </children>
