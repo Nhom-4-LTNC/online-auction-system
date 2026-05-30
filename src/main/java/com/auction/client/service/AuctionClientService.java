@@ -54,6 +54,18 @@ public class AuctionClientService extends BaseClientService {
         return response.getAuctions();
     }
 
+    public List<AuctionSummaryDTO> getMyCreatedAuctions() {
+        return getAuctionSummaryList(ActionType.GET_MY_CREATED_AUCTIONS);
+    }
+
+    public List<AuctionSummaryDTO> getMyParticipatedAuctions() {
+        return getAuctionSummaryList(ActionType.GET_MY_PARTICIPATED_AUCTIONS);
+    }
+
+    public List<AuctionSummaryDTO> getMyWonAuctions() {
+        return getAuctionSummaryList(ActionType.GET_MY_WON_AUCTIONS);
+    }
+
     public String closeAuction(int auctionId) {
         Request<CloseAuctionRequest> request = new Request<>(
                 ActionType.CLOSE_AUCTION,
@@ -61,5 +73,15 @@ public class AuctionClientService extends BaseClientService {
         );
 
         return sendAndExtract(request, String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<AuctionSummaryDTO> getAuctionSummaryList(ActionType actionType) {
+        Request<java.io.Serializable> request = new Request<>(actionType, null);
+        List<?> response = sendAndExtract(request, List.class);
+        if (response == null) {
+            return Collections.emptyList();
+        }
+        return (List<AuctionSummaryDTO>) response;
     }
 }
