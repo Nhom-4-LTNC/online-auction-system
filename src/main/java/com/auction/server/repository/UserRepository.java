@@ -58,26 +58,24 @@ public class UserRepository {
         }
     }
 
-    public User login(String email, String password) throws Exception {
+    /**
+     * @deprecated Authentication is handled in AuthService with PasswordHasher.
+     * Use getUserByEmail(...) and verify the password in the service layer.
+     */
+    @Deprecated
+    public User login(String email, String ignoredPassword) throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return login(conn, email, password);
+            return login(conn, email, ignoredPassword);
         }
     }
 
-    public User login(Connection conn, String email, String password) throws SQLException {
-        String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, email);
-            stmt.setString(2, password);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToUser(rs);
-                }
-            }
-        }
-        return null;
+    /**
+     * @deprecated Authentication is handled in AuthService with PasswordHasher.
+     * Use getUserByEmail(Connection, ...) and verify the password in the service layer.
+     */
+    @Deprecated
+    public User login(Connection conn, String email, String ignoredPassword) throws SQLException {
+        return getUserByEmail(conn, email);
     }
 
     public void updateUser(User user) throws Exception {

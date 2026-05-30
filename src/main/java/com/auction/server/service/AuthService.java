@@ -1,16 +1,20 @@
 package com.auction.server.service;
 
-import com.auction.shared.dto.UserDTO;
-import com.auction.shared.enums.Role;
-import com.auction.shared.exception.*;
 import com.auction.server.model.user.User;
 import com.auction.server.repository.UserRepository;
+import com.auction.server.security.PasswordHasher;
+import com.auction.shared.dto.UserDTO;
+import com.auction.shared.enums.Role;
+import com.auction.shared.exception.AuthenticationException;
+import com.auction.shared.exception.DuplicateResourceException;
+import com.auction.shared.exception.UserBannedException;
+import com.auction.shared.exception.ValidationException;
 
 public class AuthService {
 
     private static volatile AuthService instance;
     private final UserRepository userRepository = UserRepository.getInstance();
-    private final UserService userService = UserService.getInstance(); // Gọi UserService để check Banned
+    private final UserService userService = UserService.getInstance();
 
     private AuthService() {}
 
@@ -24,15 +28,18 @@ public class AuthService {
     }
 
     public UserDTO login(String email, String password) throws Exception {
-        if (email == null || email.trim().isEmpty()) throw new AuctionAppException("Email không được để trống!");
-        if (password == null || password.trim().isEmpty()) throw new AuctionAppException("Mật khẩu không được để trống!");
-
-        User user = userRepository.login(email.trim(), password);
-        if (user == null) {
-            throw new AuthenticationException("Email hoặc mật khẩu không đúng!");
+        if (email == null || email.trim().isEmpty()) {
+            throw new ValidationException("Email khong duoc de trong!");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new ValidationException("Mat khau khong duoc de trong!");
         }
 
-        // Nhờ UserService kiểm tra xem User này có đang bị khóa không
+        User user = userRepository.getUserByEmail(email.trim().toLowerCase());
+        if (user == null || !isPasswordValidAndUpgradeIfNeeded(user, password)) {
+            throw new AuthenticationException("Email hoac mat khau khong dung!");
+        }
+
         if (userService.isBanned(user)) {
             throw new UserBannedException(user.getBanEndTime());
         }
@@ -47,16 +54,15 @@ public class AuthService {
 
         validateRegisterData(cleanUsername, cleanEmail, password);
 
-        // Kiểm tra tồn tại
         if (userRepository.getUserByEmail(cleanEmail) != null) {
-            throw new DuplicateResourceException("Email này đã được đăng ký!");
+            throw new DuplicateResourceException("Email nay da duoc dang ky!");
         }
         if (userRepository.getUserByUsername(cleanUsername) != null) {
-            throw new DuplicateResourceException("Tên đăng nhập đã tồn tại!");
+            throw new DuplicateResourceException("Ten dang nhap da ton tai!");
         }
 
-        // Tạo mới
-        User newUser = new User(cleanUsername, password, cleanEmail, Role.USER);
+        String passwordHash = PasswordHasher.hash(password);
+        User newUser = new User(cleanUsername, passwordHash, cleanEmail, Role.USER);
         userRepository.addUser(newUser);
         newUser.setBalance(userRepository.getUserBalance(newUser.getId()));
 
@@ -64,9 +70,31 @@ public class AuthService {
     }
 
     private void validateRegisterData(String username, String email, String password) throws Exception {
-        if (username == null || username.isEmpty()) throw new ValidationException("Tên đăng nhập không được để trống!");
-        if (email == null || email.isEmpty()) throw new ValidationException("Email không được để trống!");
-        if (password == null || password.trim().isEmpty()) throw new ValidationException("Mật khẩu không được để trống!");
+        if (username == null || username.isEmpty()) {
+            throw new ValidationException("Ten dang nhap khong duoc de trong!");
+        }
+        if (email == null || email.isEmpty()) {
+            throw new ValidationException("Email khong duoc de trong!");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new ValidationException("Mat khau khong duoc de trong!");
+        }
+    }
+
+    private boolean isPasswordValidAndUpgradeIfNeeded(User user, String rawPassword) throws Exception {
+        String storedPassword = user.getPassword();
+
+        if (PasswordHasher.isBcryptHash(storedPassword)) {
+            return PasswordHasher.matches(rawPassword, storedPassword);
+        }
+
+        if (!rawPassword.equals(storedPassword)) {
+            return false;
+        }
+
+        user.setPassword(PasswordHasher.hash(rawPassword));
+        userRepository.updateUser(user);
+        return true;
     }
 
     private UserDTO mapUserToDTO(User user) {
