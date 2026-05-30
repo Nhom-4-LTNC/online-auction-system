@@ -177,6 +177,13 @@ public class AuctionService {
         }
     }
 
+    public List<AuctionSummaryDTO> getAuctionsParticipatedByUser(int userId) throws Exception {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
+            return auctionRepository.findSummariesParticipatedByBidderId(conn, userId);
+        }
+    }
+
     public List<AuctionSummaryDTO> getAllAuctionSummaries() {
 
         try {

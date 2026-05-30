@@ -144,6 +144,30 @@ public class AuctionController {
         }
     }
 
+    public Response<?> handleGetMyParticipatedAuctions(ClientHandler client) {
+        try {
+            if (client == null || client.getCurrentUser() == null) {
+                return Response.error(
+                        ActionType.GET_MY_PARTICIPATED_AUCTIONS,
+                        "Người dùng chưa đăng nhập."
+                );
+            }
+
+            List<AuctionSummaryDTO> auctions =
+                    auctionService.getAuctionsParticipatedByUser(client.getCurrentUser().getId());
+
+            return Response.success(ActionType.GET_MY_PARTICIPATED_AUCTIONS, auctions);
+        } catch (AuctionAppException e) {
+            return Response.error(ActionType.GET_MY_PARTICIPATED_AUCTIONS, e.getMessage());
+        } catch (Exception e) {
+            logUnexpected(ActionType.GET_MY_PARTICIPATED_AUCTIONS, e);
+            return Response.error(
+                    ActionType.GET_MY_PARTICIPATED_AUCTIONS,
+                    "Lỗi máy chủ khi lấy danh sách phiên đấu giá đã tham gia."
+            );
+        }
+    }
+
     public Response<?> handleCloseAuction(Request<?> request, ClientHandler client) {
         try {
             if (client.getCurrentUser() == null) {
