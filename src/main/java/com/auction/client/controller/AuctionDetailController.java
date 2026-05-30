@@ -73,6 +73,7 @@ public class AuctionDetailController {
 
     private int currentAuctionId;
     private Consumer<Response<?>> auctionUpdatedListener;
+    private boolean realtimeListenerRegistered = false;
     private volatile boolean pageLoading = false;
     private volatile boolean bidHistoryReloading = false;
 
@@ -339,35 +340,41 @@ public class AuctionDetailController {
     }
 
     private void registerRealtimeListener() {
-        unregisterRealtimeListener();
-        auctionUpdatedListener = response -> {
-            if (response == null || response.getAction() != ActionType.AUCTION_UPDATED) {
-                return;
-            }
-            Object payload = response.getPayload();
-            if (!(payload instanceof AuctionUpdatedEvent event)) {
-                return;
-            }
-            if (event.getAuctionId() != currentAuctionId) {
-                return;
-            }
+        if (realtimeListenerRegistered) {
+            return;
+        }
 
-            applyRealtimeSummary(event);
-            if (event.getUpdateType() == AuctionUpdateType.BID_PLACED) {
-                reloadBidHistoryForRealtime();
-            } else {
-                reloadAuctionDetailForRealtime();
-            }
-        };
+        if (auctionUpdatedListener == null) {
+            auctionUpdatedListener = response -> {
+                if (response == null || response.getAction() != ActionType.AUCTION_UPDATED) {
+                    return;
+                }
+                Object payload = response.getPayload();
+                if (!(payload instanceof AuctionUpdatedEvent event)) {
+                    return;
+                }
+                if (event.getAuctionId() != currentAuctionId) {
+                    return;
+                }
+
+                applyRealtimeSummary(event);
+                if (event.getUpdateType() == AuctionUpdateType.BID_PLACED) {
+                    reloadBidHistoryForRealtime();
+                } else {
+                    reloadAuctionDetailForRealtime();
+                }
+            };
+        }
 
         client.addEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
+        realtimeListenerRegistered = true;
     }
 
     private void unregisterRealtimeListener() {
-        if (auctionUpdatedListener != null) {
+        if (realtimeListenerRegistered && auctionUpdatedListener != null) {
             client.removeEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
-            auctionUpdatedListener = null;
         }
+        realtimeListenerRegistered = false;
     }
 
     public void cleanup() {

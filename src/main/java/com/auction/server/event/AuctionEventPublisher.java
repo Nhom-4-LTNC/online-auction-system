@@ -25,7 +25,8 @@ public class AuctionEventPublisher {
                 ActionType.AUCTION_UPDATED,
                 event
         );
-        System.out.println("[AuctionEventPublisher] Publish AUCTION_UPDATED: " + event);
+        System.out.println("[AuctionEventPublisher] Publish AUCTION_UPDATED auctionId="
+                + event.getAuctionId() + ", type=" + event.getUpdateType());
         Server.broadcastToLoggedIn(response);
     }
 

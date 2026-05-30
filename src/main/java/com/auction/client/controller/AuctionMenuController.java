@@ -42,6 +42,7 @@ public class AuctionMenuController {
 
     private ItemType currentType = ItemType.ELECTRONICS;
     private Consumer<Response<?>> auctionUpdatedListener;
+    private boolean realtimeListenerRegistered = false;
     private volatile boolean realtimeReloading = false;
 
     @FXML
@@ -214,28 +215,34 @@ public class AuctionMenuController {
     }
 
     private void registerRealtimeListener() {
-        unregisterRealtimeListener();
-        auctionUpdatedListener = response -> {
-            if (response == null || response.getAction() != ActionType.AUCTION_UPDATED) {
-                return;
-            }
+        if (realtimeListenerRegistered) {
+            return;
+        }
 
-            Object payload = response.getPayload();
-            if (!(payload instanceof AuctionUpdatedEvent)) {
-                return;
-            }
+        if (auctionUpdatedListener == null) {
+            auctionUpdatedListener = response -> {
+                if (response == null || response.getAction() != ActionType.AUCTION_UPDATED) {
+                    return;
+                }
 
-            reloadAuctionListForRealtime();
-        };
+                Object payload = response.getPayload();
+                if (!(payload instanceof AuctionUpdatedEvent)) {
+                    return;
+                }
+
+                reloadAuctionListForRealtime();
+            };
+        }
 
         client.addEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
+        realtimeListenerRegistered = true;
     }
 
     private void unregisterRealtimeListener() {
-        if (auctionUpdatedListener != null) {
+        if (realtimeListenerRegistered && auctionUpdatedListener != null) {
             client.removeEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
-            auctionUpdatedListener = null;
         }
+        realtimeListenerRegistered = false;
     }
 
     public void cleanup() {

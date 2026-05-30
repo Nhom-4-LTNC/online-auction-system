@@ -2,10 +2,6 @@ package com.auction.server;
 
 import com.auction.server.database.DatabaseConnection;
 import com.auction.server.handler.ClientHandler;
-import com.auction.server.repository.AuctionRepository;
-import com.auction.server.repository.BidRepository;
-import com.auction.server.repository.ItemRepository;
-import com.auction.server.repository.UserRepository;
 import com.auction.server.service.*;
 import com.auction.shared.network.NetworkConfig;
 
@@ -108,13 +104,21 @@ public class Server {
             return;
         }
 
+        int sent = 0;
         for (ClientHandler client : connectedClients) {
-            System.out.println("[Server] Broadcasting client(s): " +
-                    data.getClass().getSimpleName());
-            if (client.isLoggedIn()) {
+            if (!client.isLoggedIn()) {
+                continue;
+            }
+
+            try {
                 client.sendObject(data);
+                sent++;
+            } catch (Exception e) {
+                System.err.println("[Server] Broadcast failed for one client: " + e.getMessage());
             }
         }
+        System.out.println("[Server] Broadcast " + data.getClass().getSimpleName()
+                + " to logged-in clients: " + sent);
     }
     public static int getConnectedClientCount() {
         return connectedClients.size();

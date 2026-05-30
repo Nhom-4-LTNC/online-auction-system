@@ -26,8 +26,11 @@ public class ClientEventDispatcher {
             return;
         }
 
-        listeners.computeIfAbsent(actionType, ignored -> new CopyOnWriteArrayList<>())
-                .add(listener);
+        List<Consumer<Response<?>>> actionListeners =
+                listeners.computeIfAbsent(actionType, ignored -> new CopyOnWriteArrayList<>());
+        if (!actionListeners.contains(listener)) {
+            actionListeners.add(listener);
+        }
     }
 
     public void removeListener(ActionType actionType, Consumer<Response<?>> listener) {
