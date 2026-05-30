@@ -168,6 +168,30 @@ public class AuctionController {
         }
     }
 
+    public Response<?> handleGetMyWonAuctions(ClientHandler client) {
+        try {
+            if (client == null || client.getCurrentUser() == null) {
+                return Response.error(
+                        ActionType.GET_MY_WON_AUCTIONS,
+                        "Người dùng chưa đăng nhập."
+                );
+            }
+
+            List<AuctionSummaryDTO> auctions =
+                    auctionService.getAuctionsWonByUser(client.getCurrentUser().getId());
+
+            return Response.success(ActionType.GET_MY_WON_AUCTIONS, auctions);
+        } catch (AuctionAppException e) {
+            return Response.error(ActionType.GET_MY_WON_AUCTIONS, e.getMessage());
+        } catch (Exception e) {
+            logUnexpected(ActionType.GET_MY_WON_AUCTIONS, e);
+            return Response.error(
+                    ActionType.GET_MY_WON_AUCTIONS,
+                    "Lỗi máy chủ khi lấy danh sách phiên đấu giá đã thắng."
+            );
+        }
+    }
+
     public Response<?> handleCloseAuction(Request<?> request, ClientHandler client) {
         try {
             if (client.getCurrentUser() == null) {

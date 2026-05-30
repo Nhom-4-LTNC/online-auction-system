@@ -285,6 +285,41 @@ public class AuctionRepository {
         return result;
     }
 
+    public List<AuctionSummaryDTO> findSummariesWonByUserId(Connection conn, int userId)
+            throws SQLException {
+        String sql = """
+            SELECT
+                a.id AS auction_id,
+                i.id AS item_id,
+                i.name AS item_name,
+                i.item_type AS item_type,
+                a.current_price AS current_price,
+                a.end_time AS end_time,
+                a.status AS status
+            FROM auctions a
+            JOIN items i ON a.item_id = i.id
+            WHERE a.winner_id = ?
+              AND a.status IN (?, ?)
+            ORDER BY a.end_time DESC
+            """;
+
+        List<AuctionSummaryDTO> result = new ArrayList<>();
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setString(2, AuctionStatus.FINISHED.name());
+            stmt.setString(3, AuctionStatus.PAID.name());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapResultSetToAuctionSummaryDTO(rs));
+                }
+            }
+        }
+
+        return result;
+    }
+
     public List<AuctionSummaryDTO> getAllAuctionSummaries() throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return getAllAuctionSummaries(conn);

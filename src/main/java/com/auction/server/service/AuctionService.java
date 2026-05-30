@@ -156,8 +156,6 @@ public class AuctionService {
         }
     }
     public List<AuctionSummaryDTO> getAllAuctions() throws Exception {
-        // Reduce chatty DB: fetch all auctions with related Item+owner+winner/lastBidder in one query.
-        // (N+1 fix is handled at repository mapping level.)
         try (Connection conn = DatabaseConnection.getConnection()) {
             auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
             List<Auction> models = auctionRepository.getAllAuctionsWithDetails(conn);
@@ -181,6 +179,13 @@ public class AuctionService {
         try (Connection conn = DatabaseConnection.getConnection()) {
             auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
             return auctionRepository.findSummariesParticipatedByBidderId(conn, userId);
+        }
+    }
+
+    public List<AuctionSummaryDTO> getAuctionsWonByUser(int userId) throws Exception {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
+            return auctionRepository.findSummariesWonByUserId(conn, userId);
         }
     }
 
