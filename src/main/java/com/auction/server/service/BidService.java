@@ -128,12 +128,20 @@ public class BidService {
         return bidRepository.findByAuctionId(auctionId);
     }
 
+    public List<BidDTO> getBidHistoryByAuction(int auctionId) throws Exception {
+        return bidRepository.getBidDTOsByAuctionId(auctionId);
+    }
+
     public Bid getHighestBidByAuctionId(int auctionId) throws Exception {
         return bidRepository.findHighestBidByAuctionId(auctionId);
     }
 
     public List<Bid> getBidsByBidder(int bidderId) throws Exception {
         return bidRepository.findByBidderId(bidderId);
+    }
+
+    public List<BidDTO> getBidHistoryByBidder(int bidderId) throws Exception {
+        return bidRepository.getBidDTOsByBidderId(bidderId);
     }
 
     public List<Bid> getBidsByBidderForRequester(int requesterId, int bidderId) throws Exception {
@@ -144,6 +152,16 @@ public class BidService {
             );
         }
         return getBidsByBidder(bidderId);
+    }
+
+    public List<BidDTO> getBidHistoryByBidderForRequester(int requesterId, int bidderId) throws Exception {
+        User requester = userService.getUserById(requesterId);
+        if (!requester.isAdmin() && requesterId != bidderId) {
+            throw new com.auction.shared.exception.AuthorizationException(
+                    "Báº¡n khÃ´ng cÃ³ quyá»n xem lá»‹ch sá»­ bid cá»§a ngÆ°á»i dÃ¹ng khÃ¡c!"
+            );
+        }
+        return getBidHistoryByBidder(bidderId);
     }
 
     public BidDTO mapToBidDTO(Bid bid) throws AuctionAppException {

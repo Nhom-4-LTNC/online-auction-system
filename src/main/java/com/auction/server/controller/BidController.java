@@ -4,7 +4,6 @@ import com.auction.server.event.AuctionEventPublisher;
 import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BidDTO;
-import com.auction.server.model.Bid;
 import com.auction.server.model.auction.Auction;
 import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.protocol.ActionType;
@@ -96,8 +95,9 @@ public class BidController {
                         "Người dùng chưa đăng nhập.");
             }
 
-            List<Bid> bids = bidService.getBidsByAuctionId(getBidHistoryRequest.getAuctionId());
-            List <BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
+            List<BidDTO> bidDTOs = bidService.getBidHistoryByAuction(
+                    getBidHistoryRequest.getAuctionId()
+            );
 
             return Response.success(
                     ActionType.GET_BIDS_BY_AUCTION,
@@ -126,11 +126,10 @@ public class BidController {
                 return Response.error(ActionType.GET_BIDS_BY_BIDDER, "Người dùng chưa đăng nhập.");
             }
 
-            List<Bid> bids = bidService.getBidsByBidderForRequester(
+            List<BidDTO> bidDTOs = bidService.getBidHistoryByBidderForRequester(
                     client.getCurrentUser().getId(),
                     getBidsByBidderRequest.getBidderId()
             );
-            List<BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
 
             return Response.success(
                     ActionType.GET_BIDS_BY_BIDDER,
@@ -151,13 +150,7 @@ public class BidController {
             return Response.error(ActionType.GET_MY_BIDS,
                     "Người dùng chưa đăng nhập.");
         }
-        List <Bid> bids = bidService.getBidsByBidder(client.getCurrentUser().getId());
-        List <BidDTO> bidDTOs = null;
-        try {
-            bidDTOs = bidService.mapToBidDTOList(bids);
-        } catch (AuctionAppException e) {
-            throw new RuntimeException(e);
-        }
+        List<BidDTO> bidDTOs = bidService.getBidHistoryByBidder(client.getCurrentUser().getId());
 
         return Response.success(
                     ActionType.GET_MY_BIDS,
