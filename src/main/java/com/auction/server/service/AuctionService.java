@@ -271,7 +271,35 @@ public class AuctionService {
 
         updateCachedAuction(auction);
         notifyAuctionClosed(auction);
+
+        // Phase 3: winner announcement as system chat message (realtime-only)
+        // Winner is set when Auction finishes (winner != null) => broadcast chat message with isSystem=true.
+        if (auction != null && auction.getWinner() != null) {
+            try {
+                String winnerUsername = auction.getWinner().getUsername();
+                com.auction.shared.protocol.event.AuctionChatMessageEvent evt =
+                        new com.auction.shared.protocol.event.AuctionChatMessageEvent(
+                                auction.getId(),
+                                auction.getWinner().getId(),
+                                winnerUsername,
+                                "🏆 " + winnerUsername + " đã thắng phiên đấu giá " + auction.getId(),
+                                System.currentTimeMillis(),
+                                true
+                        );
+
+                com.auction.shared.protocol.Response<com.auction.shared.protocol.event.AuctionChatMessageEvent> response =
+                        com.auction.shared.protocol.Response.success(
+                                com.auction.shared.protocol.ActionType.CHAT_MESSAGE,
+                                evt
+                        );
+                com.auction.server.Server.broadcastToLoggedIn(response);
+            } catch (Exception ignored) {
+                // do not break auction closing
+            }
+        }
     }
+
+
 
     private void notifyAuctionClosed(Auction auction) {
         for (AuctionObserver observer : observers) {

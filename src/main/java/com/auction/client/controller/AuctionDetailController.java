@@ -1,5 +1,14 @@
 package com.auction.client.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.function.Consumer;
+
 import com.auction.client.network.Client;
 import com.auction.client.service.AuctionClientService;
 import com.auction.client.service.BidClientService;
@@ -17,6 +26,7 @@ import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auction.GetAuctionResponse;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -30,17 +40,32 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.function.Consumer;
+import javafx.scene.layout.StackPane;
 
 public class AuctionDetailController {
+
+    @FXML private javafx.scene.control.Button toggleChatButton;
+
+    @FXML
+    private void onToggleChat() {
+        boolean willShow = chatOverlay != null && (!chatOverlay.isVisible());
+        if (chatOverlay == null) {
+            return;
+        }
+
+        chatOverlay.setVisible(willShow);
+        chatOverlay.setManaged(willShow);
+        if (toggleChatButton != null) {
+            toggleChatButton.setText(willShow ? "Đóng" : "Mở");
+        }
+    }
+
+    @FXML private javafx.scene.control.Button openChatButton;
+    @FXML private javafx.scene.control.TextArea chatHistoryArea;
+    @FXML private javafx.scene.control.TextField chatInputField;
+    @FXML private javafx.scene.control.Button sendChatButton;
+    @FXML private StackPane chatOverlay;
+
 
     @FXML private BorderPane root;
     @FXML private Button backButton;
@@ -69,7 +94,9 @@ public class AuctionDetailController {
 
     private final AuctionClientService auctionClientService = new AuctionClientService();
     private final BidClientService bidClientService = new BidClientService();
+    private final com.auction.client.service.AuctionChatClientService auctionChatClientService = new com.auction.client.service.AuctionChatClientService();
     private final Client client = Client.getInstance();
+
 
     private int currentAuctionId;
     private Consumer<Response<?>> auctionUpdatedListener;
@@ -119,6 +146,13 @@ public class AuctionDetailController {
     }
 
     private void setupButtonActions() {
+        if (sendChatButton != null) {
+            sendChatButton.setOnAction(event -> handleSendChat());
+        }
+        if (chatInputField != null) {
+            chatInputField.setOnAction(event -> handleSendChat());
+        }
+
         backButton.setOnAction(event -> {
             cleanup();
             try {
@@ -338,8 +372,49 @@ public class AuctionDetailController {
         showInfo("Close auction is not enabled for this screen yet.");
     }
 
+    private void handleSendChat() {
+        if (chatInputField == null) return;
+        String text = chatInputField.getText();
+        if (text == null) return;
+        text = text.trim();
+        if (text.isEmpty()) {
+            return;
+        }
+
+        if (sendChatButton != null) {
+            sendChatButton.setDisable(true);
+        }
+
+        int auctionIdSnapshot = currentAuctionId;
+        String messageSnapshot = text;
+
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                auctionChatClientService.sendChat(auctionIdSnapshot, messageSnapshot);
+                return null;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            if (sendChatButton != null) {
+                sendChatButton.setDisable(false);
+            }
+            chatInputField.clear();
+        });
+        task.setOnFailed(e -> {
+            if (sendChatButton != null) {
+                sendChatButton.setDisable(false);
+            }
+            showError(errorMessage(task.getException()));
+        });
+
+        runDaemon(task, "auction-chat-send");
+    }
+
     private void registerRealtimeListener() {
         unregisterRealtimeListener();
+
         auctionUpdatedListener = response -> {
             if (response == null || response.getAction() != ActionType.AUCTION_UPDATED) {
                 return;
@@ -361,18 +436,41 @@ public class AuctionDetailController {
         };
 
         client.addEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
+
+        // Chat realtime listener
+        client.addEventListener(ActionType.CHAT_MESSAGE, chatListener);
     }
+
 
     private void unregisterRealtimeListener() {
         if (auctionUpdatedListener != null) {
             client.removeEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
             auctionUpdatedListener = null;
         }
+
+        client.removeEventListener(ActionType.CHAT_MESSAGE, chatListener);
     }
+
 
     public void cleanup() {
         unregisterRealtimeListener();
     }
+
+    private final Consumer<Response<?>> chatListener = response -> {
+        try {
+            if (response == null || response.getAction() != ActionType.CHAT_MESSAGE) return;
+            Object payload = response.getPayload();
+            if (!(payload instanceof com.auction.shared.protocol.event.AuctionChatMessageEvent evt)) return;
+            if (evt.getAuctionId() != currentAuctionId) return;
+
+            String line = (evt.isSystem() ? "[SYSTEM] " : "") + evt.getSenderUsername() + ": " + evt.getMessage();
+            if (chatHistoryArea != null) {
+                chatHistoryArea.appendText(line + "\n");
+            }
+        } catch (Exception ignored) {
+        }
+    };
+
 
     private BigDecimal parseBidAmount() {
         String rawAmount = bidAmountField.getText();

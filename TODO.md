@@ -1,31 +1,52 @@
-# TODO - Admin riêng & quản lý qua shared
+# TODO - Auction Chat Box (realtime-only)
 
-## Steps
-- [ ] Step 1: Thêm protocol admin (ActionType + DTO/Request/Response)
-- [x] Step 1.1: Thêm ActionType admin và shared protocol files
+## Phase 0: Understand & align architecture
+- [x] Review realtime pipeline: `Client.addEventListener(ActionType.AUCTION_UPDATED, ...)` -> `Server.broadcastToLoggedIn(...)` -> `ClientEventDispatcher`
+- [x] Decide chat to be realtime-only (no DB persistence)
 
-- [ ] Step 1.2: Update TODO sau khi xong
-- [x] Step 2: Tạo Admin UI (AdminScreen.fxml + AdminMenuController.java)
+## Phase 1: Protocol & server push
+- [x] Add `ActionType.CHAT_MESSAGE`
+
+- [x] Add shared DTO/event model `AuctionChatMessageEvent`
+
+- [x] Implement server service `AuctionChatService` to:
+  - [x] validate auctionId exists + auction status open/running
+  - [x] validate sender is logged-in
+  - [x] broadcast chat message to clients (for now: all logged-in)
+
+## Phase 2: Client-to-server request
+- [x] Add client `Request`: `SendAuctionChatRequest`
+- [x] Add server controller `AuctionChatController.handleSendChat(...)`
+- [x] Update `ClientHandler.dispatch()` switch to handle new request action
+
+## Phase 3: Winner announcement
+- [x] When auction closes and winner is known, server creates system message via chat event:
+  - [x] `🏆 {winner} đã thắng phiên đấu giá {auctionId}`
+  - [x] broadcast with `isSystem=true`
 
 
-- [x] Step 2: Routing theo role trong LoginController (ADMIN -> AdminScreen, USER -> HomeScreen)
 
-- [x] Step 3: Tạo protocol ActionType/Request/Response cho admin: 
+## Phase 4: UI/Client integration
+- [x] Update `AuctionDetailView.fxml` to include chat UI:
+  - [x] overlay (hidden by default) + toggle button
+  - [x] message list (ListView)
+  - [x] input TextField
+  - [x] send Button
 
-  - [ ] Lấy danh sách users (GET_ALL_USERS)
-  - [ ] Ban user (APPLY_BAN)
-  - [ ] Gỡ ban (REMOVE_BAN)
-- [x] Step 4: Tạo server controller cho admin (AdminController)
+- [x] Update `AuctionDetailController`:
+  - [x] subscribe `client.addEventListener(ActionType.CHAT_MESSAGE, ...)`
+  - [x] append incoming messages for currentAuctionId
+  - [x] send message through `AuctionChatClientService`
 
-- [x] Step 5: Mở rộng ClientHandler.dispatch để route các ActionType mới tới AdminController
 
-- [x] Step 6: Tạo client-side requests (AdminClientService hoặc gọi Client.sendMessage trực tiếp) để implement nút admin
+## Phase 5: Client service
+- [x] Create `AuctionChatClientService` for sending `SendAuctionChatRequest`
 
-- [x] Step 7: Update UI: gọi danh sách users, hiển thị, ban/unban
 
-- [x] Step 8: Kiểm tra
 
-  - [ ] Login USER không vào AdminScreen
-  - [ ] Login ADMIN vào AdminScreen và bấm nút hoạt động đúng phân quyền
-
+## Phase 6: Build & basic manual test
+- [ ] Run `mvn compile`
+- [ ] Manual test with 2+ clients:
+  - [ ] chat works in same auction
+  - [ ] winner announcement appears as system message
 

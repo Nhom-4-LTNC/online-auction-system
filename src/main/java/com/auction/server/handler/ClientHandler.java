@@ -1,21 +1,22 @@
 package com.auction.server.handler;
 
-import com.auction.server.Server;
-import com.auction.shared.dto.UserDTO;
-import com.auction.shared.protocol.ActionType;
-import com.auction.shared.protocol.Request;
-import com.auction.shared.protocol.Response;
-import com.auction.shared.protocol.auth.AuthResponse;
-import com.auction.server.controller.AuctionController;
-import com.auction.server.controller.AuthController;
-import com.auction.server.controller.BidController;
-import com.auction.server.controller.WalletController;
-import com.auction.server.controller.AdminController;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+
+import com.auction.server.Server;
+import com.auction.server.controller.AdminController;
+import com.auction.server.controller.AuctionController;
+import com.auction.server.controller.AuthController;
+import com.auction.server.controller.BidController;
+import com.auction.server.controller.WalletController;
+import com.auction.shared.dto.UserDTO;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.auth.AuthResponse;
 
 /**
  * Quản lý một kết nối socket từ client.
@@ -50,12 +51,13 @@ public class ClientHandler implements Runnable {
     private final BidController bidController = new BidController();
     private final WalletController walletController = new WalletController();
     private final AdminController adminController = new AdminController();
+    private final com.auction.server.controller.AuctionChatController auctionChatController = new com.auction.server.controller.AuctionChatController();
 
 
     public ClientHandler(Socket socket) {
-
         this.socket = socket;
     }
+
 
     public UserDTO getCurrentUser() {
         return currentUser;
@@ -161,8 +163,14 @@ public class ClientHandler implements Runnable {
                 case ADD_BALANCE -> walletController.handleAddBalance(this, request);
 
                 case PAY_AUCTION -> walletController.handlePayAuction(this, request);
+
+                // ===== CHAT (AUCTION) =====
+                case SEND_AUCTION_CHAT -> auctionChatController.handleSendChat(request, this);
+
+
                 // ===== ADMIN =====
                 case GET_ALL_USERS -> adminController.handleGetAllUsers(request, this);
+
 
                 case APPLY_BAN -> adminController.handleApplyBan(request, this);
 
