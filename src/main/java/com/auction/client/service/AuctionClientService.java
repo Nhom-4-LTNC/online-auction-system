@@ -10,6 +10,7 @@ import com.auction.shared.protocol.auction.CreateAuctionRequest;
 import com.auction.shared.protocol.auction.CreateAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionRequest;
 import com.auction.shared.protocol.auction.GetAuctionResponse;
+import com.auction.shared.protocol.auction.GetAllAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeRequest;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeResponse;
 
@@ -48,6 +49,16 @@ public class AuctionClientService extends BaseClientService {
         );
 
         GetAuctionsByTypeResponse response = sendAndExtract(request, GetAuctionsByTypeResponse.class);
+        if (response == null || response.getAuctions() == null) {
+            return Collections.emptyList();
+        }
+        return response.getAuctions();
+    }
+
+    public List<AuctionSummaryDTO> getAllAuctions() {
+        Request<java.io.Serializable> request = new Request<>(ActionType.GET_ALL_AUCTIONS, null);
+
+        GetAllAuctionResponse response = sendAndExtract(request, GetAllAuctionResponse.class);
         if (response == null || response.getAuctions() == null) {
             return Collections.emptyList();
         }

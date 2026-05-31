@@ -37,13 +37,7 @@ public class AuctionService {
     private final UserRepository userRepository = UserRepository.getInstance();
 
     private AuctionService() {
-        try {
-            for (Auction auction : auctionRepository.getAllAuctions()) {
-                auctions.put(auction.getId(), auction);
-            }
-        } catch (Exception e) {
-            System.err.println("[AuctionService] Không thể tải dữ liệu phiên đấu giá từ DB: " + e.getMessage());
-        }
+        // Full auction graphs are loaded on demand. List screens use summary queries.
     }
 
     public static AuctionService getInstance() {
@@ -120,6 +114,11 @@ public class AuctionService {
     public Auction getAuctionModelById(int auctionId) throws Exception {
         Auction auction = auctions.get(auctionId);
         if (auction == null) {
+            auction = auctionRepository.getAuctionById(auctionId);
+            if (auction != null) {
+                updateCachedAuction(auction);
+                return auction;
+            }
             throw new ResourceNotFoundException("Phòng đấu giá", auctionId);
         }
         return auction;
@@ -158,13 +157,7 @@ public class AuctionService {
     public List<AuctionSummaryDTO> getAllAuctions() throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
             auctionRepository.finalizeExpiredAuctionsForRead(conn, System.currentTimeMillis());
-            List<Auction> models = auctionRepository.getAllAuctionsWithDetails(conn);
-            List<AuctionSummaryDTO> auctionDTOs = new ArrayList<>(models.size());
-            for (Auction auction : models) {
-                updateCachedAuction(auction);
-                auctionDTOs.add(mapToAuctionSummaryDTO(auction));
-            }
-            return auctionDTOs;
+            return auctionRepository.getAllAuctionSummaries(conn);
         }
     }
 
