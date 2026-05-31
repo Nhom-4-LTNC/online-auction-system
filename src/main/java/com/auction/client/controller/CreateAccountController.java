@@ -166,10 +166,12 @@ public class CreateAccountController implements Initializable {
 
     private void navigateToHome(UserDTO user) throws IOException {
         Stage stage = (Stage) Create.getScene().getWindow();
-        HomeController homeController = SceneUtils.switchSceneAndGetController(stage, "/fxml/HomeScreen.fxml");
-        if (homeController != null) {
-            homeController.displayName(user.getUsername());
+        AuctionMenuController controller =
+                SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionMenu.fxml");
+        if (controller != null) {
+            controller.setCurrentUser(user);
         }
+        stage.setMaximized(true);
     }
 
     private void setPwdReqImage(ImageView imgView, boolean valid) {

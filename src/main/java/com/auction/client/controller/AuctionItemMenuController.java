@@ -40,8 +40,10 @@ public class AuctionItemMenuController implements Initializable {
     @FXML private TextField descriptionTF;
     @FXML private Label itemTypeLabel;
     @FXML private Label selectedImageFileLabel;
+    @FXML private Label messageLabel;
     @FXML private Button auctionButton;
     @FXML private Button importImageButton;
+    @FXML private Button backButton;
 
     @FXML private RadioButton electronicsButton;
     @FXML private RadioButton artButton;
@@ -70,12 +72,23 @@ public class AuctionItemMenuController implements Initializable {
     private ItemType currentType;
     private File selectedImageFile;
     private volatile boolean creatingAuction = false;
+    private Runnable onAuctionCreated;
+    private Runnable onCancel;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         currentType = null;
         setupTimeComboBoxes();
         updateItemTypePanels();
+        setMessage(null, false);
+    }
+
+    public void setOnAuctionCreated(Runnable callback) {
+        this.onAuctionCreated = callback;
+    }
+
+    public void setOnCancel(Runnable callback) {
+        this.onCancel = callback;
     }
 
     @FXML
@@ -116,13 +129,16 @@ public class AuctionItemMenuController implements Initializable {
         if (creatingAuction) {
             return;
         }
+        setMessage(null, false);
         CreateAuctionRequest request;
         try {
             request = buildCreateAuctionRequest();
         } catch (IllegalArgumentException e) {
+            setMessage(e.getMessage(), false);
             AlertUtils.showError("Dữ liệu không hợp lệ", e.getMessage());
             return;
         } catch (IOException e) {
+            setMessage("Không thể đọc ảnh sản phẩm.", false);
             AlertUtils.showError("Lỗi ảnh", "Không thể đọc ảnh sản phẩm.");
             return;
         }
@@ -133,6 +149,10 @@ public class AuctionItemMenuController implements Initializable {
     @FXML
     public void back(ActionEvent event) throws IOException {
         if (creatingAuction) {
+            return;
+        }
+        if (onCancel != null) {
+            onCancel.run();
             return;
         }
         SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
@@ -153,6 +173,11 @@ public class AuctionItemMenuController implements Initializable {
             creatingAuction = false;
             setSubmitting(false);
             CreateAuctionResponse response = task.getValue();
+            setMessage(response == null ? "Tạo phiên đấu giá thành công." : response.getMessage(), true);
+            if (onAuctionCreated != null) {
+                onAuctionCreated.run();
+                return;
+            }
             AlertUtils.showInfo("Create auction success", response == null ? "Auction created." : response.getMessage());
             try {
                 SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
@@ -168,7 +193,7 @@ public class AuctionItemMenuController implements Initializable {
             String message = error instanceof ClientServiceException
                     ? error.getMessage()
                     : "Không thể tạo phiên đấu giá.";
-            AlertUtils.showError("Tạo phiên thất bại", message);
+            setMessage(message, false);
         });
 
         task.setOnCancelled(workerEvent -> {
@@ -366,6 +391,20 @@ public class AuctionItemMenuController implements Initializable {
     private void setSubmitting(boolean submitting) {
         auctionButton.setDisable(submitting);
         importImageButton.setDisable(submitting);
+        if (backButton != null) {
+            backButton.setDisable(submitting);
+        }
+        if (submitting) {
+            setMessage("Đang tạo phiên đấu giá...", false);
+        }
+    }
+
+    private void setMessage(String message, boolean success) {
+        if (messageLabel == null) {
+            return;
+        }
+        messageLabel.setText(message == null ? "" : message);
+        messageLabel.setStyle(success ? "-fx-text-fill: #1b5e20;" : "-fx-text-fill: #b00020;");
     }
 
     private record ImagePayload(byte[] imageData, String imageFileName) {

@@ -17,6 +17,7 @@ import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.auction.GetAuctionResponse;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -30,6 +31,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -86,10 +88,13 @@ public class AuctionDetailController {
         setupButtonActions();
         closeAuctionButton.setDisable(true);
         messageLabel.setText("");
-
+        itemImageView.setSmooth(true);
         root.sceneProperty().addListener((observable, oldScene, newScene) -> {
             if (oldScene != null && newScene == null) {
                 cleanup();
+            }
+            if (newScene != null) {
+                Platform.runLater(this::maximizeStage);
             }
         });
     }
@@ -126,7 +131,9 @@ public class AuctionDetailController {
         backButton.setOnAction(event -> {
             cleanup();
             try {
-                SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
+                Stage stage = (Stage) root.getScene().getWindow();
+                SceneUtils.switchScene(stage, "/fxml/AuctionMenu.fxml");
+                stage.setMaximized(true);
             } catch (IOException e) {
                 showError("Không thể quay lại danh sách đấu giá.");
             }
@@ -408,6 +415,14 @@ public class AuctionDetailController {
 
     public void cleanup() {
         unregisterRealtimeListener();
+    }
+
+    private void maximizeStage() {
+        if (root == null || root.getScene() == null || root.getScene().getWindow() == null) {
+            return;
+        }
+        Stage stage = (Stage) root.getScene().getWindow();
+        stage.setMaximized(true);
     }
 
     private BigDecimal parseBidAmount() {

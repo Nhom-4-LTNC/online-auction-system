@@ -295,7 +295,8 @@ public class AuctionService {
                 auction.getItem().getItemType(),
                 auction.getCurrentPrice(),
                 auction.getEndTime(),
-                auction.getStatus()
+                auction.getStatus(),
+                auction.getWinner() == null ? null : auction.getWinner().getId()
         );
     }
 

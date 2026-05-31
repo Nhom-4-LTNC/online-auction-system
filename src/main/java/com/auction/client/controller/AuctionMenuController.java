@@ -10,6 +10,7 @@ import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BalanceResponse;
+import com.auction.shared.dto.PayAuctionResponse;
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.protocol.ActionType;
@@ -23,6 +24,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -321,6 +323,18 @@ public class AuctionMenuController {
         );
     }
 
+    private void updateSessionWallet(PayAuctionResponse response) {
+        if (response == null) {
+            return;
+        }
+
+        ClientSession.updateWalletSummary(
+                response.getNewBalance(),
+                response.getNewUnpaidWinningAmount(),
+                response.getNewAvailableBalance()
+        );
+    }
+
     private void setMoneyLabel(Label label, Double value) {
         label.setText(value == null ? "-" : FormatUtils.currency(value));
     }
@@ -579,7 +593,13 @@ public class AuctionMenuController {
         actionButton.setMaxWidth(Double.MAX_VALUE);
         actionButton.setStyle("-fx-background-color: #e79316; -fx-text-fill: white; -fx-font-weight: bold;");
         actionButton.setDisable(auction.getStatus() == AuctionStatus.PAID);
-        actionButton.setOnAction(event -> openAuctionDetail(auction));
+        actionButton.setOnAction(event -> {
+            if (isPayableByCurrentUser(auction)) {
+                handlePayAuctionFromCard(auction, actionButton);
+                return;
+            }
+            openAuctionDetail(auction);
+        });
 
         card.getChildren().addAll(imageBox, title, price, statusRow, time, spacer, actionButton);
         card.setOnMouseClicked(event -> {
@@ -613,6 +633,9 @@ public class AuctionMenuController {
 
     private String actionText(AuctionSummaryDTO auction) {
         AuctionStatus status = auction.getStatus();
+        if (isPayableByCurrentUser(auction)) {
+            return "Thanh toán";
+        }
         if (status == AuctionStatus.FINISHED) {
             // TODO: show "Thanh toán" when AuctionSummaryDTO exposes winnerId/isCurrentUserWinner.
             return "Xem kết quả";
@@ -621,6 +644,58 @@ public class AuctionMenuController {
             return "Đã thanh toán";
         }
         return "Xem chi tiết";
+    }
+
+    private boolean isPayableByCurrentUser(AuctionSummaryDTO auction) {
+        if (auction == null || auction.getStatus() != AuctionStatus.FINISHED || auction.getWinnerId() == null) {
+            return false;
+        }
+
+        UserDTO user = currentUser != null ? currentUser : ClientSession.getCurrentUser();
+        return user != null && user.getId() == auction.getWinnerId();
+    }
+
+    private void handlePayAuctionFromCard(AuctionSummaryDTO auction, Button actionButton) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Xác nhận thanh toán");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Thanh toán phiên đấu giá \"" + safeText(auction.getItemName())
+                + "\" với số tiền " + FormatUtils.currency(auction.getCurrentPrice()) + "?");
+
+        if (confirm.showAndWait().filter(ButtonType.OK::equals).isEmpty()) {
+            return;
+        }
+
+        actionButton.setDisable(true);
+        Task<PayAuctionResponse> task = new Task<>() {
+            @Override
+            protected PayAuctionResponse call() {
+                return walletClientService.payAuction(auction.getAuctionId());
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            PayAuctionResponse response = task.getValue();
+            updateSessionWallet(response);
+            renderUserInfo();
+            AlertUtils.showInfo("Thanh toán", "Thanh toán thành công.");
+            loadAuctionsForCurrentMode();
+        });
+
+        task.setOnFailed(event -> {
+            actionButton.setDisable(false);
+            Throwable error = task.getException();
+            String message = error instanceof ClientServiceException
+                    ? error.getMessage()
+                    : "Không thể thanh toán phiên đấu giá.";
+            AlertUtils.showError("Thanh toán thất bại", message);
+        });
+
+        task.setOnCancelled(event -> actionButton.setDisable(false));
+
+        Thread thread = new Thread(task, "auction-card-pay-auction");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private String formatStatus(AuctionStatus status) {

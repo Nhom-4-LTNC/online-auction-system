@@ -187,7 +187,8 @@ public class AuctionRepository {
                 i.item_type AS item_type,
                 a.current_price AS current_price,
                 a.end_time AS end_time,
-                a.status AS status
+                a.status AS status,
+                a.winner_id AS winner_id
             FROM auctions a
             JOIN items i ON a.item_id = i.id
             WHERE i.item_type = ?
@@ -208,7 +209,8 @@ public class AuctionRepository {
                             ItemType.valueOf(rs.getString("item_type")),
                             rs.getDouble("current_price"),
                             rs.getTimestamp("end_time").getTime(),
-                            AuctionStatus.valueOf(rs.getString("status"))
+                            AuctionStatus.valueOf(rs.getString("status")),
+                            getNullableInt(rs, "winner_id")
                     ));
                 }
             }
@@ -226,7 +228,8 @@ public class AuctionRepository {
                 i.item_type AS item_type,
                 a.current_price AS current_price,
                 a.end_time AS end_time,
-                a.status AS status
+                a.status AS status,
+                a.winner_id AS winner_id
             FROM auctions a
             JOIN items i ON a.item_id = i.id
             WHERE i.owner_id = ?
@@ -258,7 +261,8 @@ public class AuctionRepository {
                 i.item_type AS item_type,
                 a.current_price AS current_price,
                 a.end_time AS end_time,
-                a.status AS status
+                a.status AS status,
+                a.winner_id AS winner_id
             FROM auctions a
             JOIN items i ON a.item_id = i.id
             WHERE EXISTS (
@@ -295,7 +299,8 @@ public class AuctionRepository {
                 i.item_type AS item_type,
                 a.current_price AS current_price,
                 a.end_time AS end_time,
-                a.status AS status
+                a.status AS status,
+                a.winner_id AS winner_id
             FROM auctions a
             JOIN items i ON a.item_id = i.id
             WHERE a.winner_id = ?
@@ -336,7 +341,8 @@ public class AuctionRepository {
             i.item_type AS item_type,
             a.current_price AS current_price,
             a.end_time AS end_time,
-            a.status AS status
+            a.status AS status,
+            a.winner_id AS winner_id
         FROM auctions a
         JOIN items i ON a.item_id = i.id
         ORDER BY a.end_time ASC
@@ -354,7 +360,8 @@ public class AuctionRepository {
                         ItemType.valueOf(rs.getString("item_type")),
                         rs.getDouble("current_price"),
                         rs.getTimestamp("end_time").getTime(),
-                        AuctionStatus.valueOf(rs.getString("status"))
+                        AuctionStatus.valueOf(rs.getString("status")),
+                        getNullableInt(rs, "winner_id")
                 ));
             }
         }
@@ -618,7 +625,13 @@ public class AuctionRepository {
                 ItemType.valueOf(rs.getString("item_type")),
                 rs.getDouble("current_price"),
                 rs.getTimestamp("end_time").getTime(),
-                AuctionStatus.valueOf(rs.getString("status"))
+                AuctionStatus.valueOf(rs.getString("status")),
+                getNullableInt(rs, "winner_id")
         );
+    }
+
+    private Integer getNullableInt(ResultSet rs, String columnLabel) throws SQLException {
+        int value = rs.getInt(columnLabel);
+        return rs.wasNull() ? null : value;
     }
 }

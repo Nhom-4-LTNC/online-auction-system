@@ -34,8 +34,8 @@ public final class SceneUtils {
     public static <T> T switchSceneAndGetController(Stage stage, String fxmlPath) throws IOException {
         FXMLLoader loader = new FXMLLoader(resolveFxml(fxmlPath));
         Parent root = loader.load();
-        stage.setScene(new Scene(root));
-        stage.show();
+        Scene scene = stage.getScene();
+        scene.setRoot(root);
         return loader.getController();
     }
 

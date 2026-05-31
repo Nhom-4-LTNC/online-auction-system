@@ -17,6 +17,7 @@ public class AuctionSummaryDTO implements Serializable {
     private final double currentPrice;
     private final long endTimeMillis;
     private final AuctionStatus status;
+    private final Integer winnerId;
 
     public AuctionSummaryDTO(int auctionId,
                              int itemId,
@@ -25,6 +26,17 @@ public class AuctionSummaryDTO implements Serializable {
                              double currentPrice,
                              long endTimeMillis,
                              AuctionStatus status) {
+        this(auctionId, itemId, itemName, itemType, currentPrice, endTimeMillis, status, null);
+    }
+
+    public AuctionSummaryDTO(int auctionId,
+                             int itemId,
+                             String itemName,
+                             ItemType itemType,
+                             double currentPrice,
+                             long endTimeMillis,
+                             AuctionStatus status,
+                             Integer winnerId) {
         this.auctionId = auctionId;
         this.itemId = itemId;
         this.itemName = itemName;
@@ -32,6 +44,7 @@ public class AuctionSummaryDTO implements Serializable {
         this.currentPrice = currentPrice;
         this.endTimeMillis = endTimeMillis;
         this.status = status;
+        this.winnerId = winnerId;
     }
 
     public int getAuctionId() {
@@ -53,11 +66,14 @@ public class AuctionSummaryDTO implements Serializable {
     public AuctionStatus getStatus() {
         return status;
     }
+    public Integer getWinnerId() {
+        return winnerId;
+    }
 
     @Override
     public String toString() {
-        return String.format("AuctionSummaryDTO{id=%d, itemId=%d, itemName='%s', itemType='%s', currentPrice=%.2f, endTimeMillis=%d, status=%s}",
-                auctionId, itemId, itemName, itemType, currentPrice, endTimeMillis, status);
+        return String.format("AuctionSummaryDTO{id=%d, itemId=%d, itemName='%s', itemType='%s', currentPrice=%.2f, endTimeMillis=%d, status=%s, winnerId=%s}",
+                auctionId, itemId, itemName, itemType, currentPrice, endTimeMillis, status, winnerId);
     }
 
 }
