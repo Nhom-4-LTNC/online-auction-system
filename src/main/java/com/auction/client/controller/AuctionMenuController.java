@@ -70,7 +70,6 @@ public class AuctionMenuController {
     @FXML private Button myParticipatedButton;
     @FXML private Button myWonButton;
     @FXML private Button myCreatedButton;
-    @FXML private Button paymentButton;
     @FXML private Label titleLabel;
     @FXML private Label userInfoLabel;
     @FXML private Label balanceLabel;
@@ -200,7 +199,6 @@ public class AuctionMenuController {
         myWonButton.setOnAction(event -> showMyWonAuctions());
         myCreatedButton.setOnAction(event -> showMyCreatedAuctions());
         createAuctionButton.setOnAction(event -> openScene("/fxml/ItemMenu.fxml", "Không thể mở màn tạo phiên đấu giá."));
-        paymentButton.setOnAction(event -> openScene("/fxml/FinanceMenu.fxml", "Không thể mở màn thanh toán."));
         myBidsButton.setOnAction(event -> AlertUtils.showInfo(
                 "Lịch sử đặt giá",
                 "Màn hình lịch sử đặt giá cá nhân chưa được triển khai."
@@ -397,7 +395,6 @@ public class AuctionMenuController {
         styleSidebarButton(myCreatedButton, currentMode == AuctionListMode.MY_CREATED);
         styleSidebarButton(createAuctionButton, false);
         styleSidebarButton(myBidsButton, false);
-        styleSidebarButton(paymentButton, false);
     }
 
     private void styleSidebarButton(Button button, boolean selected) {

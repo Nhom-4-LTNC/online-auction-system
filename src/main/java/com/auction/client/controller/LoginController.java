@@ -167,6 +167,7 @@ public class LoginController implements Initializable {
         if (controller != null) {
             controller.setCurrentUser(user);
         }
+        stage.setMaximized(true);
     }
 
     private void setLoginSubmitting(boolean submitting) {
