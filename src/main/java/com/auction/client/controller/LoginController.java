@@ -6,7 +6,6 @@ import com.auction.client.session.ClientSession;
 import com.auction.client.util.AlertUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.UserDTO;
-import com.auction.shared.enums.Role;
 import com.auction.shared.protocol.auth.AuthResponse;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -162,15 +161,11 @@ public class LoginController implements Initializable {
     }
 
     private void navigateToHome(UserDTO user) throws IOException {
-        String fxml = (user.getRole() != null && user.getRole() == Role.ADMIN)
-                ? "/fxml/AdminScreen.fxml"
-                : "/fxml/HomeScreen.fxml";
-
         Stage stage = (Stage) emailTextField.getScene().getWindow();
-        Object controller = SceneUtils.switchSceneAndGetController(stage, fxml);
-
-        if (controller instanceof HomeController homeController) {
-            homeController.displayName(user.getUsername());
+        AuctionMenuController controller =
+                SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionMenu.fxml");
+        if (controller != null) {
+            controller.setCurrentUser(user);
         }
     }
 

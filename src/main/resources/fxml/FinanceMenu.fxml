@@ -14,46 +14,46 @@
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="77.0" stroke="BLACK" strokeType="INSIDE" width="600.0" />
       <Label layoutX="28.0" layoutY="14.0" text="FINANCE" textFill="WHITE">
          <font>
-            <Font name="Trebuchet MS" size="44.0" />
+            <Font name="Tahoma" size="44.0" />
          </font>
       </Label>
       <Button fx:id="backButton" layoutX="503.0" layoutY="26.0" mnemonicParsing="false" onAction="#back" style="-fx-background-color: white;" text="Back">
          <font>
-            <Font name="Trebuchet MS" size="15.0" />
+            <Font name="Tahoma" size="15.0" />
          </font></Button>
       <Label layoutX="64.0" layoutY="111.0" text="Wallet Summary">
          <font>
-            <Font name="Trebuchet MS" size="14.0" />
+            <Font name="Tahoma" size="14.0" />
          </font></Label>
       <Label fx:id="currentBalanceLabel" layoutX="64.0" layoutY="137.0" text="Balance: N/A">
          <font>
-            <Font name="Trebuchet MS" size="13.0" />
+            <Font name="Tahoma" size="13.0" />
          </font></Label>
       <Label fx:id="availableBalanceLabel" layoutX="64.0" layoutY="160.0" text="Available: N/A">
          <font>
-            <Font name="Trebuchet MS" size="13.0" />
+            <Font name="Tahoma" size="13.0" />
          </font></Label>
       <Label fx:id="unpaidWinningAmountLabel" layoutX="64.0" layoutY="183.0" text="Unpaid winning: N/A">
          <font>
-            <Font name="Trebuchet MS" size="13.0" />
+            <Font name="Tahoma" size="13.0" />
          </font></Label>
       <Label layoutX="64.0" layoutY="223.0" text="Add Balance">
          <font>
-            <Font name="Trebuchet MS" size="14.0" />
+            <Font name="Tahoma" size="14.0" />
          </font></Label>
       <TextField fx:id="incrementBalanceTextField" layoutX="64.0" layoutY="253.0" promptText="e.g. 500" />
       <Button fx:id="incrementBalanceButton" layoutX="234.0" layoutY="253.0" mnemonicParsing="false" onAction="#incrementBalance" text="Add">
          <font>
-            <Font name="Trebuchet MS" size="14.0" />
+            <Font name="Tahoma" size="14.0" />
          </font></Button>
       <Label layoutX="67.0" layoutY="295.0" text="Set Balance">
          <font>
-            <Font name="Trebuchet MS" size="14.0" />
+            <Font name="Tahoma" size="14.0" />
          </font></Label>
       <TextField fx:id="setBalanceTextField" layoutX="67.0" layoutY="315.0" promptText="Unsupported" />
       <Button fx:id="setBalanceButton" layoutX="233.0" layoutY="314.0" mnemonicParsing="false" onAction="#setBalance" prefHeight="26.0" prefWidth="66.0" text="Set">
          <font>
-            <Font name="Trebuchet MS" size="14.0" />
+            <Font name="Tahoma" size="14.0" />
          </font></Button>
       <ImageView fitHeight="204.0" fitWidth="185.0" layoutX="334.0" layoutY="129.0" pickOnBounds="true" preserveRatio="true">
          <image>

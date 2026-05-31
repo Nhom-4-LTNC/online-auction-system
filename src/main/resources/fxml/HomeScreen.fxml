@@ -16,17 +16,17 @@
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="78.0" layoutX="-4.0" layoutY="-1.0" stroke="BLACK" strokeType="INSIDE" width="607.0" />
       <Label fx:id="nameLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="327.0" layoutY="321.0" prefHeight="20.0" prefWidth="259.0" text="Hello:" textFill="#e79316">
          <font>
-            <Font name="Trebuchet MS Italic" size="16.0" />
+            <Font name="Tahoma Italic" size="16.0" />
          </font>
       </Label>
       <Label fx:id="roleLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="327.0" layoutY="347.0" prefHeight="20.0" prefWidth="259.0" text="Role: N/A" textFill="#e79316">
          <font>
-            <Font name="Trebuchet MS Italic" size="14.0" />
+            <Font name="Tahoma Italic" size="14.0" />
          </font>
       </Label>
       <Label fx:id="balanceLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="327.0" layoutY="369.0" prefHeight="20.0" prefWidth="259.0" text="Balance: N/A" textFill="#e79316">
          <font>
-            <Font name="Trebuchet MS Italic" size="14.0" />
+            <Font name="Tahoma Italic" size="14.0" />
          </font>
       </Label>
       <Button fx:id="thamgiaBUtton" layoutX="48.0" layoutY="145.0" mnemonicParsing="false" onAction="#joinBid" prefHeight="26.0" prefWidth="246.0" style="-fx-background-color: #e79316;" textFill="#e79316">
@@ -43,7 +43,7 @@
                   </ImageView>
                   <Label text="SEARCH AUCTIONS" textFill="#dfdfdf">
                      <font>
-                        <Font name="Trebuchet MS" size="21.0" />
+                        <Font name="Tahoma" size="21.0" />
                      </font>
                      <padding>
                         <Insets right="10.0" />
@@ -54,7 +54,7 @@
          </graphic></Button>
       <Label layoutX="31.0" layoutY="20.0" text="HOME" textFill="WHITE">
          <font>
-            <Font name="Trebuchet MS" size="30.0" />
+            <Font name="Tahoma" size="30.0" />
          </font>
       </Label>
       <Button fx:id="createButton" layoutX="48.0" layoutY="190.0" mnemonicParsing="false" onAction="#createItem" prefHeight="26.0" prefWidth="246.0" style="-fx-background-color: white; -fx-border-color: #e79316;" textFill="#e79316">
@@ -63,7 +63,7 @@
                <children>
                   <Label text="CREATE AUCTION" textFill="#e79316">
                      <font>
-                        <Font name="Trebuchet MS" size="21.0" />
+                        <Font name="Tahoma" size="21.0" />
                      </font>
                      <padding>
                         <Insets right="10.0" />
@@ -92,7 +92,7 @@
                   </ImageView>
                   <Label text="FINANCE" textFill="#dfdfdf">
                      <font>
-                        <Font name="Trebuchet MS" size="21.0" />
+                        <Font name="Tahoma" size="21.0" />
                      </font>
                      <padding>
                         <Insets right="10.0" />
@@ -113,7 +113,7 @@
                <children>
                   <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" text="Logout" textFill="#e79316">
                      <font>
-                        <Font name="Trebuchet MS" size="21.0" />
+                        <Font name="Tahoma" size="21.0" />
                      </font>
                      <padding>
                         <Insets right="10.0" />

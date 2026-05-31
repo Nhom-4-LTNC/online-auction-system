@@ -18,12 +18,12 @@
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="66.0" layoutX="-4.0" stroke="BLACK" strokeType="INSIDE" width="766.0" />
       <Label layoutX="20.0" layoutY="5.0" prefHeight="51.0" prefWidth="334.0" text="CREATE AUCTION" textFill="WHITE">
          <font>
-            <Font name="Trebuchet MS" size="40.0" />
+            <Font name="Tahoma" size="40.0" />
          </font>
       </Label>
       <Button fx:id="backButton" layoutX="660.0" layoutY="17.0" mnemonicParsing="false" onAction="#back" prefHeight="31.0" prefWidth="71.0" style="-fx-background-color: white; -fx-cursor: hand;" text="Back" textFill="#e79316">
          <font>
-            <Font name="Trebuchet MS" size="16.0" />
+            <Font name="Tahoma" size="16.0" />
          </font>
       </Button>
 
@@ -32,7 +32,7 @@
             <VBox spacing="10.0">
                <children>
                   <Label text="General">
-                     <font><Font name="Trebuchet MS Bold" size="16.0" /></font>
+                     <font><Font name="Tahoma Bold" size="16.0" /></font>
                   </Label>
                   <TextField fx:id="itemNameTF" prefWidth="330.0" promptText="Name" />
                   <TextField fx:id="startingPriceTF" prefWidth="330.0" promptText="Starting Price" />
@@ -42,10 +42,10 @@
                   <HBox alignment="CENTER_LEFT" spacing="15.0">
                      <children>
                         <Button fx:id="importImageButton" mnemonicParsing="false" onAction="#importImage" prefHeight="30.0" prefWidth="110.0" style="-fx-background-color: #e0e0e0; -fx-cursor: hand;" text="Add Image..." textFill="#4d4d4d">
-                           <font><Font name="Trebuchet MS" size="14.0" /></font>
+                           <font><Font name="Tahoma" size="14.0" /></font>
                         </Button>
                         <Label fx:id="selectedImageFileLabel" text="No image selected" textFill="#666666">
-                           <font><Font name="Trebuchet MS Italic" size="13.0" /></font>
+                           <font><Font name="Tahoma Italic" size="13.0" /></font>
                         </Label>
                      </children>
                   </HBox>
@@ -55,11 +55,11 @@
             <VBox spacing="10.0">
                <children>
                   <Label text="Auction Duration">
-                     <font><Font name="Trebuchet MS Bold" size="16.0" /></font>
+                     <font><Font name="Tahoma Bold" size="16.0" /></font>
                   </Label>
                   <HBox alignment="CENTER_LEFT" spacing="10.0">
                      <children>
-                        <Label prefWidth="70.0" text="Start Time"><font><Font name="Trebuchet MS" size="13.0" /></font></Label>
+                        <Label prefWidth="70.0" text="Start Time"><font><Font name="Tahoma" size="13.0" /></font></Label>
                         <DatePicker fx:id="startTime" prefWidth="120.0" />
                         <ComboBox fx:id="startHourComboBox" prefWidth="60.0" promptText="HH" />
                         <ComboBox fx:id="startMinuteComboBox" prefWidth="60.0" promptText="MM" />
@@ -67,7 +67,7 @@
                   </HBox>
                   <HBox alignment="CENTER_LEFT" spacing="10.0">
                      <children>
-                        <Label prefWidth="70.0" text="End Time"><font><Font name="Trebuchet MS" size="13.0" /></font></Label>
+                        <Label prefWidth="70.0" text="End Time"><font><Font name="Tahoma" size="13.0" /></font></Label>
                         <DatePicker fx:id="endTime" prefWidth="120.0" />
                         <ComboBox fx:id="endHourComboBox" prefWidth="60.0" promptText="HH" />
                         <ComboBox fx:id="endMinuteComboBox" prefWidth="60.0" promptText="MM" />
@@ -81,20 +81,20 @@
       <VBox layoutX="410.0" layoutY="90.0" spacing="15.0">
          <children>
             <Label text="Type">
-               <font><Font name="Trebuchet MS Bold" size="16.0" /></font>
+               <font><Font name="Tahoma Bold" size="16.0" /></font>
             </Label>
             <RadioButton fx:id="electronicsButton" mnemonicParsing="false" onAction="#onItemSelected" text="Electronics">
                <toggleGroup><ToggleGroup fx:id="itemType" /></toggleGroup>
-               <font><Font name="Trebuchet MS" size="14.0" /></font>
+               <font><Font name="Tahoma" size="14.0" /></font>
             </RadioButton>
             <RadioButton fx:id="artButton" mnemonicParsing="false" onAction="#onItemSelected" text="Art" toggleGroup="$itemType">
-               <font><Font name="Trebuchet MS" size="14.0" /></font>
+               <font><Font name="Tahoma" size="14.0" /></font>
             </RadioButton>
             <RadioButton fx:id="vehicleButton" mnemonicParsing="false" onAction="#onItemSelected" text="Vehicle" toggleGroup="$itemType">
-               <font><Font name="Trebuchet MS" size="14.0" /></font>
+               <font><Font name="Tahoma" size="14.0" /></font>
             </RadioButton>
             <RadioButton fx:id="otherButton" mnemonicParsing="false" onAction="#onItemSelected" text="Other" toggleGroup="$itemType">
-               <font><Font name="Trebuchet MS" size="14.0" /></font>
+               <font><Font name="Tahoma" size="14.0" /></font>
             </RadioButton>
          </children>
       </VBox>
@@ -102,7 +102,7 @@
       <VBox layoutX="540.0" layoutY="90.0" prefWidth="180.0" spacing="15.0">
          <children>
             <Label fx:id="itemTypeLabel" text="Choose a Type!">
-               <font><Font name="Trebuchet MS Bold" size="16.0" /></font>
+               <font><Font name="Tahoma Bold" size="16.0" /></font>
             </Label>
             <AnchorPane>
                <children>
@@ -132,7 +132,7 @@
 
       <Button fx:id="auctionButton" layoutX="570.0" layoutY="480.0" mnemonicParsing="false" onAction="#createAuction" prefHeight="35.0" prefWidth="150.0" style="-fx-background-color: #e79316; -fx-cursor: hand; -fx-background-radius: 5;" text="AUCTION ITEM" textFill="WHITE">
          <font>
-            <Font name="Trebuchet MS Bold" size="15.0" />
+            <Font name="Tahoma Bold" size="15.0" />
          </font>
       </Button>
 
