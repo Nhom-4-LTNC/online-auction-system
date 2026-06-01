@@ -73,6 +73,15 @@ public class AuctionController {
                     req.getEndTime()
             );
             AuctionDetailDTO createdAuctionDetail = auctionService.mapToAuctionDetailDTO(createdAuction);
+            AuctionSummaryDTO summary = auctionService.mapToAuctionSummaryDTO(createdAuction);
+            auctionEventPublisher.publishAuctionUpdatedExcept(
+                    createdAuction.getId(),
+                    AuctionUpdateType.AUCTION_CREATED,
+                    summary,
+                    null,
+                    "Co phien dau gia moi duoc tao.",
+                    client
+            );
 
             return Response.success(
                     ActionType.CREATE_AUCTION,

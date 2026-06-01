@@ -120,6 +120,28 @@ public class Server {
         System.out.println("[Server] Broadcast " + data.getClass().getSimpleName()
                 + " to logged-in clients: " + sent);
     }
+
+    public static void broadcastToLoggedInExcept(Object data, ClientHandler excludedClient) {
+        if (data == null) {
+            return;
+        }
+
+        int sent = 0;
+        for (ClientHandler client : connectedClients) {
+            if (client == excludedClient || !client.isLoggedIn()) {
+                continue;
+            }
+
+            try {
+                client.sendObject(data);
+                sent++;
+            } catch (Exception e) {
+                System.err.println("[Server] Broadcast failed for one client: " + e.getMessage());
+            }
+        }
+        System.out.println("[Server] Broadcast " + data.getClass().getSimpleName()
+                + " to logged-in clients except requester: " + sent);
+    }
     public static int getConnectedClientCount() {
         return connectedClients.size();
     }

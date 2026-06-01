@@ -11,6 +11,8 @@ import com.auction.server.controller.AuthController;
 import com.auction.server.controller.BidController;
 import com.auction.server.controller.WalletController;
 import com.auction.server.controller.AdminController;
+import com.auction.server.model.user.User;
+import com.auction.server.service.UserService;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -50,6 +52,7 @@ public class ClientHandler implements Runnable {
     private final BidController bidController = new BidController();
     private final WalletController walletController = new WalletController();
     private final AdminController adminController = new AdminController();
+    private final UserService userService = UserService.getInstance();
 
 
     public ClientHandler(Socket socket) {
@@ -129,6 +132,11 @@ public class ClientHandler implements Runnable {
             );
         }
         try {
+            Response<?> bannedSessionResponse = rejectBannedSession(action);
+            if (bannedSessionResponse != null) {
+                return bannedSessionResponse;
+            }
+
             return switch (action) {
                 // ===== AUTH =====
                 case LOGIN -> authController.handleLogin(request, this);
@@ -198,6 +206,35 @@ public class ClientHandler implements Runnable {
             return Response.error(
                     action,
                     "Lỗi máy chủ khi xử lý yêu cầu."
+            );
+        }
+    }
+
+    private Response<?> rejectBannedSession(ActionType action) {
+        if (currentUser == null
+                || action == ActionType.LOGIN
+                || action == ActionType.REGISTER
+                || action == ActionType.LOGOUT) {
+            return null;
+        }
+
+        try {
+            User latestUser = userService.getUserById(currentUser.getId());
+            if (!userService.isBanned(latestUser)) {
+                return null;
+            }
+
+            long banEndTime = latestUser.getBanEndTime();
+            currentUser = null;
+            return Response.error(
+                    action,
+                    "Tai khoan cua ban da bi khoa den thoi diem: " + banEndTime
+            );
+        } catch (Exception e) {
+            currentUser = null;
+            return Response.error(
+                    action,
+                    "Khong the xac thuc trang thai tai khoan. Vui long dang nhap lai."
             );
         }
     }

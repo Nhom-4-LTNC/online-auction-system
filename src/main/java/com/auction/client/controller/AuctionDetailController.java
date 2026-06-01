@@ -1,6 +1,7 @@
 package com.auction.client.controller;
 
 import com.auction.client.network.Client;
+import com.auction.client.session.ClientSession;
 import com.auction.client.service.AuctionClientService;
 import com.auction.client.service.BidClientService;
 import com.auction.client.service.ClientServiceException;
@@ -10,7 +11,9 @@ import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BidDTO;
 import com.auction.shared.dto.ItemDTO;
+import com.auction.shared.dto.UserDTO;
 import com.auction.shared.enums.AuctionStatus;
+import com.auction.shared.enums.Role;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.protocol.Response;
@@ -313,6 +316,7 @@ public class AuctionDetailController {
         auctionBiddable = bidOpen;
         placeBidButton.setDisable(!bidOpen || placingBid);
         bidAmountField.setDisable(!bidOpen);
+        closeAuctionButton.setDisable(!isAuctionClosableByCurrentUser(detail));
     }
 
     private void renderBidHistory(List<BidDTO> bids) {
@@ -372,6 +376,36 @@ public class AuctionDetailController {
     }
 
     private void handleCloseAuction() {
+        if (currentAuctionId > 0) {
+            closeAuctionButton.setDisable(true);
+            refreshBidHistoryButton.setDisable(true);
+            showInfo("Dang dong phien dau gia...");
+
+            int auctionIdSnapshot = currentAuctionId;
+            Task<String> task = new Task<>() {
+                @Override
+                protected String call() {
+                    return auctionClientService.closeAuction(auctionIdSnapshot);
+                }
+            };
+
+            task.setOnSucceeded(event -> {
+                showInfo(task.getValue() == null ? "Dong phien dau gia thanh cong." : task.getValue());
+                loadAuctionDetailPageAsync(false);
+            });
+            task.setOnFailed(event -> {
+                closeAuctionButton.setDisable(false);
+                refreshBidHistoryButton.setDisable(loadingBidHistory);
+                showError(errorMessage(task.getException()));
+            });
+            task.setOnCancelled(event -> {
+                closeAuctionButton.setDisable(false);
+                refreshBidHistoryButton.setDisable(loadingBidHistory);
+            });
+
+            runDaemon(task, "auction-detail-close-auction");
+            return;
+        }
         showInfo("Màn hình này chưa hỗ trợ đóng phiên đấu giá.");
     }
 
@@ -489,7 +523,23 @@ public class AuctionDetailController {
     }
 
     private boolean isAuctionBiddable(AuctionStatus status) {
-        return status == AuctionStatus.OPEN || status == AuctionStatus.RUNNING;
+        return status == AuctionStatus.RUNNING;
+    }
+
+    private boolean isAuctionClosableByCurrentUser(AuctionDetailDTO detail) {
+        if (detail == null
+                || detail.getStatus() == AuctionStatus.FINISHED
+                || detail.getStatus() == AuctionStatus.PAID
+                || detail.getStatus() == AuctionStatus.CANCELED) {
+            return false;
+        }
+
+        UserDTO user = ClientSession.getCurrentUser();
+        if (user == null) {
+            return false;
+        }
+
+        return user.getId() == detail.getSellerId() || user.getRole() == Role.ADMIN;
     }
 
     private String safeText(String value) {
