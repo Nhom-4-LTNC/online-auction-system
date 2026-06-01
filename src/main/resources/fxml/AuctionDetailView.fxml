@@ -132,7 +132,8 @@
 
                                 <Region VBox.vgrow="ALWAYS" />
 
-                                <Button fx:id="closeAuctionButton" maxWidth="Infinity" mnemonicParsing="false" style="-fx-background-color: #d32f2f; -fx-text-fill: white;" text="Đóng phiên đấu giá" />
+                                <Button fx:id="updateAuctionButton" maxWidth="Infinity" mnemonicParsing="false" style="-fx-background-color: #1976d2; -fx-text-fill: white;" text="Sửa phiên đấu giá" />
+                                <Button fx:id="cancelAuctionButton" maxWidth="Infinity" mnemonicParsing="false" style="-fx-background-color: #f57c00; -fx-text-fill: white;" text="Hủy phiên đấu giá" />
                             </children>
                         </VBox>
                     </children>

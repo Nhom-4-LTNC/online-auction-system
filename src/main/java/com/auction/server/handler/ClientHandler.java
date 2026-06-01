@@ -162,6 +162,10 @@ public class ClientHandler implements Runnable {
 
                 case GET_MY_WON_AUCTIONS -> auctionController.handleGetMyWonAuctions(this);
 
+                case UPDATE_AUCTION_ITEM -> auctionController.handleUpdateAuctionItem(request, this);
+
+                case CANCEL_AUCTION -> auctionController.handleCancelAuction(request, this);
+
                 // ===== BID =====
                 case PLACE_BID -> bidController.handlePlaceBid(request, this);
 

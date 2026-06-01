@@ -7,17 +7,22 @@ import com.auction.client.service.BidClientService;
 import com.auction.client.service.ClientServiceException;
 import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
+import com.auction.shared.dto.ArtDTO;
 import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BidDTO;
+import com.auction.shared.dto.ElectronicsDTO;
 import com.auction.shared.dto.ItemDTO;
 import com.auction.shared.dto.UserDTO;
+import com.auction.shared.dto.VehicleDTO;
 import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.enums.Role;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.auction.CreateAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionResponse;
+import com.auction.shared.protocol.auction.UpdateAuctionRequest;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
 import javafx.application.Platform;
@@ -26,6 +31,8 @@ import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -34,12 +41,18 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -61,7 +74,8 @@ public class AuctionDetailController {
     @FXML private Label endTimeLabel;
     @FXML private TextField bidAmountField;
     @FXML private Button placeBidButton;
-    @FXML private Button closeAuctionButton;
+    @FXML private Button updateAuctionButton;
+    @FXML private Button cancelAuctionButton;
     @FXML private Label messageLabel;
     @FXML private Button refreshBidHistoryButton;
     @FXML private TableView<BidDTO> bidHistoryTable;
@@ -84,12 +98,14 @@ public class AuctionDetailController {
     private volatile boolean loadingBidHistory = false;
     private volatile boolean placingBid = false;
     private volatile boolean auctionBiddable = false;
+    private AuctionDetailDTO currentDetail;
 
     @FXML
     private void initialize() {
         setupBidHistoryTable();
         setupButtonActions();
-        closeAuctionButton.setDisable(true);
+        updateAuctionButton.setDisable(true);
+        cancelAuctionButton.setDisable(true);
         messageLabel.setText("");
         itemImageView.setSmooth(true);
         root.sceneProperty().addListener((observable, oldScene, newScene) -> {
@@ -142,7 +158,8 @@ public class AuctionDetailController {
             }
         });
         placeBidButton.setOnAction(event -> handlePlaceBid());
-        closeAuctionButton.setOnAction(event -> handleCloseAuction());
+        updateAuctionButton.setOnAction(event -> handleUpdateAuction());
+        cancelAuctionButton.setOnAction(event -> handleCancelAuction());
         refreshBidHistoryButton.setOnAction(event -> loadBidHistoryAsync());
     }
 
@@ -282,6 +299,8 @@ public class AuctionDetailController {
         auctionBiddable = bidOpen;
         placeBidButton.setDisable(!bidOpen || placingBid);
         bidAmountField.setDisable(!bidOpen);
+        updateAuctionButton.setDisable(true);
+        cancelAuctionButton.setDisable(true);
     }
 
     private void showLoadingState() {
@@ -299,6 +318,7 @@ public class AuctionDetailController {
             return;
         }
 
+        currentDetail = detail;
         ItemDTO item = detail.getItem();
         String itemName = item == null ? "N/A" : safeText(item.getName());
         auctionTitleLabel.setText(itemName);
@@ -316,7 +336,8 @@ public class AuctionDetailController {
         auctionBiddable = bidOpen;
         placeBidButton.setDisable(!bidOpen || placingBid);
         bidAmountField.setDisable(!bidOpen);
-        closeAuctionButton.setDisable(!isAuctionClosableByCurrentUser(detail));
+        updateAuctionButton.setDisable(!isAuctionUpdatableByCurrentUser(detail));
+        cancelAuctionButton.setDisable(!isAuctionCancelableByCurrentUser(detail));
     }
 
     private void renderBidHistory(List<BidDTO> bids) {
@@ -375,38 +396,197 @@ public class AuctionDetailController {
         runDaemon(task, "place-bid-submit");
     }
 
-    private void handleCloseAuction() {
-        if (currentAuctionId > 0) {
-            closeAuctionButton.setDisable(true);
-            refreshBidHistoryButton.setDisable(true);
-            showInfo("Dang dong phien dau gia...");
-
-            int auctionIdSnapshot = currentAuctionId;
-            Task<String> task = new Task<>() {
-                @Override
-                protected String call() {
-                    return auctionClientService.closeAuction(auctionIdSnapshot);
-                }
-            };
-
-            task.setOnSucceeded(event -> {
-                showInfo(task.getValue() == null ? "Dong phien dau gia thanh cong." : task.getValue());
-                loadAuctionDetailPageAsync(false);
-            });
-            task.setOnFailed(event -> {
-                closeAuctionButton.setDisable(false);
-                refreshBidHistoryButton.setDisable(loadingBidHistory);
-                showError(errorMessage(task.getException()));
-            });
-            task.setOnCancelled(event -> {
-                closeAuctionButton.setDisable(false);
-                refreshBidHistoryButton.setDisable(loadingBidHistory);
-            });
-
-            runDaemon(task, "auction-detail-close-auction");
+    private void handleUpdateAuction() {
+        if (currentDetail == null || currentDetail.getItem() == null) {
+            showError("Khong co thong tin phien dau gia de cap nhat.");
             return;
         }
-        showInfo("Màn hình này chưa hỗ trợ đóng phiên đấu giá.");
+
+        ItemDTO item = currentDetail.getItem();
+        Dialog<UpdateAuctionRequest> dialog = new Dialog<>();
+        dialog.setTitle("Sua phien dau gia");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        TextField nameField = new TextField(safeText(item.getName()));
+        TextArea descriptionField = new TextArea(safeText(item.getDescription()));
+        descriptionField.setPrefRowCount(3);
+        TextField startTimeField = new TextField(formatTime(currentDetail.getStartTimeMillis()));
+        TextField endTimeField = new TextField(formatTime(currentDetail.getEndTimeMillis()));
+        TextField subtypeField1 = new TextField();
+        TextField subtypeField2 = new TextField();
+        String subtypeLabel1 = "Field 1";
+        String subtypeLabel2 = "Field 2";
+
+        if (item instanceof ArtDTO art) {
+            subtypeLabel1 = "Artist";
+            subtypeLabel2 = "Year";
+            subtypeField1.setText(safeText(art.getArtist()));
+            subtypeField2.setText(String.valueOf(art.getYearCreated()));
+        } else if (item instanceof ElectronicsDTO electronics) {
+            subtypeLabel1 = "Brand";
+            subtypeLabel2 = "Warranty months";
+            subtypeField1.setText(safeText(electronics.getBrand()));
+            subtypeField2.setText(String.valueOf(electronics.getWarrantyMonths()));
+        } else if (item instanceof VehicleDTO vehicle) {
+            subtypeLabel1 = "Brand";
+            subtypeLabel2 = "VIN / Mileage";
+            subtypeField1.setText(safeText(vehicle.getBrand()));
+            subtypeField2.setText(safeText(vehicle.getVin()) + " / " + vehicle.getMileage());
+        }
+
+        File[] selectedImage = new File[1];
+        Label imageLabel = new Label("Giu anh hien tai");
+        Button imageButton = new Button("Chon anh moi");
+        imageButton.setOnAction(event -> {
+            FileChooser chooser = new FileChooser();
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
+            File file = chooser.showOpenDialog(root.getScene().getWindow());
+            if (file != null) {
+                selectedImage[0] = file;
+                imageLabel.setText(file.getName());
+            }
+        });
+
+        GridPane form = new GridPane();
+        form.setHgap(10);
+        form.setVgap(10);
+        form.addRow(0, new Label("Ten"), nameField);
+        form.addRow(1, new Label("Mo ta"), descriptionField);
+        form.addRow(2, new Label("Bat dau"), startTimeField);
+        form.addRow(3, new Label("Ket thuc"), endTimeField);
+        form.addRow(4, new Label(subtypeLabel1), subtypeField1);
+        form.addRow(5, new Label(subtypeLabel2), subtypeField2);
+        form.addRow(6, imageButton, imageLabel);
+        dialog.getDialogPane().setContent(new VBox(8, form));
+
+        dialog.setResultConverter(buttonType -> {
+            if (buttonType != ButtonType.OK) {
+                return null;
+            }
+            try {
+                byte[] imageData = selectedImage[0] == null ? null : Files.readAllBytes(selectedImage[0].toPath());
+                String imageFileName = selectedImage[0] == null ? null : selectedImage[0].getName();
+                ItemDTO updatedItem = buildUpdatedItemDTO(
+                        item,
+                        nameField.getText(),
+                        descriptionField.getText(),
+                        imageData,
+                        imageFileName,
+                        subtypeField1.getText(),
+                        subtypeField2.getText()
+                );
+                return new UpdateAuctionRequest(
+                        currentAuctionId,
+                        updatedItem,
+                        parseUpdateTime(startTimeField.getText()),
+                        parseUpdateTime(endTimeField.getText())
+                );
+            } catch (Exception e) {
+                showError(errorMessage(e));
+                return null;
+            }
+        });
+
+        dialog.showAndWait().ifPresent(this::submitUpdateAuction);
+    }
+
+    private ItemDTO buildUpdatedItemDTO(ItemDTO existingItem,
+                                        String name,
+                                        String description,
+                                        byte[] imageData,
+                                        String imageFileName,
+                                        String subtypeValue1,
+                                        String subtypeValue2) {
+        if (existingItem instanceof ArtDTO) {
+            return new ArtDTO(name, description, existingItem.getStartingPrice(),
+                    imageData, imageFileName, subtypeValue1, Integer.parseInt(subtypeValue2.trim()));
+        }
+        if (existingItem instanceof ElectronicsDTO) {
+            return new ElectronicsDTO(name, description, existingItem.getStartingPrice(),
+                    imageData, imageFileName, subtypeValue1, Integer.parseInt(subtypeValue2.trim()));
+        }
+        if (existingItem instanceof VehicleDTO vehicle) {
+            String vin = vehicle.getVin();
+            int mileage = vehicle.getMileage();
+            String raw = subtypeValue2 == null ? "" : subtypeValue2.trim();
+            int separator = raw.indexOf('/');
+            if (separator >= 0) {
+                vin = raw.substring(0, separator).trim();
+                mileage = Integer.parseInt(raw.substring(separator + 1).trim());
+            }
+            return new VehicleDTO(name, description, existingItem.getStartingPrice(),
+                    imageData, imageFileName, subtypeValue1, vin, mileage);
+        }
+        throw new IllegalArgumentException("Loai san pham khong duoc ho tro cap nhat.");
+    }
+
+    private long parseUpdateTime(String text) {
+        LocalDateTime value = LocalDateTime.parse(text.trim(), DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy"));
+        return value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    private void submitUpdateAuction(UpdateAuctionRequest request) {
+        updateAuctionButton.setDisable(true);
+        cancelAuctionButton.setDisable(true);
+        showInfo("Dang cap nhat phien dau gia...");
+
+        Task<CreateAuctionResponse> task = new Task<>() {
+            @Override
+            protected CreateAuctionResponse call() {
+                return auctionClientService.updateAuctionItem(request);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            CreateAuctionResponse response = task.getValue();
+            showInfo(response == null ? "Cap nhat phien dau gia thanh cong." : response.getMessage());
+            loadAuctionDetailPageAsync(false);
+        });
+        task.setOnFailed(event -> {
+            updateAuctionButton.setDisable(false);
+            cancelAuctionButton.setDisable(false);
+            showError(errorMessage(task.getException()));
+        });
+        task.setOnCancelled(event -> {
+            updateAuctionButton.setDisable(false);
+            cancelAuctionButton.setDisable(false);
+        });
+
+        runDaemon(task, "auction-detail-update-auction");
+    }
+
+    private void handleCancelAuction() {
+        if (currentAuctionId <= 0) {
+            return;
+        }
+
+        cancelAuctionButton.setDisable(true);
+        refreshBidHistoryButton.setDisable(true);
+        showInfo("Dang huy phien dau gia...");
+
+        int auctionIdSnapshot = currentAuctionId;
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() {
+                return auctionClientService.cancelAuction(auctionIdSnapshot);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            showInfo(task.getValue() == null ? "Huy phien dau gia thanh cong." : task.getValue());
+            loadAuctionDetailPageAsync(false);
+        });
+        task.setOnFailed(event -> {
+            cancelAuctionButton.setDisable(false);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
+            showError(errorMessage(task.getException()));
+        });
+        task.setOnCancelled(event -> {
+            cancelAuctionButton.setDisable(false);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
+        });
+
+        runDaemon(task, "auction-detail-cancel-auction");
     }
 
     private void registerRealtimeListener() {
@@ -526,11 +706,8 @@ public class AuctionDetailController {
         return status == AuctionStatus.RUNNING;
     }
 
-    private boolean isAuctionClosableByCurrentUser(AuctionDetailDTO detail) {
-        if (detail == null
-                || detail.getStatus() == AuctionStatus.FINISHED
-                || detail.getStatus() == AuctionStatus.PAID
-                || detail.getStatus() == AuctionStatus.CANCELED) {
+    private boolean isAuctionCancelableByCurrentUser(AuctionDetailDTO detail) {
+        if (detail == null || detail.getStatus() == AuctionStatus.CANCELED) {
             return false;
         }
 
@@ -538,8 +715,19 @@ public class AuctionDetailController {
         if (user == null) {
             return false;
         }
+        if (user.getRole() == Role.ADMIN) {
+            return true;
+        }
+        return user.getId() == detail.getSellerId() && detail.getStatus() == AuctionStatus.OPEN;
+    }
 
-        return user.getId() == detail.getSellerId() || user.getRole() == Role.ADMIN;
+    private boolean isAuctionUpdatableByCurrentUser(AuctionDetailDTO detail) {
+        if (detail == null || detail.getStatus() != AuctionStatus.OPEN) {
+            return false;
+        }
+
+        UserDTO user = ClientSession.getCurrentUser();
+        return user != null && user.getId() == detail.getSellerId();
     }
 
     private String safeText(String value) {

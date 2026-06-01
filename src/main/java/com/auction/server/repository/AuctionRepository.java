@@ -100,6 +100,22 @@ public class AuctionRepository {
         }
     }
 
+    public void updateAuctionSchedule(Connection conn, Auction auction) throws SQLException {
+        String sql = "UPDATE auctions SET start_time = ?, end_time = ?, status = ? WHERE id = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setTimestamp(1, new Timestamp(auction.getStartTime()));
+            pstmt.setTimestamp(2, new Timestamp(auction.getEndTime()));
+            pstmt.setString(3, auction.getStatus().name());
+            pstmt.setInt(4, auction.getId());
+
+            int rowsUpdated = pstmt.executeUpdate();
+            if (rowsUpdated == 0) {
+                throw new SQLException("No auction found for id=" + auction.getId());
+            }
+        }
+    }
+
     public int finalizeExpiredAuctionsForRead(Connection conn, long nowMillis) throws SQLException {
         String sql = """
             UPDATE auctions
