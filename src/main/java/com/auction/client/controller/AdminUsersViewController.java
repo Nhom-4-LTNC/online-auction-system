@@ -129,6 +129,7 @@ public class AdminUsersViewController implements Initializable {
 
                 private final Hyperlink banLink = new Hyperlink("BAN");
                 private final Hyperlink unbanLink = new Hyperlink("UNBAN");
+                private final javafx.scene.control.Label adminLabel = new javafx.scene.control.Label("Admin");
                 private final javafx.scene.layout.HBox root = new javafx.scene.layout.HBox(8, banLink, unbanLink);
 
                 {
@@ -162,10 +163,20 @@ public class AdminUsersViewController implements Initializable {
                     }
 
                     boolean isBanned = u.getBanEndTime() > System.currentTimeMillis();
-                    banLink.setVisible(!isBanned);
-                    banLink.setManaged(!isBanned);
+                    boolean isAdminAccount = Role.ADMIN.equals(u.getRole());
+                    boolean isCurrentAdmin = ClientSession.getCurrentUserId() != null
+                            && ClientSession.getCurrentUserId() == u.getId();
+                    boolean canBan = !isBanned && !isAdminAccount && !isCurrentAdmin;
+
+                    banLink.setVisible(canBan);
+                    banLink.setManaged(canBan);
                     unbanLink.setVisible(isBanned);
                     unbanLink.setManaged(isBanned);
+
+                    root.getChildren().setAll(banLink, unbanLink);
+                    if (!isBanned && (isAdminAccount || isCurrentAdmin)) {
+                        root.getChildren().setAll(adminLabel);
+                    }
 
                     setGraphic(root);
                 }

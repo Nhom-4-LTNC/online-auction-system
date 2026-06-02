@@ -190,6 +190,10 @@ public class UserService {
             throw new ValidationException("Admin không thể tự ban chính mình!");
         }
 
+        if (target.isAdmin()) {
+            throw new ValidationException("Không thể ban tài khoản Admin.");
+        }
+
         long now = System.currentTimeMillis();
 
         target.setBanStartTime(now);
