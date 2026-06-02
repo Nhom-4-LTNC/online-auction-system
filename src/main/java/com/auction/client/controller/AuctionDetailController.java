@@ -26,6 +26,8 @@ import com.auction.shared.protocol.auction.UpdateAuctionRequest;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
 import javafx.application.Platform;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -45,6 +47,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -55,6 +58,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -72,6 +76,9 @@ public class AuctionDetailController {
     @FXML private Label bidStepLabel;
     @FXML private Label sellerLabel;
     @FXML private Label endTimeLabel;
+    @FXML private Label startTimeLabel;
+    @FXML private Label winnerLabel;
+    @FXML private Label timeRemainingLabel;
     @FXML private TextField bidAmountField;
     @FXML private Button placeBidButton;
     @FXML private Button updateAuctionButton;
@@ -99,6 +106,10 @@ public class AuctionDetailController {
     private volatile boolean placingBid = false;
     private volatile boolean auctionBiddable = false;
     private AuctionDetailDTO currentDetail;
+    private Timeline countdownTimeline;
+    private AuctionStatus countdownStatus;
+    private long countdownStartTimeMillis;
+    private long countdownEndTimeMillis;
 
     @FXML
     private void initialize() {
@@ -107,6 +118,7 @@ public class AuctionDetailController {
         updateAuctionButton.setDisable(true);
         cancelAuctionButton.setDisable(true);
         messageLabel.setText("");
+        startCountdownTimeline();
         itemImageView.setSmooth(true);
         root.sceneProperty().addListener((observable, oldScene, newScene) -> {
             if (oldScene != null && newScene == null) {
@@ -293,7 +305,10 @@ public class AuctionDetailController {
         itemNameLabel.setText(itemName);
         currentPriceLabel.setText(FormatUtils.currency(summary.getCurrentPrice()));
         statusLabel.setText(formatStatus(summary.getStatus()));
+        startTimeLabel.setText(formatTime(summary.getStartTimeMillis()));
         endTimeLabel.setText(formatTime(summary.getEndTimeMillis()));
+        winnerLabel.setText(formatWinner(summary.getStatus(), summary.getWinnerUsername()));
+        updateCountdownState(summary.getStatus(), summary.getStartTimeMillis(), summary.getEndTimeMillis());
 
         boolean bidOpen = isAuctionBiddable(summary.getStatus());
         auctionBiddable = bidOpen;
@@ -328,8 +343,11 @@ public class AuctionDetailController {
         startingPriceLabel.setText(FormatUtils.currency(detail.getStartingPrice()));
         bidStepLabel.setText(FormatUtils.currency(detail.getBidStep()));
         sellerLabel.setText(safeText(detail.getSellerUsername()));
+        startTimeLabel.setText(formatTime(detail.getStartTimeMillis()));
         endTimeLabel.setText(formatTime(detail.getEndTimeMillis()));
+        winnerLabel.setText(formatWinner(detail.getStatus(), detail.getWinnerUsername()));
         statusLabel.setText(formatStatus(detail.getStatus()));
+        updateCountdownState(detail.getStatus(), detail.getStartTimeMillis(), detail.getEndTimeMillis());
         renderItemImage(item);
 
         boolean bidOpen = isAuctionBiddable(detail.getStatus());
@@ -667,6 +685,7 @@ public class AuctionDetailController {
 
     public void cleanup() {
         unregisterRealtimeListener();
+        stopCountdownTimeline();
     }
 
     private void maximizeStage() {
@@ -729,11 +748,82 @@ public class AuctionDetailController {
     }
 
     private String formatTime(long epochMillis) {
+        if (epochMillis <= 0) {
+            return "--";
+        }
         try {
             return DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(epochMillis));
         } catch (Exception e) {
             return String.valueOf(epochMillis);
         }
+    }
+
+    private void startCountdownTimeline() {
+        stopCountdownTimeline();
+        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> updateCountdownLabel()));
+        countdownTimeline.setCycleCount(Timeline.INDEFINITE);
+        countdownTimeline.play();
+        updateCountdownLabel();
+    }
+
+    private void stopCountdownTimeline() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+            countdownTimeline = null;
+        }
+    }
+
+    private void updateCountdownState(AuctionStatus status, long startTimeMillis, long endTimeMillis) {
+        countdownStatus = status;
+        countdownStartTimeMillis = startTimeMillis;
+        countdownEndTimeMillis = endTimeMillis;
+        updateCountdownLabel();
+    }
+
+    private void updateCountdownLabel() {
+        if (timeRemainingLabel == null) {
+            return;
+        }
+
+        if (countdownStatus == AuctionStatus.OPEN) {
+            timeRemainingLabel.setText("Bắt đầu sau: " + formatDuration(countdownStartTimeMillis - System.currentTimeMillis()));
+            return;
+        }
+        if (countdownStatus == AuctionStatus.RUNNING) {
+            timeRemainingLabel.setText("Còn lại: " + formatDuration(countdownEndTimeMillis - System.currentTimeMillis()));
+            return;
+        }
+        if (countdownStatus == AuctionStatus.FINISHED) {
+            timeRemainingLabel.setText("Đã kết thúc");
+            return;
+        }
+        if (countdownStatus == AuctionStatus.PAID) {
+            timeRemainingLabel.setText("Đã thanh toán");
+            return;
+        }
+        if (countdownStatus == AuctionStatus.CANCELED) {
+            timeRemainingLabel.setText("Đã hủy");
+            return;
+        }
+        timeRemainingLabel.setText("--");
+    }
+
+    private String formatDuration(long millis) {
+        long seconds = Math.max(0L, TimeUnit.MILLISECONDS.toSeconds(millis));
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+        return String.format("%02d:%02d:%02d", hours, minutes, secs);
+    }
+
+    private String formatWinner(AuctionStatus status, String winnerUsername) {
+        if (winnerUsername != null && !winnerUsername.isBlank()) {
+            return winnerUsername;
+        }
+        if (status == AuctionStatus.FINISHED || status == AuctionStatus.PAID) {
+            return "Không có người thắng";
+        }
+        return "Chưa xác định";
     }
 
     private String formatStatus(AuctionStatus status) {

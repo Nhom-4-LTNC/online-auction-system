@@ -586,6 +586,10 @@ public class AuctionMenuController {
         time.setWrapText(true);
         time.setStyle("-fx-text-fill: #555555;");
 
+        Label winner = new Label("Người thắng: " + formatWinner(auction));
+        winner.setWrapText(true);
+        winner.setStyle("-fx-text-fill: #555555;");
+
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
@@ -601,7 +605,7 @@ public class AuctionMenuController {
             openAuctionDetail(auction);
         });
 
-        card.getChildren().addAll(imageBox, title, price, statusRow, time, spacer, actionButton);
+        card.getChildren().addAll(imageBox, title, price, statusRow, time, winner, spacer, actionButton);
         card.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
                 openAuctionDetail(auction);
@@ -726,6 +730,20 @@ public class AuctionMenuController {
             return base + " -fx-background-color: #eeeeee; -fx-text-fill: #555555;";
         }
         return base + " -fx-background-color: #ffebee; -fx-text-fill: #b71c1c;";
+    }
+
+    private String formatWinner(AuctionSummaryDTO auction) {
+        if (auction == null) {
+            return "Chưa xác định";
+        }
+        String winnerUsername = auction.getWinnerUsername();
+        if (winnerUsername != null && !winnerUsername.isBlank()) {
+            return winnerUsername;
+        }
+        if (auction.getStatus() == AuctionStatus.FINISHED || auction.getStatus() == AuctionStatus.PAID) {
+            return "Không có";
+        }
+        return "Chưa xác định";
     }
 
     private String formatTimeText(AuctionSummaryDTO auction) {

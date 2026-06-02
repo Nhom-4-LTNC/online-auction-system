@@ -522,9 +522,11 @@ public class AuctionService {
                 auction.getItem().getName(),
                 auction.getItem().getItemType(),
                 auction.getCurrentPrice(),
+                auction.getStartTime(),
                 auction.getEndTime(),
                 auction.getStatus(),
-                auction.getWinner() == null ? null : auction.getWinner().getId()
+                auction.getWinner() == null ? null : auction.getWinner().getId(),
+                auction.getWinner() == null ? null : auction.getWinner().getUsername()
         );
     }
 
@@ -534,12 +536,20 @@ public class AuctionService {
 
         Integer lastBidderId = null;
         String lastBidderUsername = null;
+        Integer winnerId = null;
+        String winnerUsername = null;
 
         User lastBidder = auction.getLastBidder();
         if (lastBidder != null) {
             lastBidderId = lastBidder.getId();
             User fetchedBidder = UserService.getInstance().getUserById(lastBidderId);
             lastBidderUsername = fetchedBidder != null ? fetchedBidder.getUsername() : "Unknown";
+        }
+
+        User winner = auction.getWinner();
+        if (winner != null) {
+            winnerId = winner.getId();
+            winnerUsername = winner.getUsername();
         }
 
         return new AuctionDetailDTO(
@@ -554,7 +564,9 @@ public class AuctionService {
                 auction.getEndTime(),
                 auction.getStatus(),
                 lastBidderId,
-                lastBidderUsername
+                lastBidderUsername,
+                winnerId,
+                winnerUsername
         );
     }
 }

@@ -9,10 +9,7 @@ import com.auction.server.repository.BidRepository;
 import com.auction.server.repository.UserRepository;
 import com.auction.shared.dto.BidDTO;
 import com.auction.shared.enums.AuctionStatus;
-import com.auction.shared.exception.AuctionAppException;
-import com.auction.shared.exception.AuctionClosedException;
-import com.auction.shared.exception.InsufficientFundsException;
-import com.auction.shared.exception.ResourceNotFoundException;
+import com.auction.shared.exception.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -164,7 +161,7 @@ public class BidService {
     public List<Bid> getBidsByBidderForRequester(int requesterId, int bidderId) throws Exception {
         User requester = userService.getUserById(requesterId);
         if (!requester.isAdmin() && requesterId != bidderId) {
-            throw new com.auction.shared.exception.AuthorizationException(
+            throw new AuthorizationException(
                     "Bạn không có quyền xem lịch sử bid của người dùng khác!"
             );
         }
@@ -174,8 +171,8 @@ public class BidService {
     public List<BidDTO> getBidHistoryByBidderForRequester(int requesterId, int bidderId) throws Exception {
         User requester = userService.getUserById(requesterId);
         if (!requester.isAdmin() && requesterId != bidderId) {
-            throw new com.auction.shared.exception.AuthorizationException(
-                    "Báº¡n khÃ´ng cÃ³ quyá»n xem lá»‹ch sá»­ bid cá»§a ngÆ°á»i dÃ¹ng khÃ¡c!"
+            throw new AuthorizationException(
+                    "Bạn không có quyền xem lịch sử bid của người dùng khác!"
             );
         }
         return getBidHistoryByBidder(bidderId);

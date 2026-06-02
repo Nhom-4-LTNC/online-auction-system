@@ -229,11 +229,14 @@ public class AuctionRepository {
                 i.name AS item_name,
                 i.item_type AS item_type,
                 a.current_price AS current_price,
+                a.start_time AS start_time,
                 a.end_time AS end_time,
                 a.status AS status,
-                a.winner_id AS winner_id
+                a.winner_id AS winner_id,
+                winner.username AS winner_username
             FROM auctions a
             JOIN items i ON a.item_id = i.id
+            LEFT JOIN users winner ON a.winner_id = winner.id
             WHERE i.item_type = ?
             ORDER BY a.end_time ASC
             """;
@@ -245,16 +248,7 @@ public class AuctionRepository {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    result.add(new AuctionSummaryDTO(
-                            rs.getInt("auction_id"),
-                            rs.getInt("item_id"),
-                            rs.getString("item_name"),
-                            ItemType.valueOf(rs.getString("item_type")),
-                            rs.getDouble("current_price"),
-                            rs.getTimestamp("end_time").getTime(),
-                            AuctionStatus.valueOf(rs.getString("status")),
-                            getNullableInt(rs, "winner_id")
-                    ));
+                    result.add(mapResultSetToAuctionSummaryDTO(rs));
                 }
             }
         }
@@ -270,11 +264,14 @@ public class AuctionRepository {
                 i.name AS item_name,
                 i.item_type AS item_type,
                 a.current_price AS current_price,
+                a.start_time AS start_time,
                 a.end_time AS end_time,
                 a.status AS status,
-                a.winner_id AS winner_id
+                a.winner_id AS winner_id,
+                winner.username AS winner_username
             FROM auctions a
             JOIN items i ON a.item_id = i.id
+            LEFT JOIN users winner ON a.winner_id = winner.id
             WHERE i.owner_id = ?
             ORDER BY a.start_time DESC
             """;
@@ -303,11 +300,14 @@ public class AuctionRepository {
                 i.name AS item_name,
                 i.item_type AS item_type,
                 a.current_price AS current_price,
+                a.start_time AS start_time,
                 a.end_time AS end_time,
                 a.status AS status,
-                a.winner_id AS winner_id
+                a.winner_id AS winner_id,
+                winner.username AS winner_username
             FROM auctions a
             JOIN items i ON a.item_id = i.id
+            LEFT JOIN users winner ON a.winner_id = winner.id
             WHERE EXISTS (
                 SELECT 1
                 FROM bids b
@@ -341,11 +341,14 @@ public class AuctionRepository {
                 i.name AS item_name,
                 i.item_type AS item_type,
                 a.current_price AS current_price,
+                a.start_time AS start_time,
                 a.end_time AS end_time,
                 a.status AS status,
-                a.winner_id AS winner_id
+                a.winner_id AS winner_id,
+                winner.username AS winner_username
             FROM auctions a
             JOIN items i ON a.item_id = i.id
+            LEFT JOIN users winner ON a.winner_id = winner.id
             WHERE a.winner_id = ?
               AND a.status IN (?, ?)
             ORDER BY a.end_time DESC
@@ -383,11 +386,14 @@ public class AuctionRepository {
             i.name AS item_name,
             i.item_type AS item_type,
             a.current_price AS current_price,
+            a.start_time AS start_time,
             a.end_time AS end_time,
             a.status AS status,
-            a.winner_id AS winner_id
+            a.winner_id AS winner_id,
+            winner.username AS winner_username
         FROM auctions a
         JOIN items i ON a.item_id = i.id
+        LEFT JOIN users winner ON a.winner_id = winner.id
         ORDER BY a.end_time ASC
         """;
 
@@ -396,16 +402,7 @@ public class AuctionRepository {
         try (PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 // Map thẳng sang DTO theo đúng Constructor 7 tham số của bạn
-                result.add(new AuctionSummaryDTO(
-                        rs.getInt("auction_id"),
-                        rs.getInt("item_id"),
-                        rs.getString("item_name"),
-                        ItemType.valueOf(rs.getString("item_type")),
-                        rs.getDouble("current_price"),
-                        rs.getTimestamp("end_time").getTime(),
-                        AuctionStatus.valueOf(rs.getString("status")),
-                        getNullableInt(rs, "winner_id")
-                ));
+                result.add(mapResultSetToAuctionSummaryDTO(rs));
             }
         }
 
@@ -667,9 +664,11 @@ public class AuctionRepository {
                 rs.getString("item_name"),
                 ItemType.valueOf(rs.getString("item_type")),
                 rs.getDouble("current_price"),
+                rs.getTimestamp("start_time").getTime(),
                 rs.getTimestamp("end_time").getTime(),
                 AuctionStatus.valueOf(rs.getString("status")),
-                getNullableInt(rs, "winner_id")
+                getNullableInt(rs, "winner_id"),
+                rs.getString("winner_username")
         );
     }
 
