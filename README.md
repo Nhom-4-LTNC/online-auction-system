@@ -26,5 +26,5 @@ On Windows:
 .\mvnw.cmd javafx:run
 ```
 
-If running from an IDE, run `com.auction.client.Main` instead of `com.auction.client.Launcher`.
-Running `Launcher` directly may show `JavaFX runtime components are missing` when the IDE has not configured JavaFX runtime modules.
+If running from an IDE, run `com.auction.client.Launcher`.
+The JavaFX `Application` class lives in `com.auction.client.controller.ClientApp`.
