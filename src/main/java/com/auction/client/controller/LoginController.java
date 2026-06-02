@@ -138,7 +138,7 @@ public class LoginController implements Initializable {
         }
 
         ClientSession.setCurrentUser(user);
-        navigateToHome(user);
+        navigateAfterLogin(user);
     }
 
     private String getPasswordFromFields() {
@@ -161,7 +161,7 @@ public class LoginController implements Initializable {
         return true;
     }
 
-    private void navigateToHome(UserDTO user) throws IOException {
+    private void navigateAfterLogin(UserDTO user) throws IOException {
         Stage stage = (Stage) emailTextField.getScene().getWindow();
         if (user != null && user.getRole() == Role.ADMIN) {
             SceneUtils.switchScene(stage, "/fxml/AdminScreen.fxml");

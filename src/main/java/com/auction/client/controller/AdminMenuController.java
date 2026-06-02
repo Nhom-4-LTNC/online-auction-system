@@ -17,6 +17,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
@@ -41,6 +42,7 @@ public class AdminMenuController implements Initializable {
     @FXML private Button viewCanceledAuctionsButton;
 
     @FXML private Button logoutButton;
+    @FXML private Label adminWelcomeLabel;
 
     private final com.auction.client.service.AuctionClientService auctionClientService = new com.auction.client.service.AuctionClientService();
 
@@ -55,6 +57,7 @@ public class AdminMenuController implements Initializable {
             return;
         }
 
+        renderAdminInfo();
         setupTableColumns();
         refreshAuctions();
 
@@ -67,6 +70,19 @@ public class AdminMenuController implements Initializable {
             viewCanceledAuctionsButton.setOnAction(this::viewCanceledAuctions);
         }
 
+    }
+
+    private void renderAdminInfo() {
+        if (adminWelcomeLabel == null) {
+            return;
+        }
+
+        var user = ClientSession.getCurrentUser();
+        if (user != null) {
+            adminWelcomeLabel.setText("Chào, " + user.getUsername() + " (ID: " + user.getId() + ")");
+        } else {
+            adminWelcomeLabel.setText("Admin");
+        }
     }
 
     private void setupTableColumns() {
@@ -177,15 +193,12 @@ public class AdminMenuController implements Initializable {
 
 
     @FXML
-    public void back(ActionEvent event) {
+    private void handleLogout(ActionEvent event) {
+        ClientSession.clear();
         try {
-            ClientSession.clear();
-        } catch (Exception ignored) {
-        }
-
-        try {
-            SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
-        } catch (IOException ignored) {
+            SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
+        } catch (IOException e) {
+            AlertUtils.showError("Lỗi điều hướng", "Không thể quay về màn hình đăng nhập.");
         }
     }
 }

@@ -31,9 +31,6 @@
                 </VBox>
             </HBox>
 
-            <Label style="-fx-padding: 18 0 6 0; -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #6b7280;" text="QUẢN LÝ TỔNG QUAN" />
-            <Button maxWidth="Infinity" onAction="#back" style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: 700; -fx-background-radius: 12; -fx-padding: 10 12; -fx-alignment: CENTER_LEFT;" text="Bảng điều khiển" />
-
             <Label style="-fx-padding: 18 0 6 0; -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #6b7280;" text="QUẢN LÝ ĐẤU GIÁ" />
             <Button fx:id="auctionAllSessionsButton" maxWidth="Infinity" onAction="#refresh" style="-fx-background-color: rgba(59,130,246,0.12); -fx-text-fill: #2b6cb0; -fx-font-weight: 800; -fx-background-radius: 12; -fx-padding: 10 12; -fx-alignment: CENTER_LEFT;" text="Tất cả phiên đấu giá" />
             <Button maxWidth="Infinity" onAction="#viewCanceledAuctions" style="-fx-background-color: transparent; -fx-text-fill: #374151; -fx-font-weight: 600; -fx-background-radius: 12; -fx-padding: 10 12; -fx-alignment: CENTER_LEFT;" text="Phiên đã hủy" />
@@ -53,7 +50,7 @@
 
             <HBox HBox.hgrow="ALWAYS">
             <children>
-                    <Label style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 700;" text="Chào, Siêu Admin (ID: 001)" />
+                    <Label fx:id="adminWelcomeLabel" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 700;" text="Admin" />
             </children></HBox>
 
             <HBox alignment="CENTER_RIGHT" spacing="16">
@@ -64,7 +61,7 @@
                     <Circle fill="#ef4444" radius="5" translateX="8" translateY="-8" />
                 </StackPane>
 
-                <Button fx:id="logoutButton" onAction="#back" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: 800; -fx-cursor: hand;" text="Đăng xuất" />
+                <Button fx:id="logoutButton" onAction="#handleLogout" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: 800; -fx-cursor: hand;" text="Đăng xuất" />
             </HBox>
         </HBox>
     </top>
