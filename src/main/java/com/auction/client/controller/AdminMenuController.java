@@ -148,31 +148,47 @@ public class AdminMenuController implements Initializable {
     @FXML
     public void viewAllUsers(ActionEvent event) {
         try {
-            SceneUtils.switchScene(event, "/fxml/AdminUsersView.fxml");
-        } catch (IOException e) {
-            AlertUtils.showError("Lỗi điều hướng", e.getMessage());
-        }
-    }
+            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
 
-    @FXML
-    public void viewBannedUsers(ActionEvent event) {
-        // Load AdminUsersView.fxml thủ công để truyền tham số bannedOnly sang controller.
-        try {
             var loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/AdminUsersView.fxml"));
             var root = loader.load();
 
             var controller = loader.getController();
             if (controller instanceof AdminUsersViewController c) {
-                c.setBannedOnly(true);
+                c.setBannedOnly(false);
             }
 
-            javafx.stage.Stage stage = (javafx.stage.Stage) auctionsTableView.getScene().getWindow();
             stage.setScene(new javafx.scene.Scene((javafx.scene.Parent) root));
-
+            stage.show();
         } catch (Exception e) {
             AlertUtils.showError("Lỗi điều hướng", e.getMessage());
         }
     }
+
+
+
+    @FXML
+    public void viewBannedUsers(ActionEvent event) {
+        // FIX: setBannedOnly phải được set trước khi controller initialize() chạy.
+        try {
+            var loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/AdminUsersView.fxml"));
+
+            loader.setControllerFactory(type -> {
+                var controller = new AdminUsersViewController();
+                controller.setBannedOnly(true);
+                return controller;
+            });
+
+            var root = loader.load();
+
+            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new javafx.scene.Scene((javafx.scene.Parent) root));
+            stage.show();
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi điều hướng", e.getMessage());
+        }
+    }
+
 
 
 

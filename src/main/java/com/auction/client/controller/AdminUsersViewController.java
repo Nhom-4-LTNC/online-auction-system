@@ -79,7 +79,9 @@ public class AdminUsersViewController implements Initializable {
             backButton.setOnAction(this::back);
         }
 
+        System.out.println("[AdminUsersViewController] initialize bannedOnly=" + this.bannedOnly);
         loadUsers(this.bannedOnly);
+
 
         if (userIdSearchField != null) {
             userIdSearchField.textProperty().addListener((obs, oldV, newV) -> applyIdSearchFilter(newV));
@@ -182,11 +184,16 @@ public class AdminUsersViewController implements Initializable {
                     return users;
                 }
 
+                // Chỉ giữ lại user đang bị ban (banEndTime > now).
+                // Nếu không có user nào bị ban thì trả về list rỗng.
                 long now = System.currentTimeMillis();
-                users.removeIf(u -> u == null || u.getBanEndTime() <= now);
-                return users;
+                return users.stream()
+                        .filter(u -> u != null)
+                        .filter(u -> u.getBanEndTime() > now)
+                        .toList();
             }
         };
+
 
         task.setOnSucceeded(e -> {
             List<UserDTO> users = task.getValue();
