@@ -3,6 +3,7 @@ package com.auction.client.controller;
 import com.auction.client.network.Client;
 import com.auction.client.session.ClientSession;
 import com.auction.client.service.AuctionClientService;
+import com.auction.client.service.BidClientService;
 import com.auction.client.service.ClientServiceException;
 import com.auction.client.service.WalletClientService;
 import com.auction.client.util.AlertUtils;
@@ -10,6 +11,7 @@ import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BalanceResponse;
+import com.auction.shared.dto.BidDTO;
 import com.auction.shared.dto.PayAuctionResponse;
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.enums.AuctionStatus;
@@ -31,6 +33,9 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -79,6 +84,7 @@ public class AuctionMenuController {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.systemDefault());
 
     private final AuctionClientService auctionClientService = new AuctionClientService();
+    private final BidClientService bidClientService = new BidClientService();
     private final WalletClientService walletClientService = new WalletClientService();
     private final Client client = Client.getInstance();
 
@@ -392,16 +398,139 @@ public class AuctionMenuController {
         myWonButton.setOnAction(event -> showMyWonAuctions());
         myCreatedButton.setOnAction(event -> showMyCreatedAuctions());
         createAuctionButton.setOnAction(event -> showCreateAuctionDialog());
-        myBidsButton.setOnAction(event -> AlertUtils.showInfo(
-                "Lịch sử đặt giá",
-                "Màn hình lịch sử đặt giá cá nhân chưa được triển khai."
-        ));
+        myBidsButton.setOnAction(event -> handleShowMyBids());
         updateSidebarSelection();
     }
 
     private void setupAuctionList() {
         auctionGrid.setPrefTileWidth(260);
         auctionGrid.setPrefTileHeight(300);
+    }
+
+    @FXML
+    private void handleShowMyBids() {
+        if (auctionGrid == null || auctionGrid.getScene() == null) {
+            return;
+        }
+
+        Stage owner = (Stage) auctionGrid.getScene().getWindow();
+        Stage dialog = new Stage();
+        dialog.setTitle("Lịch sử đặt giá của tôi");
+        dialog.initOwner(owner);
+        dialog.initModality(Modality.WINDOW_MODAL);
+        dialog.setResizable(true);
+
+        Label title = new Label("Lịch sử đặt giá của tôi");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0B5394;");
+
+        Label messageLabel = new Label("Đang tải...");
+        messageLabel.setStyle("-fx-text-fill: #555555;");
+        messageLabel.setWrapText(true);
+
+        TableView<BidDTO> bidTable = createMyBidsTable();
+        bidTable.setPlaceholder(new Label("Đang tải..."));
+
+        Button closeButton = new Button("Đóng");
+        closeButton.setOnAction(event -> dialog.close());
+
+        HBox footer = new HBox(closeButton);
+        footer.setAlignment(Pos.CENTER_RIGHT);
+
+        VBox content = new VBox(12, title, messageLabel, bidTable, footer);
+        content.setPadding(new Insets(16));
+        VBox.setVgrow(bidTable, Priority.ALWAYS);
+
+        dialog.setScene(new Scene(content, 820, 500));
+        loadMyBidsAsync(bidTable, messageLabel);
+        dialog.show();
+    }
+
+    private TableView<BidDTO> createMyBidsTable() {
+        TableView<BidDTO> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<BidDTO, String> auctionIdColumn = new TableColumn<>("Mã phiên");
+        auctionIdColumn.setCellValueFactory(cell ->
+                new javafx.beans.property.SimpleStringProperty(String.valueOf(cell.getValue().getAuctionId())));
+
+        TableColumn<BidDTO, String> bidderColumn = new TableColumn<>("Người đặt");
+        bidderColumn.setCellValueFactory(cell ->
+                new javafx.beans.property.SimpleStringProperty(safeText(cell.getValue().getBidderUsername())));
+
+        TableColumn<BidDTO, String> amountColumn = new TableColumn<>("Số tiền");
+        amountColumn.setCellValueFactory(cell ->
+                new javafx.beans.property.SimpleStringProperty(FormatUtils.currency(cell.getValue().getAmount())));
+
+        TableColumn<BidDTO, String> bidTimeColumn = new TableColumn<>("Thời gian");
+        bidTimeColumn.setCellValueFactory(cell ->
+                new javafx.beans.property.SimpleStringProperty(formatBidTime(cell.getValue().getBidTime())));
+
+        TableColumn<BidDTO, Void> actionColumn = new TableColumn<>("Thao tác");
+        actionColumn.setCellFactory(column -> new TableCell<>() {
+            private final Button detailButton = new Button("Xem phiên");
+
+            {
+                detailButton.setStyle("-fx-background-color: #0B5394; -fx-text-fill: white; -fx-font-weight: bold;");
+                detailButton.setOnAction(event -> {
+                    if (getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
+                        return;
+                    }
+                    BidDTO bid = getTableView().getItems().get(getIndex());
+                    Stage dialog = (Stage) detailButton.getScene().getWindow();
+                    dialog.close();
+                    openAuctionDetailById(bid.getAuctionId());
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
+                    setGraphic(null);
+                    return;
+                }
+                setGraphic(detailButton);
+            }
+        });
+
+        table.getColumns().addAll(auctionIdColumn, bidderColumn, amountColumn, bidTimeColumn, actionColumn);
+        return table;
+    }
+
+    private void loadMyBidsAsync(TableView<BidDTO> bidTable, Label messageLabel) {
+        Task<List<BidDTO>> task = new Task<>() {
+            @Override
+            protected List<BidDTO> call() {
+                return bidClientService.getMyBids();
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            List<BidDTO> bids = task.getValue();
+            if (bids == null || bids.isEmpty()) {
+                bidTable.getItems().clear();
+                bidTable.setPlaceholder(new Label("Bạn chưa đặt giá phiên nào."));
+                messageLabel.setText("Không có lịch sử đặt giá.");
+                return;
+            }
+            bidTable.setItems(javafx.collections.FXCollections.observableArrayList(bids));
+            messageLabel.setText("Đã tải " + bids.size() + " lượt đặt giá.");
+        });
+
+        task.setOnFailed(event -> {
+            bidTable.getItems().clear();
+            bidTable.setPlaceholder(new Label("Không thể tải lịch sử đặt giá."));
+            Throwable error = task.getException();
+            String message = error instanceof ClientServiceException
+                    ? error.getMessage()
+                    : "Không thể tải lịch sử đặt giá.";
+            messageLabel.setStyle("-fx-text-fill: #b00020;");
+            messageLabel.setText(message);
+        });
+
+        Thread thread = new Thread(task, "my-bids-history-loader");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     @FXML
@@ -572,7 +701,7 @@ public class AuctionMenuController {
         title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #222222;");
 
         Label price = new Label("Giá hiện tại: " + FormatUtils.currency(auction.getCurrentPrice()));
-        price.setStyle("-fx-text-fill: #e79316; -fx-font-weight: bold;");
+        price.setStyle("-fx-text-fill: #0B5394; -fx-font-weight: bold;");
 
         HBox statusRow = new HBox(8);
         statusRow.setAlignment(Pos.CENTER_LEFT);
@@ -595,7 +724,7 @@ public class AuctionMenuController {
 
         Button actionButton = new Button(actionText(auction));
         actionButton.setMaxWidth(Double.MAX_VALUE);
-        actionButton.setStyle("-fx-background-color: #e79316; -fx-text-fill: white; -fx-font-weight: bold;");
+        actionButton.setStyle("-fx-background-color: #0B5394; -fx-text-fill: white; -fx-font-weight: bold;");
         actionButton.setDisable(auction.getStatus() == AuctionStatus.PAID);
         actionButton.setOnAction(event -> {
             if (isPayableByCurrentUser(auction)) {
@@ -621,7 +750,6 @@ public class AuctionMenuController {
         imageBox.setMaxWidth(Double.MAX_VALUE);
         imageBox.setStyle("-fx-background-color: #f1f1f1; -fx-background-radius: 5; -fx-border-color: #e3e3e3; -fx-border-radius: 5;");
 
-        // TODO: render product image here when AuctionSummaryDTO exposes imageUrl.
         Label placeholder = new Label(auction.getItemType() == null ? "Ảnh sản phẩm" : auction.getItemType().name());
         placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
         imageBox.getChildren().add(placeholder);
@@ -771,6 +899,13 @@ public class AuctionMenuController {
         return String.format("%02d giờ %02d phút", hours, minutes);
     }
 
+    private String formatBidTime(long bidTimeMillis) {
+        if (bidTimeMillis <= 0) {
+            return "--";
+        }
+        return END_TIME_FORMATTER.format(Instant.ofEpochMilli(bidTimeMillis));
+    }
+
     private String safeText(String text) {
         return text == null || text.isBlank() ? "N/A" : text;
     }
@@ -833,12 +968,12 @@ public class AuctionMenuController {
     }
 
     private void styleSidebarButton(Button button, boolean selected) {
-        String baseStyle = "-fx-border-color: #e79316; -fx-border-radius: 4;";
+        String baseStyle = "-fx-border-color: #0B5394; -fx-border-radius: 4;";
         if (selected) {
-            button.setStyle(baseStyle + " -fx-background-color: #e79316; -fx-text-fill: white;");
+            button.setStyle(baseStyle + " -fx-background-color: #0B5394; -fx-text-fill: white;");
             return;
         }
-        button.setStyle(baseStyle + " -fx-background-color: white; -fx-text-fill: #e79316;");
+        button.setStyle(baseStyle + " -fx-background-color: white; -fx-text-fill: #0B5394;");
     }
 
     private void styleStatusToggles() {
@@ -849,12 +984,12 @@ public class AuctionMenuController {
     }
 
     private void styleStatusToggle(ToggleButton button, boolean selected) {
-        String baseStyle = "-fx-border-color: #e79316; -fx-border-radius: 4;";
+        String baseStyle = "-fx-border-color: #0B5394; -fx-border-radius: 4;";
         if (selected) {
-            button.setStyle(baseStyle + " -fx-background-color: #e79316; -fx-text-fill: white;");
+            button.setStyle(baseStyle + " -fx-background-color: #0B5394; -fx-text-fill: white;");
             return;
         }
-        button.setStyle(baseStyle + " -fx-background-color: white; -fx-text-fill: #e79316;");
+        button.setStyle(baseStyle + " -fx-background-color: white; -fx-text-fill: #0B5394;");
     }
 
     private void openAuctionDetail(AuctionSummaryDTO auction) {
@@ -873,6 +1008,23 @@ public class AuctionMenuController {
             AlertUtils.showError("Lỗi điều hướng", "Không thể mở chi tiết phiên đấu giá.");
         }
 
+    }
+
+    private void openAuctionDetailById(int auctionId) {
+        if (auctionId <= 0) {
+            return;
+        }
+
+        try {
+            Stage stage = (Stage) auctionGrid.getScene().getWindow();
+            AuctionDetailController controller =
+                    SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionDetailView.fxml");
+            controller.setAuctionId(auctionId);
+            stage.setMaximized(true);
+            cleanup();
+        } catch (IOException e) {
+            AlertUtils.showError("Lỗi điều hướng", "Không thể mở chi tiết phiên đấu giá.");
+        }
     }
 
     private void registerRealtimeListener() {

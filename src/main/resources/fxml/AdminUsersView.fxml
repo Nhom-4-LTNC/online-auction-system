@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AdminUsersViewController">
+
+
+    <top>
+        <HBox alignment="CENTER_LEFT" prefHeight="76.0" spacing="20" style="-fx-background-color: #0B5394; -fx-padding: 0 24 0 24;">
+            <Label style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: 900;" text="DANH SÁCH NGƯỜI DÙNG" />
+            <HBox HBox.hgrow="ALWAYS" />
+            <Button fx:id="backButton" onAction="#back" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: 800; -fx-cursor: hand;" text="Quay lại" />
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="14" style="-fx-padding: 24;">
+
+            <HBox spacing="12" style="-fx-background-color: white; -fx-padding: 12; -fx-background-radius: 12;">
+                <Label text="Tìm theo ID:" />
+                <TextField fx:id="userIdSearchField" prefWidth="120" promptText="VD: 1" />
+
+                <Label text="Thời gian ban:" />
+                <TextField fx:id="banDurationValueField" prefWidth="120" promptText="VD: 7" />
+
+                <ChoiceBox fx:id="banDurationUnitChoice" prefWidth="130">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="Phút" />
+                            <String fx:value="Giờ" />
+                            <String fx:value="Ngày" />
+                        </FXCollections>
+                    </items>
+                </ChoiceBox>
+                <Label style="-fx-text-fill: #6b7280; -fx-font-size: 12;" text="(Theo tất cả thao tác BAN trong trang)" />
+            </HBox>
+
+            <StackPane style="-fx-background-color: white; -fx-background-radius: 14;">
+                <TableView fx:id="usersTableView" prefHeight="560" prefWidth="980" style="-fx-background-color: transparent;">
+                    <columns>
+                        <TableColumn fx:id="idColumn" prefWidth="80" text="ID" />
+                        <TableColumn fx:id="usernameColumn" prefWidth="260" text="Tên đăng nhập" />
+                        <TableColumn fx:id="emailColumn" prefWidth="260" text="Email" />
+                        <TableColumn fx:id="roleColumn" prefWidth="120" text="Vai trò" />
+                        <TableColumn fx:id="balanceColumn" prefWidth="140" text="Số dư" />
+                        <TableColumn fx:id="banColumn" prefWidth="130" text="Ban" />
+                        <TableColumn fx:id="actionsColumn" prefWidth="180" text="Hành động" />
+                    </columns>
+                </TableView>
+            </StackPane>
+        </VBox>
+    </center>
+
+</BorderPane>
+

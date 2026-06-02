@@ -110,6 +110,7 @@ public class AuctionDetailController {
     private AuctionStatus countdownStatus;
     private long countdownStartTimeMillis;
     private long countdownEndTimeMillis;
+    private Runnable onBack;
 
     @FXML
     private void initialize() {
@@ -128,6 +129,10 @@ public class AuctionDetailController {
                 Platform.runLater(this::maximizeStage);
             }
         });
+    }
+
+    public void setOnBack(Runnable onBack) {
+        this.onBack = onBack;
     }
 
     public void setAuctionId(int auctionId) {
@@ -161,6 +166,10 @@ public class AuctionDetailController {
     private void setupButtonActions() {
         backButton.setOnAction(event -> {
             cleanup();
+            if (onBack != null) {
+                onBack.run();
+                return;
+            }
             try {
                 Stage stage = (Stage) root.getScene().getWindow();
                 SceneUtils.switchScene(stage, "/fxml/AuctionMenu.fxml");

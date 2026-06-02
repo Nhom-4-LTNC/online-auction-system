@@ -2,44 +2,56 @@ package com.auction.client.controller;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 
 import com.auction.client.network.Client;
-import com.auction.client.service.AdminClientService;
-import com.auction.client.service.ClientServiceException;
 import com.auction.client.session.ClientSession;
 import com.auction.client.util.AlertUtils;
+import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
-import com.auction.shared.dto.UserDTO;
-import com.auction.shared.protocol.admin.ApplyBanResponse;
-import com.auction.shared.protocol.admin.RemoveBanResponse;
+import com.auction.shared.dto.AuctionSummaryDTO;
+import com.auction.shared.enums.AuctionStatus;
 
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 
-/**
- * Refactor theo UI_REFACTOR_GUIDE: controller chỉ xử lý UI và gọi client-side service.
- */
 public class AdminMenuController implements Initializable {
+    private static final DateTimeFormatter TABLE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     private final Client client = Client.getInstance();
-    private final AdminClientService adminClientService = new AdminClientService();
 
-    @FXML private ListView<UserDTO> usersListView;
-    @FXML private TextField targetUserIdTextField;
-    @FXML private TextField durationMillisTextField;
+    // AdminScreen.fxml chỉ cần TableView phiên đấu giá.
+    @FXML private TableView<AuctionSummaryDTO> auctionsTableView;
 
-    @FXML private Button banButton;
-    @FXML private Button unbanButton;
-    @FXML private Button refreshButton;
-    @FXML private Button backButton;
+    @FXML private TableColumn<AuctionSummaryDTO, Integer> idColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, Object> imageColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> nameColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> creatorColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> currentPriceColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> startPriceColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> remainingTimeColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> statusColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> actionsColumn;
+
+    @FXML private Button auctionAllSessionsButton;
+    @FXML private Button viewCanceledAuctionsButton;
+
+    @FXML private Button logoutButton;
+    @FXML private Label adminWelcomeLabel;
+
+    private final com.auction.client.service.AuctionClientService auctionClientService = new com.auction.client.service.AuctionClientService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -47,91 +59,247 @@ public class AdminMenuController implements Initializable {
             client.connect();
         }
 
-        usersListView.setItems(FXCollections.observableArrayList());
-        usersListView.setCellFactory(lv -> new ListCell<>() {
-            @Override
-            protected void updateItem(UserDTO item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    return;
-                }
-
-                String role = item.getRole() == null ? "" : item.getRole().name();
-                long now = System.currentTimeMillis();
-                boolean banned = item.getBanEndTime() > now;
-                String banState = banned ? ("BANNED (ends in " + (item.getBanEndTime() - now) + " ms)") : "ACTIVE";
-
-                setText(item.getId() + " | " + item.getUsername() + " | " + item.getEmail() + " | " + role + " | " + banState);
-            }
-        });
-
         if (!ClientSession.isAdmin()) {
             AlertUtils.showError("Không có quyền", "Chỉ Admin mới được vào trang này.");
             return;
         }
 
-        refresh(null);
+        renderAdminInfo();
+        setupTableColumns();
+        refreshAuctions();
+
+        // Gắn handler cho các nút nếu FXML gọi @FXML method không tồn tại.
+        // (Nếu FXML đã map đúng onAction="#refresh" ... thì không cần.)
+        if (auctionAllSessionsButton != null) {
+            auctionAllSessionsButton.setOnAction(e -> viewAllAuctions(e));
+        }
+        if (viewCanceledAuctionsButton != null) {
+            viewCanceledAuctionsButton.setOnAction(this::viewCanceledAuctions);
+        }
 
     }
 
+    private void renderAdminInfo() {
+        if (adminWelcomeLabel == null) {
+            return;
+        }
+
+        var user = ClientSession.getCurrentUser();
+        if (user != null) {
+            adminWelcomeLabel.setText("Chào, " + user.getUsername() + " (ID: " + user.getId() + ")");
+        } else {
+            adminWelcomeLabel.setText("Admin");
+        }
+    }
+
+    private void setupTableColumns() {
+        if (auctionsTableView == null) return;
+
+        hideColumn(imageColumn);
+        hideColumn(creatorColumn);
+        hideColumn(startPriceColumn);
+
+        if (idColumn != null) {
+            idColumn.setCellValueFactory(cell ->
+                    new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getAuctionId()).asObject());
+        }
+
+        if (nameColumn != null) {
+            nameColumn.setCellValueFactory(cell ->
+                    new javafx.beans.property.SimpleStringProperty(cell.getValue().getItemName()));
+        }
+
+        if (currentPriceColumn != null) {
+            currentPriceColumn.setCellValueFactory(cell ->
+                    new javafx.beans.property.SimpleStringProperty(
+                            FormatUtils.currency(cell.getValue().getCurrentPrice())));
+        }
+
+        if (remainingTimeColumn != null) {
+            remainingTimeColumn.setText("Thời gian");
+            remainingTimeColumn.setCellValueFactory(cell ->
+                    new javafx.beans.property.SimpleStringProperty(formatTimeRange(cell.getValue())));
+        }
+
+        if (statusColumn != null) {
+            statusColumn.setCellValueFactory(cell ->
+                    new javafx.beans.property.SimpleStringProperty(formatStatus(cell.getValue().getStatus())));
+        }
+
+        if (actionsColumn != null) {
+            actionsColumn.setCellFactory(column -> new TableCell<>() {
+                private final Button detailButton = new Button("Xem chi tiết");
+
+                {
+                    detailButton.setStyle("-fx-background-color: #0B5394; -fx-text-fill: white; -fx-font-weight: 700;");
+                    detailButton.setOnAction(event -> {
+                        AuctionSummaryDTO auction = getTableView().getItems().get(getIndex());
+                        openAuctionDetail(auction);
+                    });
+                }
+
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
+                        setGraphic(null);
+                        return;
+                    }
+                    setGraphic(detailButton);
+                }
+            });
+        }
+
+        auctionsTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    private void hideColumn(TableColumn<?, ?> column) {
+        if (column == null) {
+            return;
+        }
+        column.setVisible(false);
+    }
+
+    private String formatTimeRange(AuctionSummaryDTO auction) {
+        if (auction == null) {
+            return "";
+        }
+        String start = formatTime(auction.getStartTimeMillis());
+        String end = formatTime(auction.getEndTimeMillis());
+        if (start.isBlank() && end.isBlank()) {
+            return "Chưa rõ";
+        }
+        if (start.isBlank()) {
+            return "Kết thúc: " + end;
+        }
+        if (end.isBlank()) {
+            return "Bắt đầu: " + start;
+        }
+        return start + " - " + end;
+    }
+
+    private String formatTime(long epochMillis) {
+        if (epochMillis <= 0) {
+            return "";
+        }
+        return Instant.ofEpochMilli(epochMillis)
+                .atZone(ZoneId.systemDefault())
+                .format(TABLE_TIME_FORMATTER);
+    }
+
+    private String formatStatus(AuctionStatus status) {
+        if (status == null) {
+            return "Không rõ";
+        }
+        return switch (status) {
+            case OPEN -> "Sắp diễn ra";
+            case RUNNING -> "Đang diễn ra";
+            case FINISHED -> "Đã kết thúc";
+            case PAID -> "Đã thanh toán";
+            case CANCELED -> "Đã hủy";
+        };
+    }
+
+    private void openAuctionDetail(AuctionSummaryDTO auction) {
+        if (auction == null || auctionsTableView == null || auctionsTableView.getScene() == null) {
+            return;
+        }
+
+        try {
+            var loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/AuctionDetailView.fxml"));
+            var root = loader.load();
+            AuctionDetailController controller = loader.getController();
+
+            javafx.stage.Stage owner = (javafx.stage.Stage) auctionsTableView.getScene().getWindow();
+            javafx.stage.Stage dialog = new javafx.stage.Stage();
+            dialog.setTitle("Chi tiết phiên đấu giá #" + auction.getAuctionId());
+            dialog.initOwner(owner);
+            dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            dialog.setResizable(true);
+            dialog.setMinWidth(980);
+            dialog.setMinHeight(680);
+            dialog.setScene(new javafx.scene.Scene((javafx.scene.Parent) root, 1180, 720));
+            controller.setOnBack(dialog::close);
+            controller.setInitialAuction(auction);
+            dialog.setOnHidden(event -> {
+                controller.cleanup();
+                refreshAuctions();
+            });
+            dialog.showAndWait();
+        } catch (IOException e) {
+            AlertUtils.showError("Lỗi điều hướng", "Không thể mở chi tiết phiên đấu giá.");
+        }
+    }
+
+    private void refreshAuctions() {
+        try {
+            List<AuctionSummaryDTO> auctions = auctionClientService.getAllAuctions();
+            auctionsTableView.setItems(FXCollections.observableArrayList(auctions));
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", "Không thể tải tất cả phiên đấu giá: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void viewAllAuctions(ActionEvent event) {
+        refreshAuctions();
+    }
+
+
+    // AdminScreen.fxml dùng onAction="#refresh" cho một số nút.
     @FXML
     public void refresh(ActionEvent event) {
+        refreshAuctions();
+    }
+
+
+    @FXML
+    public void viewCanceledAuctions(ActionEvent event) {
         try {
-            List<UserDTO> users = adminClientService.getAllUsers();
-            usersListView.setItems(FXCollections.observableArrayList(users));
-        } catch (ClientServiceException e) {
-            AlertUtils.showError("Lỗi", e.getMessage());
+            List<AuctionSummaryDTO> auctions = auctionClientService.getAllAuctions();
+            auctions.removeIf(a -> a == null || a.getStatus() != AuctionStatus.CANCELED);
+            auctionsTableView.setItems(FXCollections.observableArrayList(auctions));
         } catch (Exception e) {
-            AlertUtils.showError("Lỗi", "Không thể tải users: " + e.getMessage());
+            AlertUtils.showError("Lỗi", "Không thể tải phiên đã hủy: " + e.getMessage());
         }
     }
 
     @FXML
-    public void applyBan(ActionEvent event) {
-        try {
-            int targetUserId = Integer.parseInt(targetUserIdTextField.getText().trim());
-            long durationMillis = Long.parseLong(durationMillisTextField.getText().trim());
+    public void viewAllUsers(ActionEvent event) {
+        openUsersView(false);
+    }
 
-            if (durationMillis <= 0) {
-                AlertUtils.showError("Lỗi", "durationMillis phải > 0");
-                return;
+    @FXML
+    public void viewBannedUsers(ActionEvent event) {
+        openUsersView(true);
+    }
+
+    private void openUsersView(boolean bannedOnly) {
+        try {
+            var loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/AdminUsersView.fxml"));
+            var root = loader.load();
+
+            var controller = loader.getController();
+            if (controller instanceof AdminUsersViewController c) {
+                c.setBannedOnly(bannedOnly);
             }
 
-            ApplyBanResponse result = adminClientService.applyBan(targetUserId, durationMillis);
-            AlertUtils.showInfo("Thành công", result.getMessage());
-            refresh(null);
-        } catch (ClientServiceException e) {
-            AlertUtils.showError("Ban thất bại", e.getMessage());
+            javafx.stage.Stage stage = (javafx.stage.Stage) auctionsTableView.getScene().getWindow();
+            stage.setScene(new javafx.scene.Scene((javafx.scene.Parent) root));
         } catch (Exception e) {
-            AlertUtils.showError("Lỗi", "Input không hợp lệ: " + e.getMessage());
+            AlertUtils.showError("Lỗi điều hướng", e.getMessage());
         }
     }
 
     @FXML
-    public void removeBan(ActionEvent event) {
+    private void handleLogout(ActionEvent event) {
+        ClientSession.clear();
         try {
-            int targetUserId = Integer.parseInt(targetUserIdTextField.getText().trim());
-
-            RemoveBanResponse result = adminClientService.removeBan(targetUserId);
-            AlertUtils.showInfo("Thành công", result.getMessage());
-            refresh(null);
-        } catch (ClientServiceException e) {
-            AlertUtils.showError("Unban thất bại", e.getMessage());
-        } catch (Exception e) {
-            AlertUtils.showError("Lỗi", "Input không hợp lệ: " + e.getMessage());
+            SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
+        } catch (IOException e) {
+            AlertUtils.showError("Lỗi điều hướng", "Không thể quay về màn hình đăng nhập.");
         }
-    }
-
-    @FXML
-    public void back(ActionEvent event) throws IOException {
-        try {
-            // giữ nguyên behavior logout server-side hiện tại bằng cách clear client session
-            ClientSession.clear();
-        } catch (Exception ignored) {
-        }
-
-        SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
     }
 }
+
 
