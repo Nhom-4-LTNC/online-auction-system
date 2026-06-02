@@ -158,16 +158,6 @@ public class BidService {
         return bidRepository.getBidDTOsByBidderId(bidderId);
     }
 
-    public List<Bid> getBidsByBidderForRequester(int requesterId, int bidderId) throws Exception {
-        User requester = userService.getUserById(requesterId);
-        if (!requester.isAdmin() && requesterId != bidderId) {
-            throw new AuthorizationException(
-                    "Bạn không có quyền xem lịch sử bid của người dùng khác!"
-            );
-        }
-        return getBidsByBidder(bidderId);
-    }
-
     public List<BidDTO> getBidHistoryByBidderForRequester(int requesterId, int bidderId) throws Exception {
         User requester = userService.getUserById(requesterId);
         if (!requester.isAdmin() && requesterId != bidderId) {
@@ -178,37 +168,4 @@ public class BidService {
         return getBidHistoryByBidder(bidderId);
     }
 
-    public BidDTO mapToBidDTO(Bid bid) throws AuctionAppException {
-        User bidder;
-        try {
-            bidder = userService.getUserById(bid.getBidderId());
-        } catch (Exception e) {
-            throw new AuctionAppException("Lỗi khi lấy thông tin người đặt giá");
-        }
-
-        String bidderUsername = bidder != null
-                ? bidder.getUsername()
-                : "Unknown";
-
-        return new BidDTO(
-                bid.getId(),
-                bid.getAuctionId(),
-                bid.getBidderId(),
-                bidderUsername,
-                bid.getAmount(),
-                bid.getTimestamp()
-        );
-    }
-
-    public List<BidDTO> mapToBidDTOList(List<Bid> bids) throws AuctionAppException {
-        return bids.stream()
-                .map(bid -> {
-                    try {
-                        return mapToBidDTO(bid);
-                    } catch (Exception e) {
-                        throw new RuntimeException(new AuctionAppException("Không thể map Bid sang BidDTO"));
-                    }
-                })
-                .toList();
-    }
 }
