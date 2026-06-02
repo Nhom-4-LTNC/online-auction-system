@@ -4,7 +4,6 @@ import com.auction.server.event.AuctionEventPublisher;
 import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BidDTO;
-import com.auction.server.model.Bid;
 import com.auction.server.model.auction.Auction;
 import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.protocol.ActionType;
@@ -41,11 +40,12 @@ public class BidController {
                         "Người dùng chưa đăng nhập.");
             }
 
-            Auction updatedAuction = bidService.placeBid(
+            BidService.PlaceBidResult placeBidResult = bidService.placeBid(
                     client.getCurrentUser().getId(),
                     placeBidRequest.getAuctionId(),
                     placeBidRequest.getAmount()
             );
+            Auction updatedAuction = placeBidResult.updatedAuction();
             AuctionDetailDTO auctionDetailDTO = auctionService.getAuctionDetail(updatedAuction.getId());
             AuctionSummaryDTO summary =
                     auctionService.mapToAuctionSummaryDTO(updatedAuction);
@@ -55,7 +55,7 @@ public class BidController {
                     updatedAuction.getId(),
                     AuctionUpdateType.BID_PLACED,
                     summary,
-                    null,
+                    placeBidResult.latestBid(),
                     "Có lượt đặt giá mới.",
                     System.currentTimeMillis()
             );
@@ -77,7 +77,7 @@ public class BidController {
         } catch (AuctionAppException e) {
             return Response.error(ActionType.PLACE_BID, e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.PLACE_BID, e);
             return Response.error(ActionType.PLACE_BID, "Lỗi không xác định khi đặt giá.");
         }
     }
@@ -96,8 +96,9 @@ public class BidController {
                         "Người dùng chưa đăng nhập.");
             }
 
-            List<Bid> bids = bidService.getBidsByAuctionId(getBidHistoryRequest.getAuctionId());
-            List <BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
+            List<BidDTO> bidDTOs = bidService.getBidHistoryByAuction(
+                    getBidHistoryRequest.getAuctionId()
+            );
 
             return Response.success(
                     ActionType.GET_BIDS_BY_AUCTION,
@@ -126,11 +127,10 @@ public class BidController {
                 return Response.error(ActionType.GET_BIDS_BY_BIDDER, "Người dùng chưa đăng nhập.");
             }
 
-            List<Bid> bids = bidService.getBidsByBidderForRequester(
+            List<BidDTO> bidDTOs = bidService.getBidHistoryByBidderForRequester(
                     client.getCurrentUser().getId(),
                     getBidsByBidderRequest.getBidderId()
             );
-            List<BidDTO> bidDTOs = bidService.mapToBidDTOList(bids);
 
             return Response.success(
                     ActionType.GET_BIDS_BY_BIDDER,
@@ -138,7 +138,7 @@ public class BidController {
                             "Lấy lịch sử bid theo người tham gia thành công!")
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.GET_BIDS_BY_BIDDER, e);
             return Response.error(
                     ActionType.GET_BIDS_BY_BIDDER,
                     "Lỗi không xác định khi lấy lịch sử bid theo người tham gia."
@@ -151,18 +151,17 @@ public class BidController {
             return Response.error(ActionType.GET_MY_BIDS,
                     "Người dùng chưa đăng nhập.");
         }
-        List <Bid> bids = bidService.getBidsByBidder(client.getCurrentUser().getId());
-        List <BidDTO> bidDTOs = null;
-        try {
-            bidDTOs = bidService.mapToBidDTOList(bids);
-        } catch (AuctionAppException e) {
-            throw new RuntimeException(e);
-        }
+        List<BidDTO> bidDTOs = bidService.getBidHistoryByBidder(client.getCurrentUser().getId());
 
         return Response.success(
                     ActionType.GET_MY_BIDS,
                     new GetBidHistoryResponse(bidDTOs,
                             "Lấy lịch sử bid thành công!")
             );
+    }
+
+    private void logUnexpected(ActionType actionType, Exception e) {
+        System.err.println("[BidController] Unexpected error action=" + actionType
+                + ": " + e.getMessage());
     }
 }

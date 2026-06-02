@@ -66,13 +66,13 @@ public class Client {
             out.flush();
             in = new ObjectInputStream(socket.getInputStream());
 
-            System.out.println("Client da ket noi toi server thanh cong!");
+            System.out.println("[Client] Đã kết nối tới server.");
 
             Thread listenThread = new Thread(this::listenForData, "auction-client-listener");
             listenThread.setDaemon(true);
             listenThread.start();
         } catch (Exception e) {
-            System.out.println("Loi ket noi toi server " + e.getMessage());
+            System.err.println("[Client] Không thể kết nối tới server: " + e.getMessage());
         }
     }
 
@@ -92,7 +92,7 @@ public class Client {
                 out.reset();
             } catch (IOException e) {
                 closeSocketQuietly();
-                throw new UncheckedIOException("Loi gui tin nhan toi server", e);
+                throw new UncheckedIOException("Không thể gửi dữ liệu tới server.", e);
             }
         }
     }
@@ -113,18 +113,11 @@ public class Client {
             throw new IOException("Dang cho phan hoi cho action " + request.getAction());
         }
         try {
-            if (request.getAction() == ActionType.GET_AUCTIONS_BY_TYPE
-                    || request.getAction() == ActionType.GET_ALL_AUCTIONS) {
-                System.out.println("[Client] Sending request action=" + request.getAction());
-            }
             sendMessage(request);
             Response<?> response = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
             if (response == null) {
-                if (request.getAction() == ActionType.GET_AUCTIONS_BY_TYPE
-                        || request.getAction() == ActionType.GET_ALL_AUCTIONS) {
-                    System.err.println("[Client] Timeout waiting response action=" + request.getAction());
-                }
-                throw new IOException("Qua thoi gian cho phan hoi tu server");
+                System.err.println("[Client] Timeout waiting response action=" + request.getAction());
+                throw new IOException("Quá thời gian chờ phản hồi từ server.");
             }
             return response;
         } finally {
@@ -143,9 +136,9 @@ public class Client {
                 }
             }
         } catch (EOFException e) {
-            System.out.println("Server da dong ket noi");
+            System.out.println("[Client] Server đã đóng kết nối.");
         } catch (Exception e) {
-            System.out.println("Server bi ngat ket noi khoi server");
+            System.err.println("[Client] Mất kết nối tới server: " + e.getMessage());
         } finally {
             closeSocketQuietly();
         }
@@ -179,7 +172,7 @@ public class Client {
                 socket.close();
             }
         } catch (IOException e) {
-            System.err.println("Loi dong ket noi client: " + e.getMessage());
+            System.err.println("[Client] Lỗi đóng kết nối client: " + e.getMessage());
         }
     }
 }

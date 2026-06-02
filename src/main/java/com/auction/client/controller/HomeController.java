@@ -84,43 +84,43 @@ public class HomeController implements Initializable {
             return;
         }
 
-        nameLabel.setText("Hello: " + safeText(username));
+        nameLabel.setText("Xin chào: " + safeText(username));
         if (roleLabel != null) {
-            roleLabel.setText("Role: N/A");
+            roleLabel.setText("Vai trò: N/A");
         }
         if (balanceLabel != null) {
-            balanceLabel.setText("Balance: N/A");
+            balanceLabel.setText("Số dư: N/A");
         }
     }
 
     private void renderCurrentUser(UserDTO user) {
-        nameLabel.setText("Hello: " + safeText(user.getUsername()));
+        nameLabel.setText("Xin chào: " + safeText(user.getUsername()));
         if (roleLabel != null) {
-            roleLabel.setText("Role: " + (user.getRole() == null ? "N/A" : user.getRole().name()));
+            roleLabel.setText("Vai trò: " + (user.getRole() == null ? "N/A" : user.getRole().name()));
         }
         if (balanceLabel != null) {
             Double balance = ClientSession.getBalance();
-            balanceLabel.setText("Balance: " + (balance == null ? "N/A" : FormatUtils.currency(balance)));
+            balanceLabel.setText("Số dư: " + (balance == null ? "N/A" : FormatUtils.currency(balance)));
         }
     }
 
     private void renderGuestState() {
-        nameLabel.setText("Hello: Guest");
+        nameLabel.setText("Xin chào: Guest");
         if (roleLabel != null) {
-            roleLabel.setText("Role: N/A");
+            roleLabel.setText("Vai trò: N/A");
         }
         if (balanceLabel != null) {
-            balanceLabel.setText("Balance: N/A");
+            balanceLabel.setText("Số dư: N/A");
         }
     }
 
     private void redirectToLogin() {
-        AlertUtils.showWarning("Session expired", "Please log in again.");
+        AlertUtils.showWarning("Phiên đăng nhập hết hạn", "Vui lòng đăng nhập lại.");
         try {
             Stage stage = (Stage) scenePane.getScene().getWindow();
             SceneUtils.switchScene(stage, "/fxml/LoginScreen.fxml");
         } catch (IOException e) {
-            AlertUtils.showError("Navigation error", "Cannot open login screen: " + e.getMessage());
+            AlertUtils.showError("Lỗi điều hướng", "Không thể mở màn hình đăng nhập.");
         }
     }
 

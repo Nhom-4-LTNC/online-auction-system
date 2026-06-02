@@ -8,6 +8,7 @@ import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.protocol.auth.AuthResponse;
 import com.auction.shared.util.Check;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -43,6 +44,7 @@ public class CreateAccountController implements Initializable {
 
     private final Image invalidIcon =
             new Image(getClass().getResource("/picture/invalidIcon.png").toExternalForm());
+    private volatile boolean registering = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -51,6 +53,9 @@ public class CreateAccountController implements Initializable {
 
     @FXML
     public void Create(ActionEvent event) {
+        if (registering) {
+            return;
+        }
         String email = emailTextField.getText().trim();
         String password = passTextField.getText();
         String username = nameTextField.getText().trim();
@@ -59,26 +64,68 @@ public class CreateAccountController implements Initializable {
             return;
         }
 
-        try {
-            AuthResponse authResponse = authClientService.register(username, email, password);
-            handleRegisterSuccess(authResponse);
-        } catch (ClientServiceException e) {
-            AlertUtils.showError("Register failed", e.getMessage());
-        } catch (IOException e) {
-            AlertUtils.showError("Navigation error", "Cannot open screen: " + e.getMessage());
-        }
+        registering = true;
+        setRegisterSubmitting(true);
+
+        Task<AuthResponse> task = new Task<>() {
+            @Override
+            protected AuthResponse call() {
+                return authClientService.register(username, email, password);
+            }
+        };
+
+        task.setOnSucceeded(workerEvent -> {
+            try {
+                handleRegisterSuccess(task.getValue());
+            } catch (IOException e) {
+                registering = false;
+                setRegisterSubmitting(false);
+                AlertUtils.showError("Lỗi điều hướng", "Không thể mở màn hình tiếp theo.");
+            }
+        });
+
+        task.setOnFailed(workerEvent -> {
+            registering = false;
+            setRegisterSubmitting(false);
+            Throwable error = task.getException();
+            String message = error instanceof ClientServiceException
+                    ? error.getMessage()
+                    : "Không thể đăng ký.";
+            AlertUtils.showError("Đăng ký thất bại", message);
+        });
+
+        task.setOnCancelled(workerEvent -> {
+            registering = false;
+            setRegisterSubmitting(false);
+        });
+
+        Thread thread = new Thread(task, "register-submit");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     @FXML
     public void goToSignIn(ActionEvent event) throws IOException {
+        if (registering) {
+            return;
+        }
         SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
     }
 
     private void handleRegisterSuccess(AuthResponse authResponse) throws IOException {
+        if (authResponse == null) {
+            registering = false;
+            setRegisterSubmitting(false);
+            AlertUtils.showError("Đăng ký thất bại", "Không nhận được phản hồi đăng ký.");
+            return;
+        }
+
         UserDTO newUser = authResponse.getUser();
 
         if (newUser == null) {
-            AlertUtils.showError("Register failed", authResponse.getMessage());
+            registering = false;
+            setRegisterSubmitting(false);
+            AlertUtils.showError("Đăng ký thất bại", authResponse.getMessage());
             return;
         }
 
@@ -100,17 +147,17 @@ public class CreateAccountController implements Initializable {
 
     private boolean validateInput(String username, String email, String password) {
         if (username.isEmpty()) {
-            AlertUtils.showError("Input error", "Please enter username.");
+            AlertUtils.showError("Dữ liệu không hợp lệ", "Vui lòng nhập username.");
             return false;
         }
 
         if (email.isEmpty()) {
-            AlertUtils.showError("Input error", "Please enter email.");
+            AlertUtils.showError("Dữ liệu không hợp lệ", "Vui lòng nhập email.");
             return false;
         }
 
         if (!Check.checkPass(password)) {
-            AlertUtils.showError("Invalid password", "Password does not meet the security requirements.");
+            AlertUtils.showError("Mật khẩu không hợp lệ", "Mật khẩu chưa đáp ứng yêu cầu bảo mật.");
             return false;
         }
 
@@ -119,13 +166,24 @@ public class CreateAccountController implements Initializable {
 
     private void navigateToHome(UserDTO user) throws IOException {
         Stage stage = (Stage) Create.getScene().getWindow();
-        HomeController homeController = SceneUtils.switchSceneAndGetController(stage, "/fxml/HomeScreen.fxml");
-        if (homeController != null) {
-            homeController.displayName(user.getUsername());
+        AuctionMenuController controller =
+                SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionMenu.fxml");
+        if (controller != null) {
+            controller.setCurrentUser(user);
         }
+        stage.setMaximized(true);
     }
 
     private void setPwdReqImage(ImageView imgView, boolean valid) {
         imgView.setImage(valid ? validIcon : invalidIcon);
+    }
+
+    private void setRegisterSubmitting(boolean submitting) {
+        Create.setDisable(submitting);
+        signInButton.setDisable(submitting);
+        nameTextField.setDisable(submitting);
+        emailTextField.setDisable(submitting);
+        passTextField.setDisable(submitting);
+        Create.setText(submitting ? "Đang xử lý..." : "Create");
     }
 }

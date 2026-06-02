@@ -31,6 +31,7 @@ public class FinanceMenuController implements Initializable {
     @FXML private Label currentBalanceLabel;
     @FXML private Label availableBalanceLabel;
     @FXML private Label unpaidWinningAmountLabel;
+    private volatile boolean addingBalance = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -41,8 +42,11 @@ public class FinanceMenuController implements Initializable {
 
     @FXML
     public void incrementBalance(ActionEvent event) {
+        if (addingBalance) {
+            return;
+        }
         if (!ClientSession.isLoggedIn()) {
-            AlertUtils.showError("Wallet", "Please login first.");
+            AlertUtils.showError("Ví tiền", "Vui lòng đăng nhập trước.");
             return;
         }
 
@@ -50,7 +54,7 @@ public class FinanceMenuController implements Initializable {
         try {
             amount = parsePositiveAmount(incrementBalanceTextField.getText());
         } catch (IllegalArgumentException e) {
-            AlertUtils.showError("Input error", e.getMessage());
+            AlertUtils.showError("Dữ liệu không hợp lệ", e.getMessage());
             return;
         }
 
@@ -59,7 +63,7 @@ public class FinanceMenuController implements Initializable {
 
     @FXML
     public void setBalance(ActionEvent event) {
-        AlertUtils.showWarning("Wallet", "Direct balance setting is not supported. Use Add Balance instead.");
+        AlertUtils.showWarning("Ví tiền", "Không hỗ trợ đặt số dư trực tiếp. Vui lòng dùng nạp tiền.");
     }
 
     @FXML
@@ -68,6 +72,7 @@ public class FinanceMenuController implements Initializable {
     }
 
     private void submitAddBalance(double amount) {
+        addingBalance = true;
         setSubmitting(true);
 
         Task<BalanceResponse> task = new Task<>() {
@@ -78,21 +83,28 @@ public class FinanceMenuController implements Initializable {
         };
 
         task.setOnSucceeded(event -> {
+            addingBalance = false;
             setSubmitting(false);
             BalanceResponse response = task.getValue();
             updateSessionWallet(response);
             renderWalletSummary();
             incrementBalanceTextField.clear();
-            AlertUtils.showInfo("Wallet", response == null ? "Balance updated." : response.getMessage());
+            AlertUtils.showInfo("Ví tiền", response == null ? "Cập nhật số dư thành công." : response.getMessage());
         });
 
         task.setOnFailed(event -> {
+            addingBalance = false;
             setSubmitting(false);
             Throwable error = task.getException();
             String message = error instanceof ClientServiceException
                     ? error.getMessage()
-                    : "Cannot update balance.";
-            AlertUtils.showError("Wallet", message);
+                    : "Không thể cập nhật số dư.";
+            AlertUtils.showError("Ví tiền", message);
+        });
+
+        task.setOnCancelled(event -> {
+            addingBalance = false;
+            setSubmitting(false);
         });
 
         Thread thread = new Thread(task, "wallet-add-balance");
@@ -128,7 +140,7 @@ public class FinanceMenuController implements Initializable {
 
     private double parsePositiveAmount(String rawValue) {
         if (rawValue == null || rawValue.trim().isEmpty()) {
-            throw new IllegalArgumentException("Please enter an amount.");
+            throw new IllegalArgumentException("Vui lòng nhập số tiền.");
         }
 
         try {
@@ -138,7 +150,7 @@ public class FinanceMenuController implements Initializable {
             }
             return amount;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Amount must be a positive number.");
+            throw new IllegalArgumentException("Số tiền phải là số dương.");
         }
     }
 

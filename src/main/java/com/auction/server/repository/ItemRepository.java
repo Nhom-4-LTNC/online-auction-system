@@ -68,6 +68,50 @@ public class ItemRepository {
         }
     }
 
+    public void updateItem(Connection conn, Item item) throws SQLException {
+        String sql = "UPDATE items SET name = ?, description = ?, image_url = ?, "
+                + "brand = ?, warranty_months = ?, artist = ?, creation_year = ?, vin = ?, mileage = ? "
+                + "WHERE id = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, item.getName());
+            pstmt.setString(2, item.getDescription());
+            setNullableString(pstmt, 3, item.getImageUrl());
+
+            if (item instanceof Electronics electronics) {
+                pstmt.setString(4, electronics.getBrand());
+                pstmt.setInt(5, electronics.getWarrantyMonths());
+                pstmt.setNull(6, Types.VARCHAR);
+                pstmt.setNull(7, Types.INTEGER);
+                pstmt.setNull(8, Types.VARCHAR);
+                pstmt.setNull(9, Types.INTEGER);
+            } else if (item instanceof Art art) {
+                pstmt.setNull(4, Types.VARCHAR);
+                pstmt.setNull(5, Types.INTEGER);
+                pstmt.setString(6, art.getArtist());
+                pstmt.setInt(7, art.getYearCreated());
+                pstmt.setNull(8, Types.VARCHAR);
+                pstmt.setNull(9, Types.INTEGER);
+            } else if (item instanceof Vehicle vehicle) {
+                pstmt.setString(4, vehicle.getBrand());
+                pstmt.setNull(5, Types.INTEGER);
+                pstmt.setNull(6, Types.VARCHAR);
+                pstmt.setNull(7, Types.INTEGER);
+                pstmt.setString(8, vehicle.getVin());
+                pstmt.setInt(9, vehicle.getMileage());
+            } else {
+                throw new SQLException("Unsupported item class: " + item.getClass().getName());
+            }
+
+            pstmt.setInt(10, item.getId());
+
+            int rowsUpdated = pstmt.executeUpdate();
+            if (rowsUpdated == 0) {
+                throw new SQLException("No item found for id=" + item.getId());
+            }
+        }
+    }
+
     public Item getItemById(int id) throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return getItemById(conn, id);

@@ -9,16 +9,15 @@ import com.auction.server.repository.BidRepository;
 import com.auction.server.repository.UserRepository;
 import com.auction.shared.dto.BidDTO;
 import com.auction.shared.enums.AuctionStatus;
-import com.auction.shared.exception.AuctionAppException;
-import com.auction.shared.exception.AuctionClosedException;
-import com.auction.shared.exception.InsufficientFundsException;
-import com.auction.shared.exception.ResourceNotFoundException;
+import com.auction.shared.exception.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 public class BidService {
+    private static final int RECENT_BID_LIMIT = 20;
+
     private static volatile BidService instance;
 
     private final BidRepository bidRepository = BidRepository.getInstance();
@@ -39,13 +38,14 @@ public class BidService {
         return instance;
     }
 
-    public Auction placeBid(int bidderId, int auctionId, double amount) throws Exception {
+    public PlaceBidResult placeBid(int bidderId, int auctionId, double amount) throws Exception {
         if (bidderId <= 0) {
             throw new AuctionAppException("Bạn cần đăng nhập để đặt giá!");
         }
 
         Auction auction;
         Auction expiredAuction = null;
+        BidDTO latestBid = null;
         try (Connection conn = DatabaseConnection.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             try {
@@ -79,6 +79,14 @@ public class BidService {
 
                     Bid bid = auction.placeBid(bidder, amount);
                     bidRepository.save(conn, bid);
+                    latestBid = new BidDTO(
+                            bid.getId(),
+                            bid.getAuctionId(),
+                            bidder.getId(),
+                            bidder.getUsername(),
+                            bid.getAmount(),
+                            bid.getTimestamp()
+                    );
                     auctionRepository.updateAuction(conn, auction);
                     conn.commit();
                 }
@@ -94,8 +102,10 @@ public class BidService {
         if (expiredAuction != null) {
             throw new AuctionClosedException(auctionId);
         }
-        return auction;
+        return new PlaceBidResult(auction, latestBid);
     }
+
+    public record PlaceBidResult(Auction updatedAuction, BidDTO latestBid) {}
 
     private boolean auctionStateChanged(AuctionStatus oldStatus, Integer oldWinnerId, Auction auction) {
         return oldStatus != auction.getStatus()
@@ -128,6 +138,14 @@ public class BidService {
         return bidRepository.findByAuctionId(auctionId);
     }
 
+    public List<BidDTO> getBidHistoryByAuction(int auctionId) throws Exception {
+        return bidRepository.getBidDTOsByAuctionId(auctionId);
+    }
+
+    public List<BidDTO> getRecentBidHistoryByAuction(int auctionId) throws Exception {
+        return bidRepository.getRecentBidDTOsByAuctionId(auctionId, RECENT_BID_LIMIT);
+    }
+
     public Bid getHighestBidByAuctionId(int auctionId) throws Exception {
         return bidRepository.findHighestBidByAuctionId(auctionId);
     }
@@ -136,47 +154,18 @@ public class BidService {
         return bidRepository.findByBidderId(bidderId);
     }
 
-    public List<Bid> getBidsByBidderForRequester(int requesterId, int bidderId) throws Exception {
+    public List<BidDTO> getBidHistoryByBidder(int bidderId) throws Exception {
+        return bidRepository.getBidDTOsByBidderId(bidderId);
+    }
+
+    public List<BidDTO> getBidHistoryByBidderForRequester(int requesterId, int bidderId) throws Exception {
         User requester = userService.getUserById(requesterId);
         if (!requester.isAdmin() && requesterId != bidderId) {
-            throw new com.auction.shared.exception.AuthorizationException(
+            throw new AuthorizationException(
                     "Bạn không có quyền xem lịch sử bid của người dùng khác!"
             );
         }
-        return getBidsByBidder(bidderId);
+        return getBidHistoryByBidder(bidderId);
     }
 
-    public BidDTO mapToBidDTO(Bid bid) throws AuctionAppException {
-        User bidder;
-        try {
-            bidder = userService.getUserById(bid.getBidderId());
-        } catch (Exception e) {
-            throw new AuctionAppException("Lỗi khi lấy thông tin người đặt giá");
-        }
-
-        String bidderUsername = bidder != null
-                ? bidder.getUsername()
-                : "Unknown";
-
-        return new BidDTO(
-                bid.getId(),
-                bid.getAuctionId(),
-                bid.getBidderId(),
-                bidderUsername,
-                bid.getAmount(),
-                bid.getTimestamp()
-        );
-    }
-
-    public List<BidDTO> mapToBidDTOList(List<Bid> bids) throws AuctionAppException {
-        return bids.stream()
-                .map(bid -> {
-                    try {
-                        return mapToBidDTO(bid);
-                    } catch (Exception e) {
-                        throw new RuntimeException(new AuctionAppException("Không thể map Bid sang BidDTO"));
-                    }
-                })
-                .toList();
-    }
 }

@@ -10,8 +10,10 @@ import com.auction.shared.protocol.auction.CreateAuctionRequest;
 import com.auction.shared.protocol.auction.CreateAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionRequest;
 import com.auction.shared.protocol.auction.GetAuctionResponse;
+import com.auction.shared.protocol.auction.GetAllAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeRequest;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeResponse;
+import com.auction.shared.protocol.auction.UpdateAuctionRequest;
 
 import java.util.Collections;
 import java.util.List;
@@ -54,6 +56,28 @@ public class AuctionClientService extends BaseClientService {
         return response.getAuctions();
     }
 
+    public List<AuctionSummaryDTO> getAllAuctions() {
+        Request<java.io.Serializable> request = new Request<>(ActionType.GET_ALL_AUCTIONS, null);
+
+        GetAllAuctionResponse response = sendAndExtract(request, GetAllAuctionResponse.class);
+        if (response == null || response.getAuctions() == null) {
+            return Collections.emptyList();
+        }
+        return response.getAuctions();
+    }
+
+    public List<AuctionSummaryDTO> getMyCreatedAuctions() {
+        return getAuctionSummaryList(ActionType.GET_MY_CREATED_AUCTIONS);
+    }
+
+    public List<AuctionSummaryDTO> getMyParticipatedAuctions() {
+        return getAuctionSummaryList(ActionType.GET_MY_PARTICIPATED_AUCTIONS);
+    }
+
+    public List<AuctionSummaryDTO> getMyWonAuctions() {
+        return getAuctionSummaryList(ActionType.GET_MY_WON_AUCTIONS);
+    }
+
     public String closeAuction(int auctionId) {
         Request<CloseAuctionRequest> request = new Request<>(
                 ActionType.CLOSE_AUCTION,
@@ -61,5 +85,33 @@ public class AuctionClientService extends BaseClientService {
         );
 
         return sendAndExtract(request, String.class);
+    }
+
+    public CreateAuctionResponse updateAuctionItem(UpdateAuctionRequest updateAuctionRequest) {
+        Request<UpdateAuctionRequest> request = new Request<>(
+                ActionType.UPDATE_AUCTION_ITEM,
+                updateAuctionRequest
+        );
+
+        return sendAndExtract(request, CreateAuctionResponse.class);
+    }
+
+    public String cancelAuction(int auctionId) {
+        Request<CloseAuctionRequest> request = new Request<>(
+                ActionType.CANCEL_AUCTION,
+                new CloseAuctionRequest(auctionId)
+        );
+
+        return sendAndExtract(request, String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<AuctionSummaryDTO> getAuctionSummaryList(ActionType actionType) {
+        Request<java.io.Serializable> request = new Request<>(actionType, null);
+        List<?> response = sendAndExtract(request, List.class);
+        if (response == null) {
+            return Collections.emptyList();
+        }
+        return (List<AuctionSummaryDTO>) response;
     }
 }

@@ -1,135 +1,149 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="495.0" prefWidth="738.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AuctionItemMenuController">
-   <children>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="66.0" layoutX="-4.0" stroke="BLACK" strokeType="INSIDE" width="744.0" />
-      <Label layoutX="20.0" layoutY="5.0" prefHeight="51.0" prefWidth="334.0" text="CREATE AUCTION" textFill="WHITE">
-         <font>
-            <Font name="Trebuchet MS" size="40.0" />
-         </font>
-      </Label>
-      <VBox layoutX="249.0" layoutY="95.0" spacing="10.0">
-         <children>
-            <Label prefHeight="26.0" prefWidth="38.0" text="Type">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
+<BorderPane prefHeight="680.0" prefWidth="820.0"
+            style="-fx-background-color: #f7f7f7;"
+            xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.client.controller.AuctionItemMenuController">
+    <top>
+        <VBox spacing="4.0" style="-fx-background-color: #e79316;">
+            <padding>
+                <Insets bottom="16.0" left="24.0" right="24.0" top="18.0" />
+            </padding>
+            <Label text="Tạo phiên đấu giá" textFill="WHITE">
+                <font>
+                    <Font name="Tahoma Bold" size="28.0" />
+                </font>
             </Label>
-            <RadioButton fx:id="electronicsButton" mnemonicParsing="false" onAction="#onItemSelected" text="Electronics">
-               <toggleGroup>
-                  <ToggleGroup fx:id="itemType" />
-               </toggleGroup>
-               <font>
-                  <Font name="Trebuchet MS" size="12.0" />
-               </font>
-            </RadioButton>
-            <RadioButton fx:id="artButton" mnemonicParsing="false" onAction="#onItemSelected" text="Art" toggleGroup="$itemType">
-               <font>
-                  <Font name="Trebuchet MS" size="12.0" />
-               </font>
-            </RadioButton>
-            <RadioButton fx:id="vehicleButton" mnemonicParsing="false" onAction="#onItemSelected" text="Vehicle" toggleGroup="$itemType">
-               <font>
-                  <Font name="Trebuchet MS" size="12.0" />
-               </font>
-            </RadioButton>
-            <RadioButton fx:id="otherButton" mnemonicParsing="false" onAction="#onItemSelected" text="Other" toggleGroup="$itemType">
-               <font>
-                  <Font name="Trebuchet MS" size="12.0" />
-               </font>
-            </RadioButton>
-         </children>
-      </VBox>
-      <Button fx:id="auctionButton" layoutX="483.0" layoutY="429.0" mnemonicParsing="false" onAction="#createAuction" prefHeight="31.0" prefWidth="150.0" style="-fx-background-color: #e79316;" text="AUCTION ITEM" textFill="WHITE">
-         <font>
-            <Font name="Trebuchet MS" size="15.0" />
-         </font></Button>
-      <VBox fx:id="artPane" layoutX="409.0" layoutY="121.0">
-         <children>
-            <TextField fx:id="authorTF" promptText="Author" />
-            <TextField fx:id="yearTF" promptText="Year" />
-         </children>
-      </VBox>
-      <VBox fx:id="vehiclePane" layoutX="382.0" layoutY="121.0" visible="false">
-         <children>
-            <TextField fx:id="vehicleBrandTF" promptText="Brand" />
-            <TextField fx:id="vinTF" prefHeight="26.0" prefWidth="204.0" promptText="Vehicle Identification Number (VIN)" />
-            <TextField fx:id="mileageTF" promptText="Mileage" />
-         </children>
-      </VBox>
-      <VBox fx:id="electronicsPane" layoutX="409.0" layoutY="121.0" visible="false">
-         <children>
-            <TextField fx:id="electronicsBrandTF" promptText="Brand" />
-            <TextField fx:id="warrantyTF" promptText="Warranty" />
-         </children>
-      </VBox>
-      <VBox layoutX="51.0" layoutY="95.0">
-         <children>
-            <Label prefHeight="26.0" prefWidth="62.0" text="General">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Label>
-            <TextField fx:id="itemNameTF" layoutX="10.0" layoutY="36.0" promptText="Name" />
-            <TextField fx:id="startingPriceTF" promptText="Starting Price" />
-            <TextField fx:id="descriptionTF" alignment="TOP_LEFT" prefHeight="94.0" prefWidth="150.0" promptText="Description" />
-            <Button fx:id="auctionButton1" mnemonicParsing="false" onAction="#importImage" prefHeight="31.0" prefWidth="150.0" style="-fx-background-color: white;" text="Add Image..." textFill="#848484">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Button>
-         </children>
-      </VBox>
-      <Label fx:id="itemTypeLabel" alignment="CENTER" layoutX="382.0" layoutY="95.0" prefHeight="26.0" prefWidth="204.0" text="Choose a Type!">
-         <font>
-            <Font name="Trebuchet MS" size="15.0" />
-         </font>
-      </Label>
-      <Button fx:id="backButton" layoutX="645.0" layoutY="17.0" mnemonicParsing="false" onAction="#back" prefHeight="31.0" prefWidth="71.0" style="-fx-background-color: white;" text="Back" textFill="#e79316">
-         <font>
-            <Font name="Trebuchet MS" size="16.0" />
-         </font></Button>
-      <ImageView fitHeight="132.0" fitWidth="172.0" layoutX="51.0" layoutY="319.0" pickOnBounds="true" preserveRatio="true">
-      </ImageView>
-      <ImageView fx:id="previewImage" fitHeight="150.0" fitWidth="200.0" layoutX="51.0" layoutY="310.0" pickOnBounds="true" preserveRatio="true" />
-      <VBox layoutX="242.0" layoutY="310.0">
-         <children>
-            <Label prefHeight="26.0" prefWidth="130.0" text="Start Time">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Label>
-            <HBox spacing="15.0">
-               <children>
-                  <DatePicker fx:id="startTime" />
-                  <TextField fx:id="HHMMSSstartTime" promptText="hh:mm:ss" />
-               </children>
-            </HBox>
-            <Label prefHeight="26.0" prefWidth="130.0" text="End Time">
-               <font>
-                  <Font name="Trebuchet MS" size="15.0" />
-               </font>
-            </Label>
-            <HBox spacing="15.0">
-               <children>
-                  <DatePicker fx:id="endTime" />
-                  <TextField fx:id="HHMMSSendTime" promptText="hh:mm:ss" />
-               </children>
-            </HBox>
-         </children>
-      </VBox>
-   </children>
-</AnchorPane>
+            <Label text="Nhập thông tin sản phẩm, chọn loại sản phẩm và thời gian đấu giá." textFill="WHITE" />
+        </VBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent;">
+            <content>
+                <VBox spacing="18.0">
+                    <padding>
+                        <Insets bottom="18.0" left="24.0" right="24.0" top="20.0" />
+                    </padding>
+
+                    <VBox spacing="12.0" style="-fx-background-color: white; -fx-border-color: #e1e1e1; -fx-border-radius: 6; -fx-background-radius: 6;">
+                        <padding>
+                            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+                        </padding>
+                        <Label text="Thông tin sản phẩm">
+                            <font>
+                                <Font name="Tahoma Bold" size="16.0" />
+                            </font>
+                        </Label>
+                        <GridPane hgap="14.0" vgap="12.0">
+                            <Label text="Tên sản phẩm" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <TextField fx:id="itemNameTF" promptText="Tên sản phẩm" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                            <Label text="Giá khởi điểm" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <TextField fx:id="startingPriceTF" promptText="Ví dụ: 100000" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                            <Label text="Bước giá" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <TextField fx:id="bidStepTF" promptText="Để trống để dùng mặc định 10" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                            <Label text="Mô tả" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                            <TextField fx:id="descriptionTF" promptText="Mô tả ngắn về sản phẩm" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                            <Label text="Ảnh" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                            <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                <Button fx:id="importImageButton" mnemonicParsing="false" onAction="#importImage" text="Chọn ảnh" />
+                                <Label fx:id="selectedImageFileLabel" text="Chưa chọn ảnh" textFill="#666666" wrapText="true" />
+                            </HBox>
+                        </GridPane>
+                    </VBox>
+
+                    <VBox spacing="12.0" style="-fx-background-color: white; -fx-border-color: #e1e1e1; -fx-border-radius: 6; -fx-background-radius: 6;">
+                        <padding>
+                            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+                        </padding>
+                        <Label text="Thuộc tính theo loại sản phẩm">
+                            <font>
+                                <Font name="Tahoma Bold" size="16.0" />
+                            </font>
+                        </Label>
+                        <fx:define>
+                            <ToggleGroup fx:id="itemType" />
+                        </fx:define>
+                        <HBox spacing="18.0">
+                            <RadioButton fx:id="electronicsButton" mnemonicParsing="false" onAction="#onItemSelected" text="Điện tử" toggleGroup="$itemType" />
+                            <RadioButton fx:id="artButton" mnemonicParsing="false" onAction="#onItemSelected" text="Nghệ thuật" toggleGroup="$itemType" />
+                            <RadioButton fx:id="vehicleButton" mnemonicParsing="false" onAction="#onItemSelected" text="Xe cộ" toggleGroup="$itemType" />
+                        </HBox>
+                        <Label fx:id="itemTypeLabel" text="Chọn loại sản phẩm" textFill="#666666" />
+
+                        <VBox fx:id="electronicsPane" spacing="10.0" visible="false">
+                            <TextField fx:id="electronicsBrandTF" promptText="Thương hiệu" />
+                            <TextField fx:id="warrantyTF" promptText="Bảo hành (tháng)" />
+                        </VBox>
+
+                        <VBox fx:id="artPane" spacing="10.0" visible="false">
+                            <TextField fx:id="authorTF" promptText="Tác giả" />
+                            <TextField fx:id="yearTF" promptText="Năm sáng tác" />
+                        </VBox>
+
+                        <VBox fx:id="vehiclePane" spacing="10.0" visible="false">
+                            <TextField fx:id="vehicleBrandTF" promptText="Thương hiệu" />
+                            <TextField fx:id="vinTF" promptText="VIN" />
+                            <TextField fx:id="mileageTF" promptText="Số km đã đi" />
+                        </VBox>
+                    </VBox>
+
+                    <VBox spacing="12.0" style="-fx-background-color: white; -fx-border-color: #e1e1e1; -fx-border-radius: 6; -fx-background-radius: 6;">
+                        <padding>
+                            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+                        </padding>
+                        <Label text="Thông tin đấu giá">
+                            <font>
+                                <Font name="Tahoma Bold" size="16.0" />
+                            </font>
+                        </Label>
+                        <GridPane hgap="12.0" vgap="12.0">
+                            <Label text="Bắt đầu" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <DatePicker fx:id="startTime" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <ComboBox fx:id="startHourComboBox" prefWidth="70.0" promptText="HH" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <ComboBox fx:id="startMinuteComboBox" prefWidth="70.0" promptText="MM" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+                            <Label text="Kết thúc" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <DatePicker fx:id="endTime" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            <ComboBox fx:id="endHourComboBox" prefWidth="70.0" promptText="HH" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <ComboBox fx:id="endMinuteComboBox" prefWidth="70.0" promptText="MM" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                        </GridPane>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="12.0" style="-fx-background-color: white; -fx-border-color: #dddddd; -fx-border-width: 1 0 0 0;">
+            <padding>
+                <Insets bottom="14.0" left="24.0" right="24.0" top="14.0" />
+            </padding>
+            <Label fx:id="messageLabel" maxWidth="Infinity" textFill="#b00020" wrapText="true" HBox.hgrow="ALWAYS" />
+            <Button fx:id="backButton" mnemonicParsing="false" onAction="#back" prefWidth="92.0" text="Hủy" />
+            <Button fx:id="auctionButton" mnemonicParsing="false" onAction="#createAuction" prefWidth="120.0"
+                    style="-fx-background-color: #e79316; -fx-text-fill: white; -fx-font-weight: bold;"
+                    text="Tạo phiên" />
+        </HBox>
+    </bottom>
+</BorderPane>

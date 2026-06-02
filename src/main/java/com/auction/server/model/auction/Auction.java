@@ -92,7 +92,7 @@ public class Auction extends Entity {
             return;
         }
 
-        if (now <= endTime) {
+        if (now < endTime) {
             status = AuctionStatus.RUNNING;
             return;
         }

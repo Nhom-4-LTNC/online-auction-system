@@ -12,13 +12,12 @@ import com.auction.shared.enums.ItemType;
 import com.auction.shared.exception.InvalidAuctionDate;
 import com.auction.shared.protocol.auction.CreateAuctionRequest;
 import com.auction.shared.protocol.auction.CreateAuctionResponse;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
@@ -27,22 +26,24 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.time.*;
-import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
 
 public class AuctionItemMenuController implements Initializable {
 
-    private static final long DEFAULT_AUCTION_DURATION_MILLIS = 60L * 60 * 1000;
-    private static final int DEFAULT_AUCTION_EXTENSION_SECONDS = 10;
+    private static final double DEFAULT_BID_STEP = 10.0;
 
     private final AuctionClientService auctionClientService = new AuctionClientService();
 
     @FXML private TextField itemNameTF;
     @FXML private TextField startingPriceTF;
+    @FXML private TextField bidStepTF;
     @FXML private TextField descriptionTF;
     @FXML private Label itemTypeLabel;
+    @FXML private Label selectedImageFileLabel;
+    @FXML private Label messageLabel;
     @FXML private Button auctionButton;
     @FXML private Button importImageButton;
+    @FXML private Button backButton;
 
     @FXML private RadioButton electronicsButton;
     @FXML private RadioButton artButton;
@@ -61,20 +62,33 @@ public class AuctionItemMenuController implements Initializable {
     @FXML private TextField vinTF;
     @FXML private TextField mileageTF;
 
-    @FXML private ImageView previewImage;
-
     @FXML private DatePicker startTime;
-    @FXML private TextField HHMMSSstartTime;
+    @FXML private ComboBox<String> startHourComboBox;
+    @FXML private ComboBox<String> startMinuteComboBox;
     @FXML private DatePicker endTime;
-    @FXML private TextField HHMMSSendTime;
+    @FXML private ComboBox<String> endHourComboBox;
+    @FXML private ComboBox<String> endMinuteComboBox;
 
     private ItemType currentType;
     private File selectedImageFile;
+    private volatile boolean creatingAuction = false;
+    private Runnable onAuctionCreated;
+    private Runnable onCancel;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         currentType = null;
+        setupTimeComboBoxes();
         updateItemTypePanels();
+        setMessage(null, false);
+    }
+
+    public void setOnAuctionCreated(Runnable callback) {
+        this.onAuctionCreated = callback;
+    }
+
+    public void setOnCancel(Runnable callback) {
+        this.onCancel = callback;
     }
 
     @FXML
@@ -94,6 +108,9 @@ public class AuctionItemMenuController implements Initializable {
 
     @FXML
     public void importImage(ActionEvent event) {
+        if (creatingAuction) {
+            return;
+        }
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose item image");
         fileChooser.getExtensionFilters().add(
@@ -102,23 +119,27 @@ public class AuctionItemMenuController implements Initializable {
 
         File file = fileChooser.showOpenDialog(auctionButton.getScene().getWindow());
         if (file != null) {
-            // file exists!
             selectedImageFile = file;
-            Image image = new Image(file.toURI().toString());
-            previewImage.setImage(image);
+            selectedImageFileLabel.setText(file.getName());
         }
     }
 
     @FXML
     public void createAuction(ActionEvent event) {
+        if (creatingAuction) {
+            return;
+        }
+        setMessage(null, false);
         CreateAuctionRequest request;
         try {
             request = buildCreateAuctionRequest();
         } catch (IllegalArgumentException e) {
-            AlertUtils.showError("Input error", e.getMessage());
+            setMessage(e.getMessage(), false);
+            AlertUtils.showError("Dữ liệu không hợp lệ", e.getMessage());
             return;
         } catch (IOException e) {
-            AlertUtils.showError("Image error", "Cannot read item image: " + e.getMessage());
+            setMessage("Không thể đọc ảnh sản phẩm.", false);
+            AlertUtils.showError("Lỗi ảnh", "Không thể đọc ảnh sản phẩm.");
             return;
         }
 
@@ -127,10 +148,18 @@ public class AuctionItemMenuController implements Initializable {
 
     @FXML
     public void back(ActionEvent event) throws IOException {
+        if (creatingAuction) {
+            return;
+        }
+        if (onCancel != null) {
+            onCancel.run();
+            return;
+        }
         SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
     }
 
     private void submitCreateAuction(ActionEvent event, CreateAuctionRequest request) {
+        creatingAuction = true;
         setSubmitting(true);
 
         Task<CreateAuctionResponse> task = new Task<>() {
@@ -141,23 +170,35 @@ public class AuctionItemMenuController implements Initializable {
         };
 
         task.setOnSucceeded(workerEvent -> {
+            creatingAuction = false;
             setSubmitting(false);
             CreateAuctionResponse response = task.getValue();
+            setMessage(response == null ? "Tạo phiên đấu giá thành công." : response.getMessage(), true);
+            if (onAuctionCreated != null) {
+                onAuctionCreated.run();
+                return;
+            }
             AlertUtils.showInfo("Create auction success", response == null ? "Auction created." : response.getMessage());
             try {
                 SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
             } catch (IOException e) {
-                AlertUtils.showError("Navigation error", "Cannot open auction list: " + e.getMessage());
+                AlertUtils.showError("Lỗi điều hướng", "Không thể mở danh sách đấu giá.");
             }
         });
 
         task.setOnFailed(workerEvent -> {
+            creatingAuction = false;
             setSubmitting(false);
             Throwable error = task.getException();
             String message = error instanceof ClientServiceException
                     ? error.getMessage()
-                    : "Cannot create auction.";
-            AlertUtils.showError("Create auction failed", message);
+                    : "Không thể tạo phiên đấu giá.";
+            setMessage(message, false);
+        });
+
+        task.setOnCancelled(workerEvent -> {
+            creatingAuction = false;
+            setSubmitting(false);
         });
 
         Thread thread = new Thread(task, "create-auction-submit");
@@ -167,66 +208,32 @@ public class AuctionItemMenuController implements Initializable {
 
     private CreateAuctionRequest buildCreateAuctionRequest() throws IOException {
         ItemDTO itemDto = buildItemDTO();
+        double bidStep = parseOptionalPositiveDouble(bidStepTF.getText(), DEFAULT_BID_STEP, "Bid step");
 
-        //long now = System.currentTimeMillis();
-        //long endTime = now + DEFAULT_AUCTION_DURATION_MILLIS;
+        long startLong = resolveStartTimeMillis();
+        long endLong = resolveEndTimeMillis();
 
-        // 1. Explicitly check for null dates to prevent NullPointerException
-        if (startTime.getValue() == null || endTime.getValue() == null) {
-            // Stop execution and tell the user they missed a field
-            throw new InvalidAuctionDate("Please select both a start and end date.");
+        if (endLong <= startLong) {
+            throw new InvalidAuctionDate("Thời gian kết thúc phải sau thời gian bắt đầu.");
         }
 
-        try {
-            // 2. Attempt to parse the text fields.
-            // This is where DateTimeParseException can happen.
-            LocalTime exactStartLocalTime = LocalTime.parse(HHMMSSstartTime.getText().trim());
-            LocalTime exactEndLocalTime = LocalTime.parse(HHMMSSendTime.getText().trim());
-
-            // 3. Combine the Date (from DatePicker) and Time (from parsing) cleanly
-            long startLong = LocalDateTime.of(startTime.getValue(), exactStartLocalTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli();
-
-            long endLong = LocalDateTime.of(endTime.getValue(), exactEndLocalTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli();
-
-            long currentMillis = Instant.now().toEpochMilli();
-
-            if  (!( // NOT
-                    (currentMillis < startLong)
-                            && (startLong < endLong)
-            )) {
-                throw new InvalidAuctionDate("Invalid auction date.");
-            }
-
-
-            return new CreateAuctionRequest(
-                    itemDto,
-                    itemDto.getStartingPrice(),
-                    DEFAULT_AUCTION_EXTENSION_SECONDS,
-                    startLong,
-                    endLong
-            );
-
-        } catch (DateTimeParseException e) {
-            // 4. Catch the error if the user typed something like "hello" or "12:0"
-            throw new InvalidAuctionDate("Invalid time format. Please use HH:mm:ss");
-            // e.g., AlertUtils.showError("Input error", "Please use valid 24-hour time formats.");
-        }
+        return new CreateAuctionRequest(
+                itemDto,
+                itemDto.getStartingPrice(),
+                bidStep,
+                startLong,
+                endLong
+        );
     }
 
     private ItemDTO buildItemDTO() throws IOException {
         if (currentType == null) {
-            throw new IllegalArgumentException("Please select item type.");
+            throw new IllegalArgumentException("Vui lòng chọn loại sản phẩm.");
         }
 
         String name = itemNameTF.getText();
         if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Please enter an item name.");
+            throw new IllegalArgumentException("Vui lòng nhập tên sản phẩm.");
         }
         double startingPrice = parsePositiveDouble(startingPriceTF.getText(), "Starting price");
         String description = descriptionTF.getText().trim();
@@ -284,9 +291,57 @@ public class AuctionItemMenuController implements Initializable {
         setPanelVisible(artPane, isArt);
         setPanelVisible(vehiclePane, isVehicle);
 
-        previewImage.setImage(null);
-
         itemTypeLabel.setText(currentType == null ? "Choose a Type!" : currentType.name());
+    }
+
+    private void setupTimeComboBoxes() {
+        startHourComboBox.setItems(FXCollections.observableArrayList(formatRange(0, 23)));
+        endHourComboBox.setItems(FXCollections.observableArrayList(formatRange(0, 23)));
+        startMinuteComboBox.setItems(FXCollections.observableArrayList(formatRange(0, 59)));
+        endMinuteComboBox.setItems(FXCollections.observableArrayList(formatRange(0, 59)));
+    }
+
+    private String[] formatRange(int start, int end) {
+        String[] values = new String[end - start + 1];
+        for (int value = start; value <= end; value++) {
+            values[value - start] = String.format("%02d", value);
+        }
+        return values;
+    }
+
+    private long resolveStartTimeMillis() {
+        if (startTime.getValue() == null
+                || startHourComboBox.getValue() == null
+                || startMinuteComboBox.getValue() == null) {
+            return Instant.now().toEpochMilli();
+        }
+
+        return toEpochMillis(
+                startTime.getValue(),
+                startHourComboBox.getValue(),
+                startMinuteComboBox.getValue()
+        );
+    }
+
+    private long resolveEndTimeMillis() {
+        if (endTime.getValue() == null
+                || endHourComboBox.getValue() == null
+                || endMinuteComboBox.getValue() == null) {
+            throw new InvalidAuctionDate("Vui lòng chọn ngày, giờ và phút kết thúc.");
+        }
+
+        return toEpochMillis(
+                endTime.getValue(),
+                endHourComboBox.getValue(),
+                endMinuteComboBox.getValue()
+        );
+    }
+
+    private long toEpochMillis(LocalDate date, String hour, String minute) {
+        return LocalDateTime.of(date, LocalTime.of(Integer.parseInt(hour), Integer.parseInt(minute)))
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
     }
 
     private void setPanelVisible(VBox panel, boolean visible) {
@@ -302,8 +357,15 @@ public class AuctionItemMenuController implements Initializable {
             }
             return value;
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException(fieldName + " must be a positive number.");
+            throw new IllegalArgumentException(fieldName + " phải là số dương.");
         }
+    }
+
+    private double parseOptionalPositiveDouble(String rawValue, double defaultValue, String fieldName) {
+        if (rawValue == null || rawValue.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return parsePositiveDouble(rawValue, fieldName);
     }
 
     private int parsePositiveInt(String rawValue, String fieldName) {
@@ -314,20 +376,35 @@ public class AuctionItemMenuController implements Initializable {
             }
             return value;
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException(fieldName + " must be a positive integer.");
+            throw new IllegalArgumentException(fieldName + " phải là số nguyên dương.");
         }
     }
 
     private String requireText(TextField textField, String fieldName) {
         String value = textField.getText().trim();
         if (value.isEmpty()) {
-            throw new IllegalArgumentException(fieldName + " is required.");
+            throw new IllegalArgumentException("Vui lòng nhập " + fieldName + ".");
         }
         return value;
     }
 
     private void setSubmitting(boolean submitting) {
         auctionButton.setDisable(submitting);
+        importImageButton.setDisable(submitting);
+        if (backButton != null) {
+            backButton.setDisable(submitting);
+        }
+        if (submitting) {
+            setMessage("Đang tạo phiên đấu giá...", false);
+        }
+    }
+
+    private void setMessage(String message, boolean success) {
+        if (messageLabel == null) {
+            return;
+        }
+        messageLabel.setText(message == null ? "" : message);
+        messageLabel.setStyle(success ? "-fx-text-fill: #1b5e20;" : "-fx-text-fill: #b00020;");
     }
 
     private record ImagePayload(byte[] imageData, String imageFileName) {

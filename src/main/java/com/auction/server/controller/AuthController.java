@@ -43,7 +43,7 @@ public class AuthController {
             return Response.error(ActionType.LOGIN, e.getMessage());
         } catch (Exception e) {
             // Lỗi hệ thống bất ngờ (Mất kết nối DB...)
-            e.printStackTrace();
+            logUnexpected(ActionType.LOGIN, e);
             return Response.error(ActionType.LOGIN, "Lỗi máy chủ khi xử lý đăng nhập!");
         }
     }
@@ -74,8 +74,13 @@ public class AuthController {
             // Bắt lỗi: Trùng Email, Trùng Username, Thiếu trường dữ liệu...
             return Response.error(ActionType.REGISTER, e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            logUnexpected(ActionType.REGISTER, e);
             return Response.error(ActionType.REGISTER, "Lỗi máy chủ khi xử lý đăng ký!");
         }
+    }
+
+    private void logUnexpected(ActionType actionType, Exception e) {
+        System.err.println("[AuthController] Unexpected error action=" + actionType
+                + ": " + e.getMessage());
     }
 }
