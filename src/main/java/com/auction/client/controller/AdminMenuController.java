@@ -22,6 +22,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
@@ -97,7 +98,6 @@ public class AdminMenuController implements Initializable {
         hideColumn(imageColumn);
         hideColumn(creatorColumn);
         hideColumn(startPriceColumn);
-        hideColumn(actionsColumn);
 
         if (idColumn != null) {
             idColumn.setCellValueFactory(cell ->
@@ -124,6 +124,30 @@ public class AdminMenuController implements Initializable {
         if (statusColumn != null) {
             statusColumn.setCellValueFactory(cell ->
                     new javafx.beans.property.SimpleStringProperty(formatStatus(cell.getValue().getStatus())));
+        }
+
+        if (actionsColumn != null) {
+            actionsColumn.setCellFactory(column -> new TableCell<>() {
+                private final Button detailButton = new Button("Xem chi tiết");
+
+                {
+                    detailButton.setStyle("-fx-background-color: #0B5394; -fx-text-fill: white; -fx-font-weight: 700;");
+                    detailButton.setOnAction(event -> {
+                        AuctionSummaryDTO auction = getTableView().getItems().get(getIndex());
+                        openAuctionDetail(auction);
+                    });
+                }
+
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
+                        setGraphic(null);
+                        return;
+                    }
+                    setGraphic(detailButton);
+                }
+            });
         }
 
         auctionsTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -174,6 +198,37 @@ public class AdminMenuController implements Initializable {
             case PAID -> "Đã thanh toán";
             case CANCELED -> "Đã hủy";
         };
+    }
+
+    private void openAuctionDetail(AuctionSummaryDTO auction) {
+        if (auction == null || auctionsTableView == null || auctionsTableView.getScene() == null) {
+            return;
+        }
+
+        try {
+            var loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/AuctionDetailView.fxml"));
+            var root = loader.load();
+            AuctionDetailController controller = loader.getController();
+
+            javafx.stage.Stage owner = (javafx.stage.Stage) auctionsTableView.getScene().getWindow();
+            javafx.stage.Stage dialog = new javafx.stage.Stage();
+            dialog.setTitle("Chi tiết phiên đấu giá #" + auction.getAuctionId());
+            dialog.initOwner(owner);
+            dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            dialog.setResizable(true);
+            dialog.setMinWidth(980);
+            dialog.setMinHeight(680);
+            dialog.setScene(new javafx.scene.Scene((javafx.scene.Parent) root, 1180, 720));
+            controller.setOnBack(dialog::close);
+            controller.setInitialAuction(auction);
+            dialog.setOnHidden(event -> {
+                controller.cleanup();
+                refreshAuctions();
+            });
+            dialog.showAndWait();
+        } catch (IOException e) {
+            AlertUtils.showError("Lỗi điều hướng", "Không thể mở chi tiết phiên đấu giá.");
+        }
     }
 
     private void refreshAuctions() {

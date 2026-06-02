@@ -82,6 +82,7 @@
                         <TableColumn fx:id="currentPriceColumn" prefWidth="170.0" text="Giá hiện tại" />
                         <TableColumn fx:id="remainingTimeColumn" prefWidth="280.0" text="Thời gian" />
                         <TableColumn fx:id="statusColumn" prefWidth="150.0" text="Trạng thái" />
+                        <TableColumn fx:id="actionsColumn" prefWidth="150.0" text="Thao tác" />
                     </columns>
                 </TableView>
             </StackPane>
