@@ -2,6 +2,7 @@ package com.auction.client.controller;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -56,6 +57,7 @@ public class AdminUsersViewController implements Initializable {
     private boolean bannedOnly = false;
     private boolean initialized = false;
     private long loadVersion = 0;
+    private List<UserDTO> loadedUsers = new ArrayList<>();
 
     /**
      * Called by FXMLLoader (AdminMenuController) to decide whether to show only banned users.
@@ -64,7 +66,7 @@ public class AdminUsersViewController implements Initializable {
         boolean changed = this.bannedOnly != bannedOnly;
         this.bannedOnly = bannedOnly;
         if (initialized && changed) {
-            loadUsers(this.bannedOnly);
+            renderUsers(applyLocalFilters(loadedUsers));
         }
     }
 
@@ -184,13 +186,6 @@ public class AdminUsersViewController implements Initializable {
                 if (users == null) {
                     return List.of();
                 }
-
-                if (!bannedOnly) {
-                    return users;
-                }
-
-                long now = System.currentTimeMillis();
-                users.removeIf(u -> u == null || u.getBanEndTime() <= now);
                 return users;
             }
         };
@@ -201,7 +196,8 @@ public class AdminUsersViewController implements Initializable {
             }
             List<UserDTO> users = task.getValue();
             if (users == null) users = List.of();
-            usersTableView.setItems(FXCollections.observableArrayList(users));
+            loadedUsers = new ArrayList<>(users);
+            renderUsers(applyLocalFilters(loadedUsers));
         });
 
         task.setOnFailed(e -> {
@@ -271,33 +267,41 @@ public class AdminUsersViewController implements Initializable {
     }
 
     private void applyIdSearchFilter(String raw) {
-        if (usersTableView == null) return;
+        renderUsers(applyLocalFilters(loadedUsers));
+    }
 
-        String text = raw == null ? "" : raw.trim();
-        if (text.isEmpty()) {
-            loadUsers(bannedOnly);
+    private List<UserDTO> applyLocalFilters(List<UserDTO> source) {
+        if (source == null || source.isEmpty()) {
+            return List.of();
+        }
+
+        String text = userIdSearchField == null ? "" : userIdSearchField.getText();
+        text = text == null ? "" : text.trim();
+
+        Integer searchId = null;
+        if (!text.isEmpty()) {
+            try {
+                searchId = Integer.parseInt(text);
+            } catch (NumberFormatException e) {
+                return List.of();
+            }
+        }
+
+        long now = System.currentTimeMillis();
+        Integer finalSearchId = searchId;
+        return source.stream()
+                .filter(u -> u != null)
+                .filter(u -> !bannedOnly || u.getBanEndTime() > now)
+                .filter(u -> finalSearchId == null || u.getId() == finalSearchId)
+                .toList();
+    }
+
+    private void renderUsers(List<UserDTO> users) {
+        if (usersTableView == null) {
             return;
         }
-
-        try {
-            int id = Integer.parseInt(text);
-            List<UserDTO> all = adminClientService.getAllUsers();
-            if (all == null) all = List.of();
-
-            long now = System.currentTimeMillis();
-            List<UserDTO> filtered = all.stream()
-                    .filter(u -> u != null)
-                    .filter(u -> u.getId() == id)
-                    .filter(u -> !bannedOnly || u.getBanEndTime() > now)
-                    .toList();
-
-            usersTableView.setItems(FXCollections.observableArrayList(filtered));
-        } catch (NumberFormatException e) {
-            // Invalid id => no result (no disruptive alert)
-            usersTableView.setItems(FXCollections.observableArrayList());
-        } catch (Exception e) {
-            AlertUtils.showError("Lỗi tìm kiếm", e.getMessage());
-        }
+        List<UserDTO> safeUsers = users == null ? List.of() : users;
+        usersTableView.setItems(FXCollections.observableArrayList(safeUsers));
     }
 
     private long parseBanDurationMillis() {
