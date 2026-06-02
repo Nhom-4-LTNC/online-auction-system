@@ -1,17 +1,13 @@
 package com.auction.client.controller;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import com.auction.client.service.AuthClientService;
 import com.auction.client.service.ClientServiceException;
 import com.auction.client.session.ClientSession;
 import com.auction.client.util.AlertUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.UserDTO;
+import com.auction.shared.enums.Role;
 import com.auction.shared.protocol.auth.AuthResponse;
-
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,6 +17,10 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
@@ -163,20 +163,19 @@ public class LoginController implements Initializable {
 
     private void navigateToHome(UserDTO user) throws IOException {
         Stage stage = (Stage) emailTextField.getScene().getWindow();
-
-        if (user != null && user.getRole() != null && user.getRole().name() != null
-                && user.getRole().name().equalsIgnoreCase("ADMIN")) {
+        if (user != null && user.getRole() == Role.ADMIN) {
             SceneUtils.switchScene(stage, "/fxml/AdminScreen.fxml");
-        } else {
-            AuctionMenuController controller =
-                    SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionMenu.fxml");
-            if (controller != null) {
-                controller.setCurrentUser(user);
-            }
             stage.setMaximized(true);
+            return;
         }
-    }
 
+        AuctionMenuController controller =
+                SceneUtils.switchSceneAndGetController(stage, "/fxml/AuctionMenu.fxml");
+        if (controller != null) {
+            controller.setCurrentUser(user);
+        }
+        stage.setMaximized(true);
+    }
 
     private void setLoginSubmitting(boolean submitting) {
         loginButton.setDisable(submitting);

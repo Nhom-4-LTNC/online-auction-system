@@ -29,6 +29,7 @@ public class AuctionUpdatedEvent implements Serializable {
     public AuctionUpdateType getUpdateType() { return updateType; }
     public AuctionSummaryDTO getSummary() { return summary; }
     public BidDTO getLastestBid() { return lastestBid; }
+    public BidDTO getLatestBid() { return lastestBid; }
     public String getMessage() { return message; }
     public long getTimestamp() { return timestamp; }
     @Override

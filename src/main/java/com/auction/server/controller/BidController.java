@@ -40,11 +40,12 @@ public class BidController {
                         "Người dùng chưa đăng nhập.");
             }
 
-            Auction updatedAuction = bidService.placeBid(
+            BidService.PlaceBidResult placeBidResult = bidService.placeBid(
                     client.getCurrentUser().getId(),
                     placeBidRequest.getAuctionId(),
                     placeBidRequest.getAmount()
             );
+            Auction updatedAuction = placeBidResult.updatedAuction();
             AuctionDetailDTO auctionDetailDTO = auctionService.getAuctionDetail(updatedAuction.getId());
             AuctionSummaryDTO summary =
                     auctionService.mapToAuctionSummaryDTO(updatedAuction);
@@ -54,7 +55,7 @@ public class BidController {
                     updatedAuction.getId(),
                     AuctionUpdateType.BID_PLACED,
                     summary,
-                    null,
+                    placeBidResult.latestBid(),
                     "Có lượt đặt giá mới.",
                     System.currentTimeMillis()
             );

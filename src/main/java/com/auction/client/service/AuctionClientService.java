@@ -13,6 +13,7 @@ import com.auction.shared.protocol.auction.GetAuctionResponse;
 import com.auction.shared.protocol.auction.GetAllAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeRequest;
 import com.auction.shared.protocol.auction.GetAuctionsByTypeResponse;
+import com.auction.shared.protocol.auction.UpdateAuctionRequest;
 
 import java.util.Collections;
 import java.util.List;
@@ -80,6 +81,24 @@ public class AuctionClientService extends BaseClientService {
     public String closeAuction(int auctionId) {
         Request<CloseAuctionRequest> request = new Request<>(
                 ActionType.CLOSE_AUCTION,
+                new CloseAuctionRequest(auctionId)
+        );
+
+        return sendAndExtract(request, String.class);
+    }
+
+    public CreateAuctionResponse updateAuctionItem(UpdateAuctionRequest updateAuctionRequest) {
+        Request<UpdateAuctionRequest> request = new Request<>(
+                ActionType.UPDATE_AUCTION_ITEM,
+                updateAuctionRequest
+        );
+
+        return sendAndExtract(request, CreateAuctionResponse.class);
+    }
+
+    public String cancelAuction(int auctionId) {
+        Request<CloseAuctionRequest> request = new Request<>(
+                ActionType.CANCEL_AUCTION,
                 new CloseAuctionRequest(auctionId)
         );
 

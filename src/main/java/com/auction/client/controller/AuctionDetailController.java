@@ -1,38 +1,40 @@
 package com.auction.client.controller;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.function.Consumer;
-
 import com.auction.client.network.Client;
+import com.auction.client.session.ClientSession;
 import com.auction.client.service.AuctionClientService;
 import com.auction.client.service.BidClientService;
 import com.auction.client.service.ClientServiceException;
 import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
+import com.auction.shared.dto.ArtDTO;
 import com.auction.shared.dto.AuctionDetailDTO;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.dto.BidDTO;
+import com.auction.shared.dto.ElectronicsDTO;
 import com.auction.shared.dto.ItemDTO;
+import com.auction.shared.dto.UserDTO;
+import com.auction.shared.dto.VehicleDTO;
 import com.auction.shared.enums.AuctionStatus;
+import com.auction.shared.enums.Role;
 import com.auction.shared.protocol.ActionType;
 import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.auction.CreateAuctionResponse;
 import com.auction.shared.protocol.auction.GetAuctionResponse;
+import com.auction.shared.protocol.auction.UpdateAuctionRequest;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
-
 import javafx.application.Platform;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -41,7 +43,24 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class AuctionDetailController {
 
@@ -57,9 +76,13 @@ public class AuctionDetailController {
     @FXML private Label bidStepLabel;
     @FXML private Label sellerLabel;
     @FXML private Label endTimeLabel;
+    @FXML private Label startTimeLabel;
+    @FXML private Label winnerLabel;
+    @FXML private Label timeRemainingLabel;
     @FXML private TextField bidAmountField;
     @FXML private Button placeBidButton;
-    @FXML private Button closeAuctionButton;
+    @FXML private Button updateAuctionButton;
+    @FXML private Button cancelAuctionButton;
     @FXML private Label messageLabel;
     @FXML private Button refreshBidHistoryButton;
     @FXML private TableView<BidDTO> bidHistoryTable;
@@ -82,13 +105,20 @@ public class AuctionDetailController {
     private volatile boolean loadingBidHistory = false;
     private volatile boolean placingBid = false;
     private volatile boolean auctionBiddable = false;
+    private AuctionDetailDTO currentDetail;
+    private Timeline countdownTimeline;
+    private AuctionStatus countdownStatus;
+    private long countdownStartTimeMillis;
+    private long countdownEndTimeMillis;
 
     @FXML
     private void initialize() {
         setupBidHistoryTable();
         setupButtonActions();
-        closeAuctionButton.setDisable(true);
+        updateAuctionButton.setDisable(true);
+        cancelAuctionButton.setDisable(true);
         messageLabel.setText("");
+        startCountdownTimeline();
         itemImageView.setSmooth(true);
         root.sceneProperty().addListener((observable, oldScene, newScene) -> {
             if (oldScene != null && newScene == null) {
@@ -140,7 +170,8 @@ public class AuctionDetailController {
             }
         });
         placeBidButton.setOnAction(event -> handlePlaceBid());
-        closeAuctionButton.setOnAction(event -> handleCloseAuction());
+        updateAuctionButton.setOnAction(event -> handleUpdateAuction());
+        cancelAuctionButton.setOnAction(event -> handleCancelAuction());
         refreshBidHistoryButton.setOnAction(event -> loadBidHistoryAsync());
     }
 
@@ -274,12 +305,17 @@ public class AuctionDetailController {
         itemNameLabel.setText(itemName);
         currentPriceLabel.setText(FormatUtils.currency(summary.getCurrentPrice()));
         statusLabel.setText(formatStatus(summary.getStatus()));
+        startTimeLabel.setText(formatTime(summary.getStartTimeMillis()));
         endTimeLabel.setText(formatTime(summary.getEndTimeMillis()));
+        winnerLabel.setText(formatWinner(summary.getStatus(), summary.getWinnerUsername()));
+        updateCountdownState(summary.getStatus(), summary.getStartTimeMillis(), summary.getEndTimeMillis());
 
         boolean bidOpen = isAuctionBiddable(summary.getStatus());
         auctionBiddable = bidOpen;
         placeBidButton.setDisable(!bidOpen || placingBid);
         bidAmountField.setDisable(!bidOpen);
+        updateAuctionButton.setDisable(true);
+        cancelAuctionButton.setDisable(true);
     }
 
     private void showLoadingState() {
@@ -297,6 +333,7 @@ public class AuctionDetailController {
             return;
         }
 
+        currentDetail = detail;
         ItemDTO item = detail.getItem();
         String itemName = item == null ? "N/A" : safeText(item.getName());
         auctionTitleLabel.setText(itemName);
@@ -306,14 +343,19 @@ public class AuctionDetailController {
         startingPriceLabel.setText(FormatUtils.currency(detail.getStartingPrice()));
         bidStepLabel.setText(FormatUtils.currency(detail.getBidStep()));
         sellerLabel.setText(safeText(detail.getSellerUsername()));
+        startTimeLabel.setText(formatTime(detail.getStartTimeMillis()));
         endTimeLabel.setText(formatTime(detail.getEndTimeMillis()));
+        winnerLabel.setText(formatWinner(detail.getStatus(), detail.getWinnerUsername()));
         statusLabel.setText(formatStatus(detail.getStatus()));
+        updateCountdownState(detail.getStatus(), detail.getStartTimeMillis(), detail.getEndTimeMillis());
         renderItemImage(item);
 
         boolean bidOpen = isAuctionBiddable(detail.getStatus());
         auctionBiddable = bidOpen;
         placeBidButton.setDisable(!bidOpen || placingBid);
         bidAmountField.setDisable(!bidOpen);
+        updateAuctionButton.setDisable(!isAuctionUpdatableByCurrentUser(detail));
+        cancelAuctionButton.setDisable(!isAuctionCancelableByCurrentUser(detail));
     }
 
     private void renderBidHistory(List<BidDTO> bids) {
@@ -322,6 +364,39 @@ public class AuctionDetailController {
             return;
         }
         bidHistoryTable.setItems(FXCollections.observableArrayList(bids));
+    }
+
+    private void addLatestBidToHistory(BidDTO latestBid) {
+        if (latestBid == null || latestBid.getAuctionId() != currentAuctionId) {
+            return;
+        }
+
+        if (bidHistoryTable.getItems() == null) {
+            bidHistoryTable.setItems(FXCollections.observableArrayList());
+        }
+
+        boolean alreadyExists = bidHistoryTable.getItems().stream()
+                .anyMatch(existing -> isSameBid(existing, latestBid));
+        if (alreadyExists) {
+            return;
+        }
+
+        bidHistoryTable.getItems().add(0, latestBid);
+        bidHistoryTable.getItems().sort((left, right) ->
+                Long.compare(right.getBidTime(), left.getBidTime()));
+    }
+
+    private boolean isSameBid(BidDTO existing, BidDTO latestBid) {
+        if (existing == null || latestBid == null) {
+            return false;
+        }
+        if (existing.getBidId() > 0 && latestBid.getBidId() > 0) {
+            return existing.getBidId() == latestBid.getBidId();
+        }
+        return existing.getAuctionId() == latestBid.getAuctionId()
+                && existing.getBidderId() == latestBid.getBidderId()
+                && Double.compare(existing.getAmount(), latestBid.getAmount()) == 0
+                && existing.getBidTime() == latestBid.getBidTime();
     }
 
     private void handlePlaceBid() {
@@ -372,8 +447,197 @@ public class AuctionDetailController {
         runDaemon(task, "place-bid-submit");
     }
 
-    private void handleCloseAuction() {
-        showInfo("Màn hình này chưa hỗ trợ đóng phiên đấu giá.");
+    private void handleUpdateAuction() {
+        if (currentDetail == null || currentDetail.getItem() == null) {
+            showError("Khong co thong tin phien dau gia de cap nhat.");
+            return;
+        }
+
+        ItemDTO item = currentDetail.getItem();
+        Dialog<UpdateAuctionRequest> dialog = new Dialog<>();
+        dialog.setTitle("Sua phien dau gia");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        TextField nameField = new TextField(safeText(item.getName()));
+        TextArea descriptionField = new TextArea(safeText(item.getDescription()));
+        descriptionField.setPrefRowCount(3);
+        TextField startTimeField = new TextField(formatTime(currentDetail.getStartTimeMillis()));
+        TextField endTimeField = new TextField(formatTime(currentDetail.getEndTimeMillis()));
+        TextField subtypeField1 = new TextField();
+        TextField subtypeField2 = new TextField();
+        String subtypeLabel1 = "Field 1";
+        String subtypeLabel2 = "Field 2";
+
+        if (item instanceof ArtDTO art) {
+            subtypeLabel1 = "Artist";
+            subtypeLabel2 = "Year";
+            subtypeField1.setText(safeText(art.getArtist()));
+            subtypeField2.setText(String.valueOf(art.getYearCreated()));
+        } else if (item instanceof ElectronicsDTO electronics) {
+            subtypeLabel1 = "Brand";
+            subtypeLabel2 = "Warranty months";
+            subtypeField1.setText(safeText(electronics.getBrand()));
+            subtypeField2.setText(String.valueOf(electronics.getWarrantyMonths()));
+        } else if (item instanceof VehicleDTO vehicle) {
+            subtypeLabel1 = "Brand";
+            subtypeLabel2 = "VIN / Mileage";
+            subtypeField1.setText(safeText(vehicle.getBrand()));
+            subtypeField2.setText(safeText(vehicle.getVin()) + " / " + vehicle.getMileage());
+        }
+
+        File[] selectedImage = new File[1];
+        Label imageLabel = new Label("Giu anh hien tai");
+        Button imageButton = new Button("Chon anh moi");
+        imageButton.setOnAction(event -> {
+            FileChooser chooser = new FileChooser();
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
+            File file = chooser.showOpenDialog(root.getScene().getWindow());
+            if (file != null) {
+                selectedImage[0] = file;
+                imageLabel.setText(file.getName());
+            }
+        });
+
+        GridPane form = new GridPane();
+        form.setHgap(10);
+        form.setVgap(10);
+        form.addRow(0, new Label("Ten"), nameField);
+        form.addRow(1, new Label("Mo ta"), descriptionField);
+        form.addRow(2, new Label("Bat dau"), startTimeField);
+        form.addRow(3, new Label("Ket thuc"), endTimeField);
+        form.addRow(4, new Label(subtypeLabel1), subtypeField1);
+        form.addRow(5, new Label(subtypeLabel2), subtypeField2);
+        form.addRow(6, imageButton, imageLabel);
+        dialog.getDialogPane().setContent(new VBox(8, form));
+
+        dialog.setResultConverter(buttonType -> {
+            if (buttonType != ButtonType.OK) {
+                return null;
+            }
+            try {
+                byte[] imageData = selectedImage[0] == null ? null : Files.readAllBytes(selectedImage[0].toPath());
+                String imageFileName = selectedImage[0] == null ? null : selectedImage[0].getName();
+                ItemDTO updatedItem = buildUpdatedItemDTO(
+                        item,
+                        nameField.getText(),
+                        descriptionField.getText(),
+                        imageData,
+                        imageFileName,
+                        subtypeField1.getText(),
+                        subtypeField2.getText()
+                );
+                return new UpdateAuctionRequest(
+                        currentAuctionId,
+                        updatedItem,
+                        parseUpdateTime(startTimeField.getText()),
+                        parseUpdateTime(endTimeField.getText())
+                );
+            } catch (Exception e) {
+                showError(errorMessage(e));
+                return null;
+            }
+        });
+
+        dialog.showAndWait().ifPresent(this::submitUpdateAuction);
+    }
+
+    private ItemDTO buildUpdatedItemDTO(ItemDTO existingItem,
+                                        String name,
+                                        String description,
+                                        byte[] imageData,
+                                        String imageFileName,
+                                        String subtypeValue1,
+                                        String subtypeValue2) {
+        if (existingItem instanceof ArtDTO) {
+            return new ArtDTO(name, description, existingItem.getStartingPrice(),
+                    imageData, imageFileName, subtypeValue1, Integer.parseInt(subtypeValue2.trim()));
+        }
+        if (existingItem instanceof ElectronicsDTO) {
+            return new ElectronicsDTO(name, description, existingItem.getStartingPrice(),
+                    imageData, imageFileName, subtypeValue1, Integer.parseInt(subtypeValue2.trim()));
+        }
+        if (existingItem instanceof VehicleDTO vehicle) {
+            String vin = vehicle.getVin();
+            int mileage = vehicle.getMileage();
+            String raw = subtypeValue2 == null ? "" : subtypeValue2.trim();
+            int separator = raw.indexOf('/');
+            if (separator >= 0) {
+                vin = raw.substring(0, separator).trim();
+                mileage = Integer.parseInt(raw.substring(separator + 1).trim());
+            }
+            return new VehicleDTO(name, description, existingItem.getStartingPrice(),
+                    imageData, imageFileName, subtypeValue1, vin, mileage);
+        }
+        throw new IllegalArgumentException("Loai san pham khong duoc ho tro cap nhat.");
+    }
+
+    private long parseUpdateTime(String text) {
+        LocalDateTime value = LocalDateTime.parse(text.trim(), DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy"));
+        return value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    private void submitUpdateAuction(UpdateAuctionRequest request) {
+        updateAuctionButton.setDisable(true);
+        cancelAuctionButton.setDisable(true);
+        showInfo("Dang cap nhat phien dau gia...");
+
+        Task<CreateAuctionResponse> task = new Task<>() {
+            @Override
+            protected CreateAuctionResponse call() {
+                return auctionClientService.updateAuctionItem(request);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            CreateAuctionResponse response = task.getValue();
+            showInfo(response == null ? "Cap nhat phien dau gia thanh cong." : response.getMessage());
+            loadAuctionDetailPageAsync(false);
+        });
+        task.setOnFailed(event -> {
+            updateAuctionButton.setDisable(false);
+            cancelAuctionButton.setDisable(false);
+            showError(errorMessage(task.getException()));
+        });
+        task.setOnCancelled(event -> {
+            updateAuctionButton.setDisable(false);
+            cancelAuctionButton.setDisable(false);
+        });
+
+        runDaemon(task, "auction-detail-update-auction");
+    }
+
+    private void handleCancelAuction() {
+        if (currentAuctionId <= 0) {
+            return;
+        }
+
+        cancelAuctionButton.setDisable(true);
+        refreshBidHistoryButton.setDisable(true);
+        showInfo("Dang huy phien dau gia...");
+
+        int auctionIdSnapshot = currentAuctionId;
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() {
+                return auctionClientService.cancelAuction(auctionIdSnapshot);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            showInfo(task.getValue() == null ? "Huy phien dau gia thanh cong." : task.getValue());
+            loadAuctionDetailPageAsync(false);
+        });
+        task.setOnFailed(event -> {
+            cancelAuctionButton.setDisable(false);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
+            showError(errorMessage(task.getException()));
+        });
+        task.setOnCancelled(event -> {
+            cancelAuctionButton.setDisable(false);
+            refreshBidHistoryButton.setDisable(loadingBidHistory);
+        });
+
+        runDaemon(task, "auction-detail-cancel-auction");
     }
 
     private void registerRealtimeListener() {
@@ -396,7 +660,12 @@ public class AuctionDetailController {
 
                 applyRealtimeSummary(event);
                 if (event.getUpdateType() == AuctionUpdateType.BID_PLACED) {
-                    reloadBidHistoryForRealtime();
+                    BidDTO latestBid = event.getLatestBid();
+                    if (latestBid != null) {
+                        addLatestBidToHistory(latestBid);
+                    } else {
+                        reloadBidHistoryForRealtime();
+                    }
                 } else {
                     reloadAuctionDetailForRealtime();
                 }
@@ -416,6 +685,7 @@ public class AuctionDetailController {
 
     public void cleanup() {
         unregisterRealtimeListener();
+        stopCountdownTimeline();
     }
 
     private void maximizeStage() {
@@ -478,6 +748,9 @@ public class AuctionDetailController {
     }
 
     private String formatTime(long epochMillis) {
+        if (epochMillis <= 0) {
+            return "--";
+        }
         try {
             return DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(epochMillis));
         } catch (Exception e) {
@@ -485,12 +758,104 @@ public class AuctionDetailController {
         }
     }
 
+    private void startCountdownTimeline() {
+        stopCountdownTimeline();
+        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> updateCountdownLabel()));
+        countdownTimeline.setCycleCount(Timeline.INDEFINITE);
+        countdownTimeline.play();
+        updateCountdownLabel();
+    }
+
+    private void stopCountdownTimeline() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+            countdownTimeline = null;
+        }
+    }
+
+    private void updateCountdownState(AuctionStatus status, long startTimeMillis, long endTimeMillis) {
+        countdownStatus = status;
+        countdownStartTimeMillis = startTimeMillis;
+        countdownEndTimeMillis = endTimeMillis;
+        updateCountdownLabel();
+    }
+
+    private void updateCountdownLabel() {
+        if (timeRemainingLabel == null) {
+            return;
+        }
+
+        if (countdownStatus == AuctionStatus.OPEN) {
+            timeRemainingLabel.setText("Bắt đầu sau: " + formatDuration(countdownStartTimeMillis - System.currentTimeMillis()));
+            return;
+        }
+        if (countdownStatus == AuctionStatus.RUNNING) {
+            timeRemainingLabel.setText("Còn lại: " + formatDuration(countdownEndTimeMillis - System.currentTimeMillis()));
+            return;
+        }
+        if (countdownStatus == AuctionStatus.FINISHED) {
+            timeRemainingLabel.setText("Đã kết thúc");
+            return;
+        }
+        if (countdownStatus == AuctionStatus.PAID) {
+            timeRemainingLabel.setText("Đã thanh toán");
+            return;
+        }
+        if (countdownStatus == AuctionStatus.CANCELED) {
+            timeRemainingLabel.setText("Đã hủy");
+            return;
+        }
+        timeRemainingLabel.setText("--");
+    }
+
+    private String formatDuration(long millis) {
+        long seconds = Math.max(0L, TimeUnit.MILLISECONDS.toSeconds(millis));
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+        return String.format("%02d:%02d:%02d", hours, minutes, secs);
+    }
+
+    private String formatWinner(AuctionStatus status, String winnerUsername) {
+        if (winnerUsername != null && !winnerUsername.isBlank()) {
+            return winnerUsername;
+        }
+        if (status == AuctionStatus.FINISHED || status == AuctionStatus.PAID) {
+            return "Không có người thắng";
+        }
+        return "Chưa xác định";
+    }
+
     private String formatStatus(AuctionStatus status) {
         return "Trạng thái: " + (status == null ? "N/A" : status.name());
     }
 
     private boolean isAuctionBiddable(AuctionStatus status) {
-        return status == AuctionStatus.OPEN || status == AuctionStatus.RUNNING;
+        return status == AuctionStatus.RUNNING;
+    }
+
+    private boolean isAuctionCancelableByCurrentUser(AuctionDetailDTO detail) {
+        if (detail == null || detail.getStatus() == AuctionStatus.CANCELED) {
+            return false;
+        }
+
+        UserDTO user = ClientSession.getCurrentUser();
+        if (user == null) {
+            return false;
+        }
+        if (user.getRole() == Role.ADMIN) {
+            return true;
+        }
+        return user.getId() == detail.getSellerId() && detail.getStatus() == AuctionStatus.OPEN;
+    }
+
+    private boolean isAuctionUpdatableByCurrentUser(AuctionDetailDTO detail) {
+        if (detail == null || detail.getStatus() != AuctionStatus.OPEN) {
+            return false;
+        }
+
+        UserDTO user = ClientSession.getCurrentUser();
+        return user != null && user.getId() == detail.getSellerId();
     }
 
     private String safeText(String value) {

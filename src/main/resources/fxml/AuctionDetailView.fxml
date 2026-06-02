@@ -82,6 +82,9 @@
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
                                         <Label text="Giá hiện tại:" GridPane.rowIndex="0">
@@ -110,6 +113,15 @@
 
                                         <Label text="Thời gian kết thúc:" textFill="#666666" GridPane.rowIndex="4" />
                                         <Label fx:id="endTimeLabel" text="--" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                                        <Label text="Thời gian bắt đầu:" textFill="#666666" GridPane.rowIndex="5" />
+                                        <Label fx:id="startTimeLabel" text="--" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+
+                                        <Label text="Người thắng:" textFill="#666666" GridPane.rowIndex="6" />
+                                        <Label fx:id="winnerLabel" text="--" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+
+                                        <Label text="Thời gian:" textFill="#666666" GridPane.rowIndex="7" />
+                                        <Label fx:id="timeRemainingLabel" text="--" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                                     </children>
                                 </GridPane>
 
@@ -132,7 +144,8 @@
 
                                 <Region VBox.vgrow="ALWAYS" />
 
-                                <Button fx:id="closeAuctionButton" maxWidth="Infinity" mnemonicParsing="false" style="-fx-background-color: #d32f2f; -fx-text-fill: white;" text="Đóng phiên đấu giá" />
+                                <Button fx:id="updateAuctionButton" maxWidth="Infinity" mnemonicParsing="false" style="-fx-background-color: #1976d2; -fx-text-fill: white;" text="Sửa phiên đấu giá" />
+                                <Button fx:id="cancelAuctionButton" maxWidth="Infinity" mnemonicParsing="false" style="-fx-background-color: #f57c00; -fx-text-fill: white;" text="Hủy phiên đấu giá" />
                             </children>
                         </VBox>
                     </children>
@@ -152,7 +165,16 @@
                             </children>
                         </HBox>
 
-                                <TableView fx:id="bidHistoryTable" maxHeight="Infinity" maxWidth="Infinity" VBox.vgrow="ALWAYS" />
+                        <TableView fx:id="bidHistoryTable" maxHeight="Infinity" maxWidth="Infinity" VBox.vgrow="ALWAYS">
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                            <columns>
+                                <TableColumn fx:id="bidderColumn" prefWidth="75.0" text="Người trả giá" />
+                                <TableColumn fx:id="amountColumn" prefWidth="75.0" text="Số tiền" />
+                                <TableColumn fx:id="timeColumn" prefWidth="75.0" text="Thời gian" />
+                            </columns>
+                        </TableView>
                     </children>
                 </VBox>
             </children>

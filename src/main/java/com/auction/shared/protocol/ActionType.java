@@ -15,6 +15,8 @@ public enum ActionType implements Serializable {
     GET_MY_CREATED_AUCTIONS,
     GET_MY_PARTICIPATED_AUCTIONS,
     GET_MY_WON_AUCTIONS,
+    UPDATE_AUCTION_ITEM,
+    CANCEL_AUCTION,
 
     PLACE_BID,
     GET_BIDS_BY_AUCTION,

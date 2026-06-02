@@ -73,6 +73,15 @@ public class AuctionController {
                     req.getEndTime()
             );
             AuctionDetailDTO createdAuctionDetail = auctionService.mapToAuctionDetailDTO(createdAuction);
+            AuctionSummaryDTO summary = auctionService.mapToAuctionSummaryDTO(createdAuction);
+            auctionEventPublisher.publishAuctionUpdatedExcept(
+                    createdAuction.getId(),
+                    AuctionUpdateType.AUCTION_CREATED,
+                    summary,
+                    null,
+                    "Co phien dau gia moi duoc tao.",
+                    client
+            );
 
             return Response.success(
                     ActionType.CREATE_AUCTION,
@@ -221,6 +230,85 @@ public class AuctionController {
         } catch (Exception e) {
             logUnexpected(ActionType.CLOSE_AUCTION, e);
             return Response.error(ActionType.CLOSE_AUCTION, "Lỗi máy chủ khi đóng phòng!");
+        }
+    }
+
+    public Response<?> handleUpdateAuctionItem(Request<?> request, ClientHandler client) {
+        try {
+            if (client.getCurrentUser() == null) {
+                return Response.error(
+                        ActionType.UPDATE_AUCTION_ITEM,
+                        "Bạn phải đăng nhập để sửa phiên đấu giá!"
+                );
+            }
+
+            Object payload = request.getPayload();
+            if (!(payload instanceof UpdateAuctionRequest req)) {
+                return Response.error(ActionType.UPDATE_AUCTION_ITEM, "Payload cập nhật phiên đấu giá không hợp lệ.");
+            }
+
+            AuctionDetailDTO updatedAuction = auctionService.updateAuctionItem(
+                    client.getCurrentUser().getId(),
+                    req.getAuctionId(),
+                    req.getItemDto(),
+                    req.getStartTime(),
+                    req.getEndTime()
+            );
+            Auction updatedAuctionModel = auctionService.getAuctionModelById(req.getAuctionId());
+            AuctionSummaryDTO summary = auctionService.mapToAuctionSummaryDTO(updatedAuctionModel);
+            auctionEventPublisher.publishAuctionUpdated(
+                    req.getAuctionId(),
+                    AuctionUpdateType.AUCTION_ITEM_UPDATED,
+                    summary,
+                    null,
+                    "Phiên đấu giá đã được cập nhật."
+            );
+
+            return Response.success(
+                    ActionType.UPDATE_AUCTION_ITEM,
+                    new CreateAuctionResponse(updatedAuction, "Cập nhật phiên đấu giá thành công!")
+            );
+        } catch (AuctionAppException e) {
+            return Response.error(ActionType.UPDATE_AUCTION_ITEM, e.getMessage());
+        } catch (Exception e) {
+            logUnexpected(ActionType.UPDATE_AUCTION_ITEM, e);
+            return Response.error(ActionType.UPDATE_AUCTION_ITEM, "Lỗi máy chủ khi cập nhật phiên đấu giá!");
+        }
+    }
+
+    public Response<?> handleCancelAuction(Request<?> request, ClientHandler client) {
+        try {
+            if (client.getCurrentUser() == null) {
+                return Response.error(
+                        ActionType.CANCEL_AUCTION,
+                        "Bạn phải đăng nhập để hủy phiên đấu giá!"
+                );
+            }
+
+            Object payload = request.getPayload();
+            if (!(payload instanceof CloseAuctionRequest req)) {
+                return Response.error(ActionType.CANCEL_AUCTION, "Payload hủy phiên đấu giá không hợp lệ.");
+            }
+
+            Auction canceledAuction = auctionService.cancelAuction(
+                    client.getCurrentUser().getId(),
+                    req.getAuctionId()
+            );
+            AuctionSummaryDTO summary = auctionService.mapToAuctionSummaryDTO(canceledAuction);
+            auctionEventPublisher.publishAuctionUpdated(
+                    req.getAuctionId(),
+                    AuctionUpdateType.AUCTION_CANCELED,
+                    summary,
+                    null,
+                    "Phiên đấu giá đã được hủy."
+            );
+
+            return Response.success(ActionType.CANCEL_AUCTION, "Hủy phiên đấu giá thành công!");
+        } catch (AuctionAppException e) {
+            return Response.error(ActionType.CANCEL_AUCTION, e.getMessage());
+        } catch (Exception e) {
+            logUnexpected(ActionType.CANCEL_AUCTION, e);
+            return Response.error(ActionType.CANCEL_AUCTION, "Lỗi máy chủ khi hủy phiên đấu giá!");
         }
     }
 
