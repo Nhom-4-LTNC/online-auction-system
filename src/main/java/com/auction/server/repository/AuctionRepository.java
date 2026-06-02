@@ -116,6 +116,20 @@ public class AuctionRepository {
         }
     }
 
+    public void updateEndTime(Connection conn, int auctionId, long endTimeMillis) throws SQLException {
+        String sql = "UPDATE auctions SET end_time = ? WHERE id = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setTimestamp(1, new Timestamp(endTimeMillis));
+            pstmt.setInt(2, auctionId);
+
+            int rowsUpdated = pstmt.executeUpdate();
+            if (rowsUpdated == 0) {
+                throw new SQLException("No auction found for id=" + auctionId);
+            }
+        }
+    }
+
     public int finalizeExpiredAuctionsForRead(Connection conn, long nowMillis) throws SQLException {
         String sql = """
             UPDATE auctions

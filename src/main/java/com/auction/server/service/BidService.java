@@ -17,6 +17,8 @@ import java.util.List;
 
 public class BidService {
     private static final int RECENT_BID_LIMIT = 20;
+    private static final long ANTI_SNIPE_WINDOW_MILLIS = 2 * 60 * 1000L;
+    private static final long ANTI_SNIPE_EXTENSION_MILLIS = 2 * 60 * 1000L;
 
     private static volatile BidService instance;
 
@@ -79,6 +81,7 @@ public class BidService {
 
                     Bid bid = auction.placeBid(bidder, amount);
                     bidRepository.save(conn, bid);
+                    applyAntiSnipingExtension(conn, auction, System.currentTimeMillis());
                     latestBid = new BidDTO(
                             bid.getId(),
                             bid.getAuctionId(),
@@ -106,6 +109,23 @@ public class BidService {
     }
 
     public record PlaceBidResult(Auction updatedAuction, BidDTO latestBid) {}
+
+    private void applyAntiSnipingExtension(Connection conn, Auction auction, long nowMillis) throws SQLException {
+        if (auction == null || auction.getStatus() != AuctionStatus.RUNNING) {
+            return;
+        }
+
+        long endTimeMillis = auction.getEndTime();
+        long remainingMillis = endTimeMillis - nowMillis;
+        if (remainingMillis < 0 || remainingMillis > ANTI_SNIPE_WINDOW_MILLIS) {
+            return;
+        }
+
+        // Default anti-sniping rule: a valid bid in the last 2 minutes extends to now + 2 minutes.
+        long extendedEndTimeMillis = nowMillis + ANTI_SNIPE_EXTENSION_MILLIS;
+        auction.setEndTime(extendedEndTimeMillis);
+        auctionRepository.updateEndTime(conn, auction.getId(), extendedEndTimeMillis);
+    }
 
     private boolean auctionStateChanged(AuctionStatus oldStatus, Integer oldWinnerId, Auction auction) {
         return oldStatus != auction.getStatus()
