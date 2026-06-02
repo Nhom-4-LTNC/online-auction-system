@@ -6,10 +6,10 @@ import com.auction.shared.exception.InsufficientFundsException;
 import com.auction.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * BidServiceTest - test smoke/integration-light.
@@ -91,7 +91,7 @@ public class BidServiceTest {
         AuctionService auctionService = AuctionService.getInstance();
 
         int finishedAuctionId = findFinishedAuctionId(auctionService);
-        assertTrue(finishedAuctionId > 0, "DB hiện không có auction FINISHED để test");
+        assumeTrue(finishedAuctionId > 0, "DB hiện không có auction FINISHED để test");
 
         int bidderId = 30001;
         double amount = 1.0;
@@ -109,7 +109,7 @@ public class BidServiceTest {
         WalletService walletService = WalletService.getInstance();
 
         int auctionId = findBiddableAuctionId(auctionService);
-        assertTrue(auctionId > 0, "DB hiện không có auction OPEN/RUNNING để test InsufficientFunds");
+        assumeTrue(auctionId > 0, "DB hiện không có auction OPEN/RUNNING để test InsufficientFunds");
 
         int bidderId = 30001;
 

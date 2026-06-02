@@ -25,4 +25,9 @@ public class AuthClientService extends BaseClientService {
 
         return sendAndExtract(request, AuthResponse.class);
     }
+
+    public AuthResponse logout() {
+        Request<java.io.Serializable> request = new Request<>(ActionType.LOGOUT, null);
+        return sendAndExtract(request, AuthResponse.class);
+    }
 }

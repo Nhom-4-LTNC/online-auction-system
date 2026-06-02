@@ -836,7 +836,14 @@ public class AuctionDetailController {
     }
 
     private String formatStatus(AuctionStatus status) {
-        return "Trạng thái: " + (status == null ? "N/A" : status.name());
+        return "Trạng thái: " + switch (status) {
+            case OPEN -> "Sắp diễn ra";
+            case RUNNING -> "Đang diễn ra";
+            case FINISHED -> "Đã kết thúc";
+            case PAID -> "Đã thanh toán";
+            case CANCELED -> "Đã hủy";
+            case null -> "N/A";
+        };
     }
 
     private boolean isAuctionBiddable(AuctionStatus status) {

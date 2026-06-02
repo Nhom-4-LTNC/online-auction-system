@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import com.auction.client.network.Client;
+import com.auction.client.service.AuthClientService;
 import com.auction.client.session.ClientSession;
 import com.auction.client.util.AlertUtils;
 import com.auction.client.util.FormatUtils;
@@ -17,6 +18,7 @@ import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.enums.AuctionStatus;
 
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -31,6 +33,7 @@ public class AdminMenuController implements Initializable {
             DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     private final Client client = Client.getInstance();
+    private final AuthClientService authClientService = new AuthClientService();
 
     // AdminScreen.fxml chỉ cần TableView phiên đấu giá.
     @FXML private TableView<AuctionSummaryDTO> auctionsTableView;
@@ -52,6 +55,8 @@ public class AdminMenuController implements Initializable {
     @FXML private Label adminWelcomeLabel;
 
     private final com.auction.client.service.AuctionClientService auctionClientService = new com.auction.client.service.AuctionClientService();
+    private volatile boolean loadingAuctions = false;
+    private long auctionLoadVersion = 0;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -232,12 +237,7 @@ public class AdminMenuController implements Initializable {
     }
 
     private void refreshAuctions() {
-        try {
-            List<AuctionSummaryDTO> auctions = auctionClientService.getAllAuctions();
-            auctionsTableView.setItems(FXCollections.observableArrayList(auctions));
-        } catch (Exception e) {
-            AlertUtils.showError("Lỗi", "Không thể tải tất cả phiên đấu giá: " + e.getMessage());
-        }
+        loadAuctionsAsync(null);
     }
 
     @FXML
@@ -255,12 +255,69 @@ public class AdminMenuController implements Initializable {
 
     @FXML
     public void viewCanceledAuctions(ActionEvent event) {
-        try {
-            List<AuctionSummaryDTO> auctions = auctionClientService.getAllAuctions();
-            auctions.removeIf(a -> a == null || a.getStatus() != AuctionStatus.CANCELED);
-            auctionsTableView.setItems(FXCollections.observableArrayList(auctions));
-        } catch (Exception e) {
-            AlertUtils.showError("Lỗi", "Không thể tải phiên đã hủy: " + e.getMessage());
+        loadAuctionsAsync(AuctionStatus.CANCELED);
+    }
+
+    private void loadAuctionsAsync(AuctionStatus statusFilter) {
+        if (loadingAuctions || auctionsTableView == null) {
+            return;
+        }
+
+        loadingAuctions = true;
+        long requestVersion = ++auctionLoadVersion;
+        setAuctionTableLoading(true);
+
+        Task<List<AuctionSummaryDTO>> task = new Task<>() {
+            @Override
+            protected List<AuctionSummaryDTO> call() {
+                List<AuctionSummaryDTO> auctions = auctionClientService.getAllAuctions();
+                if (auctions == null) {
+                    return List.of();
+                }
+                if (statusFilter == null) {
+                    return auctions;
+                }
+                return auctions.stream()
+                        .filter(auction -> auction != null && auction.getStatus() == statusFilter)
+                        .toList();
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            if (requestVersion == auctionLoadVersion) {
+                auctionsTableView.setItems(FXCollections.observableArrayList(task.getValue()));
+            }
+            loadingAuctions = false;
+            setAuctionTableLoading(false);
+        });
+
+        task.setOnFailed(event -> {
+            loadingAuctions = false;
+            setAuctionTableLoading(false);
+            Throwable error = task.getException();
+            AlertUtils.showError("Lỗi", "Không thể tải danh sách phiên đấu giá: "
+                    + (error == null ? "Không rõ lỗi" : error.getMessage()));
+        });
+
+        task.setOnCancelled(event -> {
+            loadingAuctions = false;
+            setAuctionTableLoading(false);
+        });
+
+        Thread thread = new Thread(task, "admin-auction-list-loader");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void setAuctionTableLoading(boolean loading) {
+        if (auctionAllSessionsButton != null) {
+            auctionAllSessionsButton.setDisable(loading);
+        }
+        if (viewCanceledAuctionsButton != null) {
+            viewCanceledAuctionsButton.setDisable(loading);
+        }
+        if (auctionsTableView != null) {
+            auctionsTableView.setDisable(loading);
         }
     }
 
@@ -293,12 +350,25 @@ public class AdminMenuController implements Initializable {
 
     @FXML
     private void handleLogout(ActionEvent event) {
+        logoutServerSideAsync();
         ClientSession.clear();
         try {
             SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
         } catch (IOException e) {
             AlertUtils.showError("Lỗi điều hướng", "Không thể quay về màn hình đăng nhập.");
         }
+    }
+
+    private void logoutServerSideAsync() {
+        Thread thread = new Thread(() -> {
+            try {
+                authClientService.logout();
+            } catch (Exception ignored) {
+                // Local logout should still continue if the socket is already closed.
+            }
+        }, "admin-menu-logout");
+        thread.setDaemon(true);
+        thread.start();
     }
 }
 

@@ -3,6 +3,7 @@ package com.auction.client.controller;
 import com.auction.client.network.Client;
 import com.auction.client.session.ClientSession;
 import com.auction.client.service.AuctionClientService;
+import com.auction.client.service.AuthClientService;
 import com.auction.client.service.BidClientService;
 import com.auction.client.service.ClientServiceException;
 import com.auction.client.service.WalletClientService;
@@ -84,6 +85,7 @@ public class AuctionMenuController {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.systemDefault());
 
     private final AuctionClientService auctionClientService = new AuctionClientService();
+    private final AuthClientService authClientService = new AuthClientService();
     private final BidClientService bidClientService = new BidClientService();
     private final WalletClientService walletClientService = new WalletClientService();
     private final Client client = Client.getInstance();
@@ -147,11 +149,24 @@ public class AuctionMenuController {
     public void handleBack(ActionEvent event) {
         try {
             cleanup();
+            logoutServerSideAsync();
             ClientSession.clear();
             SceneUtils.switchScene(event, "/fxml/LoginScreen.fxml");
         } catch (IOException e) {
             AlertUtils.showError("Lỗi điều hướng", "Không thể quay về màn hình đăng nhập.");
         }
+    }
+
+    private void logoutServerSideAsync() {
+        Thread thread = new Thread(() -> {
+            try {
+                authClientService.logout();
+            } catch (Exception ignored) {
+                // Local logout should still continue if the socket is already closed.
+            }
+        }, "auction-menu-logout");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public void setCurrentUser(UserDTO user) {

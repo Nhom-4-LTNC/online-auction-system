@@ -216,14 +216,6 @@ public class AuctionRepository {
         }
     }
 
-    public List<Auction> getAuctionsByType(Connection conn, String type) throws Exception {
-        String sql = "SELECT * FROM auctions WHERE item_type = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, type);
-            return queryAuctions(conn, pstmt.toString());
-        }
-    }
-
     public List<Auction> getAllAuctions(Connection conn) throws Exception {
         String sql = "SELECT * FROM auctions";
         return queryAuctions(conn, sql);
