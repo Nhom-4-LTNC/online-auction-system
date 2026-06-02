@@ -2,12 +2,16 @@ package com.auction.client.controller;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 
 import com.auction.client.network.Client;
 import com.auction.client.session.ClientSession;
 import com.auction.client.util.AlertUtils;
+import com.auction.client.util.FormatUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.enums.AuctionStatus;
@@ -22,6 +26,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
 public class AdminMenuController implements Initializable {
+    private static final DateTimeFormatter TABLE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     private final Client client = Client.getInstance();
 
@@ -32,8 +38,8 @@ public class AdminMenuController implements Initializable {
     @FXML private TableColumn<AuctionSummaryDTO, Object> imageColumn;
     @FXML private TableColumn<AuctionSummaryDTO, String> nameColumn;
     @FXML private TableColumn<AuctionSummaryDTO, String> creatorColumn;
-    @FXML private TableColumn<AuctionSummaryDTO, Double> currentPriceColumn;
-    @FXML private TableColumn<AuctionSummaryDTO, Double> startPriceColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> currentPriceColumn;
+    @FXML private TableColumn<AuctionSummaryDTO, String> startPriceColumn;
     @FXML private TableColumn<AuctionSummaryDTO, String> remainingTimeColumn;
     @FXML private TableColumn<AuctionSummaryDTO, String> statusColumn;
     @FXML private TableColumn<AuctionSummaryDTO, String> actionsColumn;
@@ -88,10 +94,10 @@ public class AdminMenuController implements Initializable {
     private void setupTableColumns() {
         if (auctionsTableView == null) return;
 
-        // AuctionSummaryDTO hiện chỉ có các field: auctionId, itemId, itemName, itemType,
-        // currentPrice, endTimeMillis, status, winnerId.
-        // Vì AdminScreen.fxml khai báo thêm nhiều cột khác (image/creator/start/remaining/actions)
-        // nên tạm thời chỉ bind những cột có dữ liệu thực sự.
+        hideColumn(imageColumn);
+        hideColumn(creatorColumn);
+        hideColumn(startPriceColumn);
+        hideColumn(actionsColumn);
 
         if (idColumn != null) {
             idColumn.setCellValueFactory(cell ->
@@ -105,26 +111,70 @@ public class AdminMenuController implements Initializable {
 
         if (currentPriceColumn != null) {
             currentPriceColumn.setCellValueFactory(cell ->
-                    new javafx.beans.property.SimpleDoubleProperty(cell.getValue().getCurrentPrice()).asObject());
+                    new javafx.beans.property.SimpleStringProperty(
+                            FormatUtils.currency(cell.getValue().getCurrentPrice())));
         }
 
         if (remainingTimeColumn != null) {
-            // Remaining time = endTimeMillis - now
-            remainingTimeColumn.setCellValueFactory(cell -> {
-                long remainingMillis = cell.getValue().getEndTimeMillis() - System.currentTimeMillis();
-                long remainingSec = Math.max(0, remainingMillis / 1000);
-                return new javafx.beans.property.SimpleStringProperty(remainingSec + "s");
-            });
+            remainingTimeColumn.setText("Thời gian");
+            remainingTimeColumn.setCellValueFactory(cell ->
+                    new javafx.beans.property.SimpleStringProperty(formatTimeRange(cell.getValue())));
         }
 
         if (statusColumn != null) {
             statusColumn.setCellValueFactory(cell ->
-                    new javafx.beans.property.SimpleStringProperty(cell.getValue().getStatus().name()));
+                    new javafx.beans.property.SimpleStringProperty(formatStatus(cell.getValue().getStatus())));
         }
 
         auctionsTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
+    private void hideColumn(TableColumn<?, ?> column) {
+        if (column == null) {
+            return;
+        }
+        column.setVisible(false);
+    }
+
+    private String formatTimeRange(AuctionSummaryDTO auction) {
+        if (auction == null) {
+            return "";
+        }
+        String start = formatTime(auction.getStartTimeMillis());
+        String end = formatTime(auction.getEndTimeMillis());
+        if (start.isBlank() && end.isBlank()) {
+            return "Chưa rõ";
+        }
+        if (start.isBlank()) {
+            return "Kết thúc: " + end;
+        }
+        if (end.isBlank()) {
+            return "Bắt đầu: " + start;
+        }
+        return start + " - " + end;
+    }
+
+    private String formatTime(long epochMillis) {
+        if (epochMillis <= 0) {
+            return "";
+        }
+        return Instant.ofEpochMilli(epochMillis)
+                .atZone(ZoneId.systemDefault())
+                .format(TABLE_TIME_FORMATTER);
+    }
+
+    private String formatStatus(AuctionStatus status) {
+        if (status == null) {
+            return "Không rõ";
+        }
+        return switch (status) {
+            case OPEN -> "Sắp diễn ra";
+            case RUNNING -> "Đang diễn ra";
+            case FINISHED -> "Đã kết thúc";
+            case PAID -> "Đã thanh toán";
+            case CANCELED -> "Đã hủy";
+        };
+    }
 
     private void refreshAuctions() {
         try {

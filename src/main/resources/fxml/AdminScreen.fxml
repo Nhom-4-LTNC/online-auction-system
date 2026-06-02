@@ -77,15 +77,11 @@
             <StackPane style="-fx-background-color: white; -fx-background-radius: 14;">
                 <TableView fx:id="auctionsTableView" prefHeight="520.0" prefWidth="980.0" style="-fx-background-color: transparent;">
                     <columns>
-                        <TableColumn fx:id="idColumn" prefWidth="80.0" text="ID Phiên" />
-                        <TableColumn fx:id="imageColumn" prefWidth="120.0" text="Ảnh" />
-                        <TableColumn fx:id="nameColumn" prefWidth="260.0" text="Tên Sản phẩm" />
-                        <TableColumn fx:id="creatorColumn" prefWidth="150.0" text="Người tạo" />
-                        <TableColumn fx:id="currentPriceColumn" prefWidth="160.0" text="Giá hiện tại" />
-                        <TableColumn fx:id="startPriceColumn" prefWidth="160.0" text="Giá khởi điểm" />
-                        <TableColumn fx:id="remainingTimeColumn" prefWidth="160.0" text="Thời gian còn lại" />
-                        <TableColumn fx:id="statusColumn" prefWidth="110.0" text="Trạng thái" />
-                        <TableColumn fx:id="actionsColumn" prefWidth="240.0" text="Hành động" />
+                        <TableColumn fx:id="idColumn" prefWidth="90.0" text="ID Phiên" />
+                        <TableColumn fx:id="nameColumn" prefWidth="320.0" text="Tên sản phẩm" />
+                        <TableColumn fx:id="currentPriceColumn" prefWidth="170.0" text="Giá hiện tại" />
+                        <TableColumn fx:id="remainingTimeColumn" prefWidth="280.0" text="Thời gian" />
+                        <TableColumn fx:id="statusColumn" prefWidth="150.0" text="Trạng thái" />
                     </columns>
                 </TableView>
             </StackPane>
