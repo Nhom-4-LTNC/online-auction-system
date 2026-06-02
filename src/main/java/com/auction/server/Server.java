@@ -2,6 +2,7 @@ package com.auction.server;
 
 import com.auction.server.database.DatabaseConnection;
 import com.auction.server.handler.ClientHandler;
+import com.auction.server.scheduler.AuctionStatusScheduler;
 import com.auction.server.service.*;
 import com.auction.shared.network.NetworkConfig;
 
@@ -41,6 +42,11 @@ public class Server {
         int port = Integer.getInteger("auction.server.port", NetworkConfig.PORT);
 
         warmUpApplication();
+        AuctionStatusScheduler.getInstance().start();
+        Runtime.getRuntime().addShutdownHook(new Thread(
+                () -> AuctionStatusScheduler.getInstance().stop(),
+                "auction-status-scheduler-shutdown"
+        ));
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("[Server] Đang chạy ở port: " + port);

@@ -41,13 +41,14 @@ public class BidService {
         return instance;
     }
 
-    public Auction placeBid(int bidderId, int auctionId, double amount) throws Exception {
+    public PlaceBidResult placeBid(int bidderId, int auctionId, double amount) throws Exception {
         if (bidderId <= 0) {
             throw new AuctionAppException("Bạn cần đăng nhập để đặt giá!");
         }
 
         Auction auction;
         Auction expiredAuction = null;
+        BidDTO latestBid = null;
         try (Connection conn = DatabaseConnection.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             try {
@@ -81,6 +82,14 @@ public class BidService {
 
                     Bid bid = auction.placeBid(bidder, amount);
                     bidRepository.save(conn, bid);
+                    latestBid = new BidDTO(
+                            bid.getId(),
+                            bid.getAuctionId(),
+                            bidder.getId(),
+                            bidder.getUsername(),
+                            bid.getAmount(),
+                            bid.getTimestamp()
+                    );
                     auctionRepository.updateAuction(conn, auction);
                     conn.commit();
                 }
@@ -96,8 +105,10 @@ public class BidService {
         if (expiredAuction != null) {
             throw new AuctionClosedException(auctionId);
         }
-        return auction;
+        return new PlaceBidResult(auction, latestBid);
     }
+
+    public record PlaceBidResult(Auction updatedAuction, BidDTO latestBid) {}
 
     private boolean auctionStateChanged(AuctionStatus oldStatus, Integer oldWinnerId, Auction auction) {
         return oldStatus != auction.getStatus()

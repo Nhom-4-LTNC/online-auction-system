@@ -169,6 +169,33 @@ public class AuctionRepository {
         return null;
     }
 
+    public List<Auction> findAuctionsDueForStatusTransition(Connection conn, long nowMillis) throws Exception {
+        String sql = """
+            SELECT *
+            FROM auctions
+            WHERE (status = ? AND start_time <= ?)
+               OR (status = ? AND end_time <= ?)
+            FOR UPDATE
+            """;
+
+        List<Auction> auctions = new ArrayList<>();
+        Timestamp now = new Timestamp(nowMillis);
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, AuctionStatus.OPEN.name());
+            pstmt.setTimestamp(2, now);
+            pstmt.setString(3, AuctionStatus.RUNNING.name());
+            pstmt.setTimestamp(4, now);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    auctions.add(mapResultSetToAuction(conn, rs));
+                }
+            }
+        }
+        return auctions;
+    }
+
     public List<Auction> getAllAuctions() throws Exception {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return getAllAuctions(conn);

@@ -348,6 +348,39 @@ public class AuctionDetailController {
         bidHistoryTable.setItems(FXCollections.observableArrayList(bids));
     }
 
+    private void addLatestBidToHistory(BidDTO latestBid) {
+        if (latestBid == null || latestBid.getAuctionId() != currentAuctionId) {
+            return;
+        }
+
+        if (bidHistoryTable.getItems() == null) {
+            bidHistoryTable.setItems(FXCollections.observableArrayList());
+        }
+
+        boolean alreadyExists = bidHistoryTable.getItems().stream()
+                .anyMatch(existing -> isSameBid(existing, latestBid));
+        if (alreadyExists) {
+            return;
+        }
+
+        bidHistoryTable.getItems().add(0, latestBid);
+        bidHistoryTable.getItems().sort((left, right) ->
+                Long.compare(right.getBidTime(), left.getBidTime()));
+    }
+
+    private boolean isSameBid(BidDTO existing, BidDTO latestBid) {
+        if (existing == null || latestBid == null) {
+            return false;
+        }
+        if (existing.getBidId() > 0 && latestBid.getBidId() > 0) {
+            return existing.getBidId() == latestBid.getBidId();
+        }
+        return existing.getAuctionId() == latestBid.getAuctionId()
+                && existing.getBidderId() == latestBid.getBidderId()
+                && Double.compare(existing.getAmount(), latestBid.getAmount()) == 0
+                && existing.getBidTime() == latestBid.getBidTime();
+    }
+
     private void handlePlaceBid() {
         if (placingBid) {
             return;
@@ -609,7 +642,12 @@ public class AuctionDetailController {
 
                 applyRealtimeSummary(event);
                 if (event.getUpdateType() == AuctionUpdateType.BID_PLACED) {
-                    reloadBidHistoryForRealtime();
+                    BidDTO latestBid = event.getLatestBid();
+                    if (latestBid != null) {
+                        addLatestBidToHistory(latestBid);
+                    } else {
+                        reloadBidHistoryForRealtime();
+                    }
                 } else {
                     reloadAuctionDetailForRealtime();
                 }

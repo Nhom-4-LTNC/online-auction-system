@@ -30,6 +30,7 @@ import com.auction.shared.exception.AuctionAppException;
 import com.auction.shared.exception.AuthorizationException;
 import com.auction.shared.exception.ResourceNotFoundException;
 import com.auction.shared.exception.ValidationException;
+import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.util.ItemFactory;
 
 public class AuctionService {
@@ -199,6 +200,68 @@ public class AuctionService {
             return new ArrayList<>(); // Trả về danh sách rỗng để tránh lỗi Null giao diện
         }
     }
+
+    public List<AuctionStatusChangeResult> refreshDueAuctionStatuses() throws Exception {
+        List<AuctionStatusChangeResult> changes = new ArrayList<>();
+        long now = System.currentTimeMillis();
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            try {
+                conn.setAutoCommit(false);
+
+                List<Auction> dueAuctions = auctionRepository.findAuctionsDueForStatusTransition(conn, now);
+                for (Auction auction : dueAuctions) {
+                    AuctionStatus oldStatus = auction.getStatus();
+                    Integer oldWinnerId = userIdOrNull(auction.getWinner());
+
+                    auction.refreshStatus(now);
+                    if (!auctionStateChanged(oldStatus, oldWinnerId, auction)) {
+                        continue;
+                    }
+
+                    auctionRepository.updateAuction(conn, auction);
+                    updateCachedAuction(auction);
+
+                    AuctionUpdateType updateType = toStatusUpdateType(auction.getStatus());
+                    if (updateType != null) {
+                        changes.add(new AuctionStatusChangeResult(
+                                auction.getId(),
+                                auction.getStatus(),
+                                updateType,
+                                mapToAuctionSummaryDTO(auction)
+                        ));
+                    }
+                }
+
+                conn.commit();
+            } catch (Exception e) {
+                rollbackQuietly(conn);
+                throw e;
+            } finally {
+                restoreAutoCommitQuietly(conn, originalAutoCommit);
+            }
+        }
+
+        return changes;
+    }
+
+    private AuctionUpdateType toStatusUpdateType(AuctionStatus status) {
+        if (status == AuctionStatus.RUNNING) {
+            return AuctionUpdateType.AUCTION_STARTED;
+        }
+        if (status == AuctionStatus.FINISHED) {
+            return AuctionUpdateType.AUCTION_FINISHED;
+        }
+        return null;
+    }
+
+    public record AuctionStatusChangeResult(
+            int auctionId,
+            AuctionStatus newStatus,
+            AuctionUpdateType updateType,
+            AuctionSummaryDTO summary
+    ) {}
 
     public Auction refreshAndPersistIfChanged(int auctionId) throws Exception {
         Auction auction;
