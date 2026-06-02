@@ -155,7 +155,7 @@ public class AuctionItemMenuController implements Initializable {
             onCancel.run();
             return;
         }
-        SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
+        SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
     }
 
     private void submitCreateAuction(ActionEvent event, CreateAuctionRequest request) {

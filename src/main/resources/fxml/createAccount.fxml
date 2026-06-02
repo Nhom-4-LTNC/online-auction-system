@@ -11,7 +11,7 @@
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.CreateAccountController">
    <children>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="215.0" layoutX="14.0" layoutY="112.0" stroke="BLACK" strokeType="INSIDE" width="281.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#0B5394" height="215.0" layoutX="14.0" layoutY="112.0" stroke="BLACK" strokeType="INSIDE" width="281.0" />
       <Label layoutX="26.0" layoutY="138.0" text="Username " textFill="WHITE">
          <font>
             <Font name="Tahoma" size="15.0" />
@@ -30,7 +30,7 @@
       <TextField fx:id="nameTextField" layoutX="115.0" layoutY="135.0" prefHeight="26.0" prefWidth="164.0" />
       <TextField fx:id="emailTextField" layoutX="115.0" layoutY="188.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: nguyenvanA@gmail.com" />
       <TextField fx:id="passTextField" layoutX="116.0" layoutY="237.0" prefHeight="26.0" prefWidth="164.0" promptText="ex: 12345aA@" />
-      <Button fx:id="Create" layoutX="120.0" layoutY="283.0" mnemonicParsing="false" onAction="#Create" style="-fx-background-color: white;" text="Create" textFill="#e79316">
+      <Button fx:id="Create" layoutX="120.0" layoutY="283.0" mnemonicParsing="false" onAction="#Create" style="-fx-background-color: white;" text="Create" textFill="#0B5394">
          <font>
             <Font name="Tahoma" size="16.0" />
          </font></Button>
@@ -84,18 +84,18 @@
             <Image url="@../picture/invalidIcon.png" />
          </image>
       </ImageView>
-      <Label layoutX="111.0" layoutY="73.0" text="Sign Up" textFill="#e79316">
+      <Label layoutX="111.0" layoutY="73.0" text="Sign Up" textFill="#0B5394">
          <font>
             <Font name="Tahoma" size="26.0" />
          </font>
       </Label>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="63.0" layoutY="-3.0" stroke="BLACK" strokeType="INSIDE" width="600.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#0B5394" height="63.0" layoutY="-3.0" stroke="BLACK" strokeType="INSIDE" width="600.0" />
       <Label layoutX="26.0" layoutY="345.0" text="Already have an account?">
          <font>
             <Font name="Tahoma" size="14.0" />
          </font>
       </Label>
-      <Button fx:id="signInButton" layoutX="198.0" layoutY="337.0" mnemonicParsing="false" onAction="#goToSignIn" prefHeight="16.0" prefWidth="68.0" style="-fx-background-color: #e79316;" text="Sign In" textFill="#fcfcfc">
+      <Button fx:id="signInButton" layoutX="198.0" layoutY="337.0" mnemonicParsing="false" onAction="#goToSignIn" prefHeight="16.0" prefWidth="68.0" style="-fx-background-color: #0B5394;" text="Sign In" textFill="#fcfcfc">
          <font>
             <Font name="Tahoma" size="16.0" />
          </font>

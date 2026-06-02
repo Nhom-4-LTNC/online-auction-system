@@ -15,7 +15,7 @@
 <BorderPane prefHeight="720.0" prefWidth="1180.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AuctionMenuController">
 
     <top>
-        <HBox alignment="CENTER_LEFT" minHeight="80.0" spacing="12.0" style="-fx-background-color: #e79316;">
+        <HBox alignment="CENTER_LEFT" minHeight="80.0" spacing="12.0" style="-fx-background-color: #0B5394;">
             <padding>
                 <Insets bottom="12.0" left="22.0" right="22.0" top="12.0" />
             </padding>
@@ -40,12 +40,12 @@
                         </Label>
                     </children>
                 </VBox>
-                <Button fx:id="topUpButton" mnemonicParsing="false" prefHeight="30.0" prefWidth="82.0" style="-fx-background-color: white;" text="Nạp tiền" textFill="#e79316">
+                <Button fx:id="topUpButton" mnemonicParsing="false" prefHeight="30.0" prefWidth="82.0" style="-fx-background-color: white;" text="Nạp tiền" textFill="#0B5394">
                     <font>
                         <Font name="Tahoma" size="13.0" />
                     </font>
                 </Button>
-                <Button fx:id="backButton" mnemonicParsing="false" onAction="#handleBack" prefHeight="30.0" prefWidth="86.0" style="-fx-background-color: white;" text="Đăng xuất" textFill="#e79316">
+                <Button fx:id="backButton" mnemonicParsing="false" onAction="#handleBack" prefHeight="30.0" prefWidth="86.0" style="-fx-background-color: white;" text="Đăng xuất" textFill="#0B5394">
                     <font>
                         <Font name="Tahoma" size="13.0" />
                     </font>
@@ -83,7 +83,7 @@
                         <ToggleButton fx:id="runningAuctionsToggle" mnemonicParsing="false" prefHeight="32.0" prefWidth="112.0" text="Đang diễn ra" />
                         <ToggleButton fx:id="finishedAuctionsToggle" mnemonicParsing="false" prefHeight="32.0" prefWidth="112.0" text="Đã kết thúc" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#handleRefresh" prefHeight="32.0" prefWidth="90.0" style="-fx-background-color: #e79316;" text="Refresh" textFill="WHITE">
+                        <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#handleRefresh" prefHeight="32.0" prefWidth="90.0" style="-fx-background-color: #0B5394;" text="Refresh" textFill="WHITE">
                             <font>
                                 <Font name="Tahoma" size="14.0" />
                             </font>

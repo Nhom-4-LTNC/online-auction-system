@@ -10,14 +10,14 @@
    <center>
       <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="396.0" prefWidth="640.0">
          <children>
-            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="185.0" layoutX="24.0" layoutY="126.0" stroke="BLACK" strokeType="INSIDE" width="263.0" />
-            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="66.0" layoutX="-4.0" stroke="BLACK" strokeType="INSIDE" width="647.0" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#0B5394" height="185.0" layoutX="24.0" layoutY="126.0" stroke="BLACK" strokeType="INSIDE" width="263.0" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#0B5394" height="66.0" layoutX="-4.0" stroke="BLACK" strokeType="INSIDE" width="647.0" />
             <ImageView fitHeight="262.0" fitWidth="234.0" layoutX="369.0" layoutY="94.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@../picture/background.png" />
                </image>
             </ImageView>
-            <Button fx:id="loginButton" layoutX="72.0" layoutY="262.0" mnemonicParsing="false" onAction="#login" prefHeight="30.0" prefWidth="168.0" style="-fx-background-color: white;" text="Login" textFill="#e79316">
+            <Button fx:id="loginButton" layoutX="72.0" layoutY="262.0" mnemonicParsing="false" onAction="#login" prefHeight="30.0" prefWidth="168.0" style="-fx-background-color: white;" text="Login" textFill="#0B5394">
                <font>
                   <Font name="Tahoma" size="15.0" />
                </font>
@@ -55,7 +55,7 @@
                   </Button>
                </children>
             </HBox>
-            <Label layoutX="113.0" layoutY="78.0" prefHeight="34.0" prefWidth="102.0" text="Sign In" textFill="#e79316">
+            <Label layoutX="113.0" layoutY="78.0" prefHeight="34.0" prefWidth="102.0" text="Sign In" textFill="#0B5394">
                <font>
                   <Font name="Tahoma Bold" size="27.0" />
                </font>

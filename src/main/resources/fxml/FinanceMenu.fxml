@@ -11,7 +11,7 @@
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.FinanceMenuController">
    <children>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#e79316" height="77.0" stroke="BLACK" strokeType="INSIDE" width="600.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#0B5394" height="77.0" stroke="BLACK" strokeType="INSIDE" width="600.0" />
       <Label layoutX="28.0" layoutY="14.0" text="FINANCE" textFill="WHITE">
          <font>
             <Font name="Tahoma" size="44.0" />

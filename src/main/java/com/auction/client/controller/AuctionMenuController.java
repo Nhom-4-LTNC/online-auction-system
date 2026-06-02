@@ -572,7 +572,7 @@ public class AuctionMenuController {
         title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #222222;");
 
         Label price = new Label("Giá hiện tại: " + FormatUtils.currency(auction.getCurrentPrice()));
-        price.setStyle("-fx-text-fill: #e79316; -fx-font-weight: bold;");
+        price.setStyle("-fx-text-fill: #0B5394; -fx-font-weight: bold;");
 
         HBox statusRow = new HBox(8);
         statusRow.setAlignment(Pos.CENTER_LEFT);
@@ -595,7 +595,7 @@ public class AuctionMenuController {
 
         Button actionButton = new Button(actionText(auction));
         actionButton.setMaxWidth(Double.MAX_VALUE);
-        actionButton.setStyle("-fx-background-color: #e79316; -fx-text-fill: white; -fx-font-weight: bold;");
+        actionButton.setStyle("-fx-background-color: #0B5394; -fx-text-fill: white; -fx-font-weight: bold;");
         actionButton.setDisable(auction.getStatus() == AuctionStatus.PAID);
         actionButton.setOnAction(event -> {
             if (isPayableByCurrentUser(auction)) {
@@ -833,12 +833,12 @@ public class AuctionMenuController {
     }
 
     private void styleSidebarButton(Button button, boolean selected) {
-        String baseStyle = "-fx-border-color: #e79316; -fx-border-radius: 4;";
+        String baseStyle = "-fx-border-color: #0B5394; -fx-border-radius: 4;";
         if (selected) {
-            button.setStyle(baseStyle + " -fx-background-color: #e79316; -fx-text-fill: white;");
+            button.setStyle(baseStyle + " -fx-background-color: #0B5394; -fx-text-fill: white;");
             return;
         }
-        button.setStyle(baseStyle + " -fx-background-color: white; -fx-text-fill: #e79316;");
+        button.setStyle(baseStyle + " -fx-background-color: white; -fx-text-fill: #0B5394;");
     }
 
     private void styleStatusToggles() {
@@ -849,12 +849,12 @@ public class AuctionMenuController {
     }
 
     private void styleStatusToggle(ToggleButton button, boolean selected) {
-        String baseStyle = "-fx-border-color: #e79316; -fx-border-radius: 4;";
+        String baseStyle = "-fx-border-color: #0B5394; -fx-border-radius: 4;";
         if (selected) {
-            button.setStyle(baseStyle + " -fx-background-color: #e79316; -fx-text-fill: white;");
+            button.setStyle(baseStyle + " -fx-background-color: #0B5394; -fx-text-fill: white;");
             return;
         }
-        button.setStyle(baseStyle + " -fx-background-color: white; -fx-text-fill: #e79316;");
+        button.setStyle(baseStyle + " -fx-background-color: white; -fx-text-fill: #0B5394;");
     }
 
     private void openAuctionDetail(AuctionSummaryDTO auction) {
