@@ -750,7 +750,6 @@ public class AuctionMenuController {
         imageBox.setMaxWidth(Double.MAX_VALUE);
         imageBox.setStyle("-fx-background-color: #f1f1f1; -fx-background-radius: 5; -fx-border-color: #e3e3e3; -fx-border-radius: 5;");
 
-        // TODO: render product image here when AuctionSummaryDTO exposes imageUrl.
         Label placeholder = new Label(auction.getItemType() == null ? "Ảnh sản phẩm" : auction.getItemType().name());
         placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
         imageBox.getChildren().add(placeholder);

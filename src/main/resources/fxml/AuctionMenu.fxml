@@ -60,7 +60,7 @@
                 <Insets bottom="16.0" left="18.0" right="18.0" top="24.0" />
             </padding>
             <children>
-                <Button fx:id="allAuctionsButton" maxWidth="Infinity" mnemonicParsing="false" prefHeight="34.0" text="Hệ thống đấu giá" />
+                <Button fx:id="allAuctionsButton" maxWidth="Infinity" mnemonicParsing="false" prefHeight="34.0" text="Danh sách đấu giá" />
                 <Button fx:id="createAuctionButton" maxWidth="Infinity" mnemonicParsing="false" prefHeight="34.0" text="Tạo phiên đấu giá" />
                 <Button fx:id="myBidsButton" maxWidth="Infinity" mnemonicParsing="false" prefHeight="34.0" text="Lịch sử đặt giá" />
                 <Button fx:id="myParticipatedButton" maxWidth="Infinity" mnemonicParsing="false" prefHeight="34.0" text="Phiên đã tham gia" />
