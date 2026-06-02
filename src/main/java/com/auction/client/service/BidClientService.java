@@ -8,6 +8,7 @@ import com.auction.shared.protocol.bid.GetBidsByAuctionRequest;
 import com.auction.shared.protocol.bid.PlaceBidRequest;
 import com.auction.shared.protocol.bid.PlaceBidResponse;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +20,16 @@ public class BidClientService extends BaseClientService {
                 ActionType.GET_BIDS_BY_AUCTION,
                 new GetBidsByAuctionRequest(auctionId)
         );
+
+        GetBidHistoryResponse response = sendAndExtract(request, GetBidHistoryResponse.class);
+        if (response == null || response.getBidHistory() == null) {
+            return Collections.emptyList();
+        }
+        return response.getBidHistory();
+    }
+
+    public List<BidDTO> getMyBids() {
+        Request<Serializable> request = new Request<>(ActionType.GET_MY_BIDS, null);
 
         GetBidHistoryResponse response = sendAndExtract(request, GetBidHistoryResponse.class);
         if (response == null || response.getBidHistory() == null) {
