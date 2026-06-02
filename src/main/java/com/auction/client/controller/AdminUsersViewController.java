@@ -54,12 +54,18 @@ public class AdminUsersViewController implements Initializable {
 
 
     private boolean bannedOnly = false;
+    private boolean initialized = false;
+    private long loadVersion = 0;
 
     /**
      * Called by FXMLLoader (AdminMenuController) to decide whether to show only banned users.
      */
     public void setBannedOnly(boolean bannedOnly) {
+        boolean changed = this.bannedOnly != bannedOnly;
         this.bannedOnly = bannedOnly;
+        if (initialized && changed) {
+            loadUsers(this.bannedOnly);
+        }
     }
 
     @Override
@@ -79,12 +85,12 @@ public class AdminUsersViewController implements Initializable {
             backButton.setOnAction(this::back);
         }
 
-        loadUsers(this.bannedOnly);
-
         if (userIdSearchField != null) {
             userIdSearchField.textProperty().addListener((obs, oldV, newV) -> applyIdSearchFilter(newV));
         }
 
+        initialized = true;
+        loadUsers(this.bannedOnly);
     }
 
     private void setupColumns() {
@@ -170,6 +176,7 @@ public class AdminUsersViewController implements Initializable {
     }
 
     private void loadUsers(boolean bannedOnly) {
+        long requestVersion = ++loadVersion;
         Task<List<UserDTO>> task = new Task<>() {
             @Override
             protected List<UserDTO> call() throws Exception {
@@ -189,12 +196,18 @@ public class AdminUsersViewController implements Initializable {
         };
 
         task.setOnSucceeded(e -> {
+            if (requestVersion != loadVersion || usersTableView == null) {
+                return;
+            }
             List<UserDTO> users = task.getValue();
             if (users == null) users = List.of();
             usersTableView.setItems(FXCollections.observableArrayList(users));
         });
 
         task.setOnFailed(e -> {
+            if (requestVersion != loadVersion) {
+                return;
+            }
             Throwable ex = task.getException();
             String message = ex instanceof ClientServiceException ? ex.getMessage() : "Không thể tải danh sách người dùng.";
             AlertUtils.showError("Lỗi", message);

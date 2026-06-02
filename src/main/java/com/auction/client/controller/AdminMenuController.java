@@ -159,38 +159,32 @@ public class AdminMenuController implements Initializable {
         }
     }
 
-    // TODO: Hiện tại AdminScreen.fxml có các onAction này nhưng controller chưa triển khai.
-    // Thêm stub để tránh FXMLLoader crash khi đăng nhập ADMIN.
     @FXML
     public void viewAllUsers(ActionEvent event) {
-        try {
-            SceneUtils.switchScene(event, "/fxml/AdminUsersView.fxml");
-        } catch (IOException e) {
-            AlertUtils.showError("Lỗi điều hướng", e.getMessage());
-        }
+        openUsersView(false);
     }
 
     @FXML
     public void viewBannedUsers(ActionEvent event) {
-        // Load AdminUsersView.fxml thủ công để truyền tham số bannedOnly sang controller.
+        openUsersView(true);
+    }
+
+    private void openUsersView(boolean bannedOnly) {
         try {
             var loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/AdminUsersView.fxml"));
             var root = loader.load();
 
             var controller = loader.getController();
             if (controller instanceof AdminUsersViewController c) {
-                c.setBannedOnly(true);
+                c.setBannedOnly(bannedOnly);
             }
 
             javafx.stage.Stage stage = (javafx.stage.Stage) auctionsTableView.getScene().getWindow();
             stage.setScene(new javafx.scene.Scene((javafx.scene.Parent) root));
-
         } catch (Exception e) {
             AlertUtils.showError("Lỗi điều hướng", e.getMessage());
         }
     }
-
-
 
     @FXML
     private void handleLogout(ActionEvent event) {
