@@ -68,7 +68,7 @@ public class FinanceMenuController implements Initializable {
 
     @FXML
     public void back(ActionEvent event) throws IOException {
-        SceneUtils.switchScene(event, "/fxml/HomeScreen.fxml");
+        SceneUtils.switchScene(event, "/fxml/AuctionMenu.fxml");
     }
 
     private void submitAddBalance(double amount) {

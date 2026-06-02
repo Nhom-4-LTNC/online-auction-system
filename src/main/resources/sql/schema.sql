@@ -154,10 +154,7 @@ CREATE TABLE `users` (
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(30001,'testuser','test@gmail.com','Test@123',NULL,'USER',0.00,0,0,'2026-05-14 06:12:13'),
-(60001,'testuser2','test2@gmail.com','Test@123',NULL,'USER',0.00,0,0,'2026-05-14 08:20:54'),
-(90001,'jumbledtestaccount123','jumbled@gmail.com','@JumbledTestAccount123',NULL,'USER',0.00,0,0,'2026-05-15 06:55:00'),
-(540001,'admin','admin@gmail.com','Admin1211!',NULL,'ADMIN',0.00,0,0,'2026-05-26 14:13:00');
+(540001,'admin','admin','admin',NULL,'ADMIN',0.00,0,0,null);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

@@ -228,8 +228,6 @@ com.auction.client
 com.auction.client.controller
   LoginController
   RegisterController / CreateAccountController
-  HomeController
-  HomeMenuController
   AuctionMenuController
   AuctionDetailController / ItemAuctionController
   AuctionItemMenuController / CreateAuctionController

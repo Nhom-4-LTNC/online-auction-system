@@ -21,7 +21,7 @@
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.auction.client.controller.AuctionItemMenuController">
     <top>
-        <VBox spacing="4.0" style="-fx-background-color: #e79316;">
+        <VBox spacing="4.0" style="-fx-background-color: #0B5394;">
             <padding>
                 <Insets bottom="16.0" left="24.0" right="24.0" top="18.0" />
             </padding>
@@ -142,7 +142,7 @@
             <Label fx:id="messageLabel" maxWidth="Infinity" textFill="#b00020" wrapText="true" HBox.hgrow="ALWAYS" />
             <Button fx:id="backButton" mnemonicParsing="false" onAction="#back" prefWidth="92.0" text="Hủy" />
             <Button fx:id="auctionButton" mnemonicParsing="false" onAction="#createAuction" prefWidth="120.0"
-                    style="-fx-background-color: #e79316; -fx-text-fill: white; -fx-font-weight: bold;"
+                    style="-fx-background-color: #0B5394; -fx-text-fill: white; -fx-font-weight: bold;"
                     text="Tạo phiên" />
         </HBox>
     </bottom>

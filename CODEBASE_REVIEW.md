@@ -127,7 +127,8 @@ Giao diện JavaFX. Mỗi màn hình có một Controller tương ứng.
 |---|---|
 | `LoginController` | Đăng nhập |
 | `CreateAccountController` | Đăng ký tài khoản |
-| `HomeController` | Màn hình chính sau khi đăng nhập |
+| `AuctionMenuController` | Danh sách đấu giá sau khi user đăng nhập |
+| `AdminMenuController` | Màn hình quản trị sau khi admin đăng nhập |
 | `AuctionItemMenuController` | Tạo sản phẩm và phiên đấu giá |
 
 **Quy tắc quan trọng:** Controller **không** gọi Service trực tiếp. Thay vào đó:
@@ -219,7 +220,6 @@ Hai lớp này chỉ có khai báo class, không có nội dung. Chức năng "x
 | `Item.toString()` | `String.format()` có 6 placeholder nhưng truyền 7 tham số → lỗi runtime |
 | `SessionManager.getInstance()` | Không thread-safe (thiếu `synchronized`) |
 | `LoginController` + `AuctionItemMenuController` | Mỗi lần gửi request lại ghi đè `onMessageReceived` — nếu server trả về nhiều phản hồi liên tiếp có thể bị nhầm handler |
-| `HomeController` | Tham chiếu đến `AC.fxml` — tên file khó hiểu |
 | `NetworkConfig` | `SERVER_IP = "127.0.0.1"` — chỉ chạy được trên máy cục bộ |
 
 ---
