@@ -1,4 +1,4 @@
-package com.auction.shared.util;
+package com.auction.client.util;
 
 import java.util.ArrayList;
 import java.util.List;

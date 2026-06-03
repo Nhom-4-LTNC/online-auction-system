@@ -7,7 +7,7 @@ import com.auction.client.util.AlertUtils;
 import com.auction.client.util.SceneUtils;
 import com.auction.shared.dto.UserDTO;
 import com.auction.shared.protocol.auth.AuthResponse;
-import com.auction.shared.util.Check;
+import com.auction.client.util.Check;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

@@ -57,10 +57,6 @@ public class AuctionService {
         return instance;
     }
 
-    public synchronized Auction createAuction(int sellerId, ItemDTO itemDto, double bidStep, long endTimeMillis) throws Exception {
-        return createAuction(sellerId, itemDto, bidStep, System.currentTimeMillis(), endTimeMillis);
-    }
-
     public synchronized Auction createAuction(int sellerId, ItemDTO itemDto, double bidStep,
                                               long startTimeMillis, long endTimeMillis) throws Exception {
         AuctionValidator.validateAuctionParams(startTimeMillis, endTimeMillis, bidStep);
@@ -193,11 +189,10 @@ public class AuctionService {
     public List<AuctionSummaryDTO> getAllAuctionSummaries() {
 
         try {
-            // Gọi sang hàm Repository tối ưu vừa thêm ở Bước 1
             return auctionRepository.getAllAuctionSummaries();
         } catch (Exception e) {
             System.err.println("[AuctionService] Cannot load auction summaries: " + e.getMessage());
-            return new ArrayList<>(); // Trả về danh sách rỗng để tránh lỗi Null giao diện
+            return new ArrayList<>();
         }
     }
 

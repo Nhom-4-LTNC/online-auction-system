@@ -170,10 +170,6 @@ public class BidService {
         return bidRepository.findHighestBidByAuctionId(auctionId);
     }
 
-    public List<Bid> getBidsByBidder(int bidderId) throws Exception {
-        return bidRepository.findByBidderId(bidderId);
-    }
-
     public List<BidDTO> getBidHistoryByBidder(int bidderId) throws Exception {
         return bidRepository.getBidDTOsByBidderId(bidderId);
     }
