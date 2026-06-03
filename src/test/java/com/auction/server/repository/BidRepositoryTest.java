@@ -2,6 +2,7 @@ package com.auction.server.repository;
 
 import com.auction.server.model.Bid;
 import com.auction.server.service.AuctionService;
+import com.auction.testutil.DbTestSupport;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,8 @@ public class BidRepositoryTest {
 
     @Test
     void findByAuctionId_whenAuctionHasBids_shouldReturnBidsWithMatchingAuctionId() throws Exception {
+        DbTestSupport.assumeDatabaseAvailable();
+
         AuctionServiceSupport auctionSupport = new AuctionServiceSupport();
         int auctionId = auctionSupport.getFirstAuctionId();
         assertTrue(auctionId > 0);
@@ -32,6 +35,8 @@ public class BidRepositoryTest {
 
     @Test
     void findHighestBidByAuctionId_whenBidsExist_shouldReturnMaxAmountBid() throws Exception {
+        DbTestSupport.assumeDatabaseAvailable();
+
         AuctionServiceSupport auctionSupport = new AuctionServiceSupport();
         int auctionId = auctionSupport.getFirstAuctionId();
         assertTrue(auctionId > 0);

@@ -1,6 +1,7 @@
 package com.auction.server.repository;
 
 import com.auction.server.model.auction.Auction;
+import com.auction.testutil.DbTestSupport;
 import com.auction.shared.dto.AuctionSummaryDTO;
 import com.auction.shared.enums.AuctionStatus;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,8 @@ public class AuctionRepositoryTest {
 
     @Test
     void getAllAuctionSummaries_whenDbHasAuctions_shouldReturnSummariesWithAuctionId() throws Exception {
+        DbTestSupport.assumeDatabaseAvailable();
+
         AuctionRepository repo = AuctionRepository.getInstance();
 
         List<AuctionSummaryDTO> summaries = repo.getAllAuctionSummaries();
@@ -28,6 +31,8 @@ public class AuctionRepositoryTest {
 
     @Test
     void getAuctionById_whenAuctionExists_shouldReturnNonNullAuction() throws Exception {
+        DbTestSupport.assumeDatabaseAvailable();
+
         AuctionServiceSupport auctionSupport = new AuctionServiceSupport();
         int auctionId = auctionSupport.getFirstAuctionId();
         assertTrue(auctionId > 0);
@@ -45,6 +50,8 @@ public class AuctionRepositoryTest {
 
     @Test
     void getActiveAuctions_whenThereAreActive_shouldOnlyReturnOpenOrRunning() throws Exception {
+        DbTestSupport.assumeDatabaseAvailable();
+
         AuctionRepository repo = AuctionRepository.getInstance();
 
         List<Auction> active = repo.getActiveAuctions();

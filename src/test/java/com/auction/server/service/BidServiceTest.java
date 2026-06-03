@@ -1,6 +1,7 @@
 package com.auction.server.service;
 
 import com.auction.server.model.Bid;
+import com.auction.testutil.DbTestSupport;
 import com.auction.shared.exception.AuctionClosedException;
 
 import com.auction.shared.exception.ResourceNotFoundException;
@@ -67,6 +68,8 @@ public class BidServiceTest {
 
     @Test
     void getBidsByAuctionId_whenAuctionHasData_shouldReturnBidsWithMatchingAuctionId() throws Exception {
+        DbTestSupport.assumeDatabaseAvailable();
+
         BidService bidService = BidService.getInstance();
         AuctionService auctionService = AuctionService.getInstance();
 
@@ -83,6 +86,8 @@ public class BidServiceTest {
 
     @Test
     void placeBid_whenAuctionDoesNotExist_shouldThrowResourceNotFoundException() {
+        DbTestSupport.assumeDatabaseAvailable();
+
         BidService bidService = BidService.getInstance();
 
         int bidderId = FIXTURE_BIDDER_ID; // theo fixture users trong schema.sql
@@ -96,6 +101,8 @@ public class BidServiceTest {
 
     @Test
     void placeBid_whenAuctionIsAlreadyFinished_shouldThrowAuctionClosedException() throws Exception {
+        DbTestSupport.assumeDatabaseAvailable();
+
         BidService bidService = BidService.getInstance();
         AuctionService auctionService = AuctionService.getInstance();
 

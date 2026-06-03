@@ -1,6 +1,7 @@
 package com.auction.server.service;
 
 import com.auction.server.model.auction.Auction;
+import com.auction.testutil.DbTestSupport;
 import com.auction.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +19,8 @@ public class AuctionServiceTest {
 
     @Test
     void getAuctionModelById_whenAuctionNotFound_shouldThrowResourceNotFoundException() {
+        DbTestSupport.assumeDatabaseAvailable();
+
         AuctionService service = AuctionService.getInstance();
 
         // Chọn auctionId “rất khó tồn tại” để tránh flake do dữ liệu DB thay đổi.
@@ -32,6 +35,8 @@ public class AuctionServiceTest {
 
     @Test
     void auctionModelReturned_shouldHaveValidId() throws Exception {
+        DbTestSupport.assumeDatabaseAvailable();
+
         AuctionService service = AuctionService.getInstance();
 
         // Fixture cụ thể (BTL) - lấy auctionId có sẵn trực tiếp từ DB để tránh hardcode.
