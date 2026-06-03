@@ -32,6 +32,10 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -89,6 +93,8 @@ public class AuctionDetailController {
     @FXML private TableColumn<BidDTO, String> bidderColumn;
     @FXML private TableColumn<BidDTO, String> amountColumn;
     @FXML private TableColumn<BidDTO, String> timeColumn;
+    @FXML private LineChart lineChart;
+    @FXML private CategoryAxis categoryAxis;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy").withZone(ZoneId.systemDefault());
@@ -370,9 +376,41 @@ public class AuctionDetailController {
     private void renderBidHistory(List<BidDTO> bids) {
         if (bids == null) {
             bidHistoryTable.getItems().clear();
+            populateBidHistoryChart(null);
             return;
         }
         bidHistoryTable.setItems(FXCollections.observableArrayList(bids));
+        populateBidHistoryChart(bids);
+    }
+
+    private void populateBidHistoryChart(List<BidDTO> bids) {
+        if (lineChart == null) {
+            return;
+        }
+
+        lineChart.getData().clear();
+
+        if (bids == null || bids.isEmpty()) {
+            return;
+        }
+
+        // Create a series for the bid amounts
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        series.setName("Giá đấu giá");
+
+        // Sort bids by time for proper display
+        List<BidDTO> sortedBids = new java.util.ArrayList<>(bids);
+        sortedBids.sort((a, b) -> Long.compare(a.getBidTime(), b.getBidTime()));
+
+        // Add data points to the series
+        for (int i = 0; i < sortedBids.size(); i++) {
+            BidDTO bid = sortedBids.get(i);
+            String label = "Bid " + (i + 1);
+            XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(label, bid.getAmount());
+            series.getData().add(dataPoint);
+        }
+
+        lineChart.getData().add(series);
     }
 
     private void addLatestBidToHistory(BidDTO latestBid) {
@@ -393,6 +431,9 @@ public class AuctionDetailController {
         bidHistoryTable.getItems().add(0, latestBid);
         bidHistoryTable.getItems().sort((left, right) ->
                 Long.compare(right.getBidTime(), left.getBidTime()));
+
+        // Update the chart with the new bid
+        populateBidHistoryChart(new java.util.ArrayList<>(bidHistoryTable.getItems()));
     }
 
     private boolean isSameBid(BidDTO existing, BidDTO latestBid) {
