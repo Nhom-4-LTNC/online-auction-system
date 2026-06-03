@@ -690,6 +690,13 @@ public class AuctionDetailController {
         runDaemon(task, "auction-detail-cancel-auction");
     }
 
+    /**
+     * Registers the AUCTION_UPDATED listener for this detail screen.
+     *
+     * <p>The listener filters by auctionId before applying changes. BID_PLACED
+     * can update bid history with latestBid; other update types reload detail
+     * data from the server source of truth.</p>
+     */
     private void registerRealtimeListener() {
         if (realtimeListenerRegistered) {
             return;
@@ -726,6 +733,9 @@ public class AuctionDetailController {
         realtimeListenerRegistered = true;
     }
 
+    /**
+     * Removes the realtime listener to avoid duplicated updates after reopening detail.
+     */
     private void unregisterRealtimeListener() {
         if (realtimeListenerRegistered && auctionUpdatedListener != null) {
             client.removeEventListener(ActionType.AUCTION_UPDATED, auctionUpdatedListener);
@@ -733,6 +743,13 @@ public class AuctionDetailController {
         realtimeListenerRegistered = false;
     }
 
+    /**
+     * Releases JavaFX lifecycle resources for this screen.
+     *
+     * <p>Call when navigating away or closing the modal. It prevents memory
+     * leaks by removing the realtime listener and stopping the countdown
+     * Timeline.</p>
+     */
     public void cleanup() {
         unregisterRealtimeListener();
         stopCountdownTimeline();

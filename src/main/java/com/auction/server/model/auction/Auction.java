@@ -46,6 +46,13 @@ public class Auction extends Entity {
         updateStatus();
     }
 
+    /**
+     * Applies the in-memory domain bidding rules.
+     *
+     * <p>Only RUNNING auctions are biddable. The seller cannot bid on their own
+     * item, and a later bid must respect the configured bid step. Persistence,
+     * wallet checks and realtime notifications are handled by BidService.</p>
+     */
     public synchronized Bid placeBid(User bidder, double amount) throws InvalidBidException, AuctionClosedException {
         refreshStatus(System.currentTimeMillis());
         if (!isBiddable()) {
@@ -80,6 +87,12 @@ public class Auction extends Entity {
         return status;
     }
 
+    /**
+     * Refreshes time-based status using the supplied server time.
+     *
+     * <p>OPEN can become RUNNING, RUNNING can become FINISHED. FINISHED, PAID
+     * and CANCELED are terminal for this domain method and are not moved back.</p>
+     */
     public synchronized void refreshStatus(long now) {
         if (status == AuctionStatus.FINISHED
                 || status == AuctionStatus.PAID

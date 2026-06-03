@@ -105,6 +105,12 @@ public class Server {
             client.sendObject(data);
         }
     }
+    /**
+     * Broadcasts a server-push payload to authenticated clients only.
+     *
+     * <p>This is used by realtime auction updates. Clients that are not logged
+     * in do not receive AUCTION_UPDATED events.</p>
+     */
     public static void broadcastToLoggedIn(Object data) {
         if (data == null) {
             return;
@@ -127,6 +133,9 @@ public class Server {
                 + " to logged-in clients: " + sent);
     }
 
+    /**
+     * Broadcasts to authenticated clients except the client that triggered the change.
+     */
     public static void broadcastToLoggedInExcept(Object data, ClientHandler excludedClient) {
         if (data == null) {
             return;

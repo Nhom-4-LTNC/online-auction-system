@@ -8,6 +8,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Server-side scheduler that advances auction status over time.
+ *
+ * <p>The database/server is the source of truth. This scheduler periodically
+ * moves OPEN auctions to RUNNING and RUNNING auctions to FINISHED, then
+ * broadcasts changed summaries. Terminal PAID/CANCELED auctions are not moved
+ * back by the domain refresh logic.</p>
+ */
 public class AuctionStatusScheduler {
     private static final AuctionStatusScheduler INSTANCE = new AuctionStatusScheduler();
 
@@ -22,6 +30,9 @@ public class AuctionStatusScheduler {
         return INSTANCE;
     }
 
+    /**
+     * Starts the single background tick thread. Calling this repeatedly is safe.
+     */
     public synchronized void start() {
         if (executor != null && !executor.isShutdown()) {
             return;
@@ -36,6 +47,9 @@ public class AuctionStatusScheduler {
         System.out.println("[AuctionStatusScheduler] Started.");
     }
 
+    /**
+     * Stops the background scheduler during server shutdown.
+     */
     public synchronized void stop() {
         if (executor == null) {
             return;
