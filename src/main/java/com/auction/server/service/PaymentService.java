@@ -32,6 +32,13 @@ public class PaymentService {
         return instance;
     }
 
+    /**
+     * Pays a finished auction in a server-side transaction.
+     *
+     * <p>The payer must be the winner, the auction must be FINISHED, and PAID
+     * auctions are rejected to prevent double payment. Funds move from winner
+     * to seller before the auction status is marked PAID.</p>
+     */
     public PayAuctionResponse payAuction(int payerId, int auctionId) throws Exception {
         Auction auction;
         double paidAmount;

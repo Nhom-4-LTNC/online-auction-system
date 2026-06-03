@@ -7,6 +7,7 @@ import com.auction.server.model.user.User;
 import com.auction.server.repository.AuctionRepository;
 import com.auction.server.repository.BidRepository;
 import com.auction.server.repository.UserRepository;
+import com.auction.server.service.policy.AntiSnipingPolicy;
 import com.auction.shared.dto.BidDTO;
 import com.auction.shared.enums.AuctionStatus;
 import com.auction.shared.exception.*;
@@ -15,10 +16,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * Coordinates bid placement with database locking, wallet validation and realtime payloads.
+ */
 public class BidService {
     private static final int RECENT_BID_LIMIT = 20;
-    private static final long ANTI_SNIPE_WINDOW_MILLIS = 2 * 60 * 1000L;
-    private static final long ANTI_SNIPE_EXTENSION_MILLIS = 2 * 60 * 1000L;
 
     private static volatile BidService instance;
 
@@ -28,6 +30,7 @@ public class BidService {
     private final AuctionService auctionService = AuctionService.getInstance();
     private final AuctionRepository auctionRepository = AuctionRepository.getInstance();
     private final WalletService walletService = WalletService.getInstance();
+    private final AntiSnipingPolicy antiSnipingPolicy = new AntiSnipingPolicy();
 
     private BidService() {}
 
@@ -40,6 +43,13 @@ public class BidService {
         return instance;
     }
 
+    /**
+     * Places a bid inside a transaction.
+     *
+     * <p>The auction row is locked, the bidder and available balance are
+     * validated, the bid is saved, anti-sniping may extend the end time, and a
+     * compact latestBid DTO is returned for realtime AUCTION_UPDATED events.</p>
+     */
     public PlaceBidResult placeBid(int bidderId, int auctionId, double amount) throws Exception {
         if (bidderId <= 0) {
             throw new AuctionAppException("Bạn cần đăng nhập để đặt giá!");
@@ -108,6 +118,9 @@ public class BidService {
         return new PlaceBidResult(auction, latestBid);
     }
 
+    /**
+     * Result used by controllers to build response DTOs and realtime latestBid payloads.
+     */
     public record PlaceBidResult(Auction updatedAuction, BidDTO latestBid) {}
 
     private void applyAntiSnipingExtension(Connection conn, Auction auction, long nowMillis) throws SQLException {
@@ -115,14 +128,12 @@ public class BidService {
             return;
         }
 
-        long endTimeMillis = auction.getEndTime();
-        long remainingMillis = endTimeMillis - nowMillis;
-        if (remainingMillis < 0 || remainingMillis > ANTI_SNIPE_WINDOW_MILLIS) {
+        if (!antiSnipingPolicy.shouldExtend(nowMillis, auction.getEndTime())) {
             return;
         }
 
         // Default anti-sniping rule: a valid bid in the last 2 minutes extends to now + 2 minutes.
-        long extendedEndTimeMillis = nowMillis + ANTI_SNIPE_EXTENSION_MILLIS;
+        long extendedEndTimeMillis = antiSnipingPolicy.calculateNewEndTime(nowMillis);
         auction.setEndTime(extendedEndTimeMillis);
         auctionRepository.updateEndTime(conn, auction.getId(), extendedEndTimeMillis);
     }

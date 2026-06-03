@@ -26,6 +26,9 @@ public class WalletService {
         return instance;
     }
 
+    /**
+     * Adds funds and returns the updated wallet summary in one transaction.
+     */
     public BalanceResponse addBalance(int userId, double amount) throws Exception {
         if (amount <= 0) {
             throw new ValidationException("Số tiền nạp phải lớn hơn 0.");
@@ -59,6 +62,13 @@ public class WalletService {
         return getWalletSummary(conn, userId).getAvailableBalance();
     }
 
+    /**
+     * Calculates soft-reserved balance available for a new bid.
+     *
+     * <p>Available balance equals balance minus unpaid winning auctions minus
+     * active leading bids in other auctions. The current auction is excluded so
+     * a leading bidder can raise their own bid using only the delta.</p>
+     */
     public double getAvailableBalanceForBid(Connection conn, int userId, int auctionId) throws Exception {
         double balance = userRepository.getUserBalanceForUpdate(conn, userId);
         double unpaidWinningAmount = auctionRepository.getUnpaidWinningAmount(conn, userId);
@@ -68,6 +78,9 @@ public class WalletService {
         return balance - unpaidWinningAmount - activeLeadingAmountExceptCurrent;
     }
 
+    /**
+     * Builds the wallet summary shown to the client.
+     */
     public BalanceResponse getWalletSummary(Connection conn, int userId) throws Exception {
         double balance = userRepository.getUserBalance(conn, userId);
         double unpaidWinningAmount = auctionRepository.getUnpaidWinningAmount(conn, userId);

@@ -196,6 +196,13 @@ public class AuctionService {
         }
     }
 
+    /**
+     * Advances due auctions for the scheduler inside one transaction.
+     *
+     * <p>This method locks candidate rows, applies domain status refresh, stores
+     * only real changes and returns summaries for realtime broadcast. The client
+     * never decides official status.</p>
+     */
     public List<AuctionStatusChangeResult> refreshDueAuctionStatuses() throws Exception {
         List<AuctionStatusChangeResult> changes = new ArrayList<>();
         long now = System.currentTimeMillis();
@@ -251,6 +258,9 @@ public class AuctionService {
         return null;
     }
 
+    /**
+     * Scheduler output used to broadcast a single official status transition.
+     */
     public record AuctionStatusChangeResult(
             int auctionId,
             AuctionStatus newStatus,

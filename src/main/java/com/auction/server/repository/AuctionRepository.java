@@ -183,6 +183,12 @@ public class AuctionRepository {
         return null;
     }
 
+    /**
+     * Finds status-transition candidates and locks them for the scheduler.
+     *
+     * <p>Only OPEN and RUNNING rows are selected; PAID/CANCELED are terminal and
+     * are not eligible for automatic reversal.</p>
+     */
     public List<Auction> findAuctionsDueForStatusTransition(Connection conn, long nowMillis) throws Exception {
         String sql = """
             SELECT *

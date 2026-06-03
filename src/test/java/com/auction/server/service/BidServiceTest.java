@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *      + không đủ tiền -> InsufficientFundsException
  */
 public class BidServiceTest {
+    private static final int FIXTURE_BIDDER_ID = 30001;
 
     private int getFirstAuctionId(AuctionService auctionService) throws Exception {
         List<?> summaries = auctionService.getAllAuctionSummaries();
@@ -56,6 +57,14 @@ public class BidServiceTest {
         return -1;
     }
 
+    private void assumeFixtureBidderExists() {
+        try {
+            UserService.getInstance().getUserById(FIXTURE_BIDDER_ID);
+        } catch (Exception e) {
+            assumeTrue(false, "DB hiện không có user fixture ID=" + FIXTURE_BIDDER_ID);
+        }
+    }
+
     @Test
     void getBidsByAuctionId_whenAuctionHasData_shouldReturnBidsWithMatchingAuctionId() throws Exception {
         BidService bidService = BidService.getInstance();
@@ -76,7 +85,7 @@ public class BidServiceTest {
     void placeBid_whenAuctionDoesNotExist_shouldThrowResourceNotFoundException() {
         BidService bidService = BidService.getInstance();
 
-        int bidderId = 30001; // theo fixture users trong schema.sql
+        int bidderId = FIXTURE_BIDDER_ID; // theo fixture users trong schema.sql
         int nonExistingAuctionId = 1_000_000_000;
 
         assertThrows(
@@ -93,7 +102,9 @@ public class BidServiceTest {
         int finishedAuctionId = findFinishedAuctionId(auctionService);
         assumeTrue(finishedAuctionId > 0, "DB hiện không có auction FINISHED để test");
 
-        int bidderId = 30001;
+        assumeFixtureBidderExists();
+
+        int bidderId = FIXTURE_BIDDER_ID;
         double amount = 1.0;
 
         assertThrows(
@@ -111,14 +122,18 @@ public class BidServiceTest {
         int auctionId = findBiddableAuctionId(auctionService);
         assumeTrue(auctionId > 0, "DB hiện không có auction OPEN/RUNNING để test InsufficientFunds");
 
-        int bidderId = 30001;
+        assumeFixtureBidderExists();
+
+        int bidderId = FIXTURE_BIDDER_ID;
 
         // Chọn amount > availableForThisBid để chắc chắn ném InsufficientFundsException.
-        double available = walletService.getAvailableBalanceForBid(
-                com.auction.server.database.DatabaseConnection.getConnection(),
-                bidderId,
-                auctionId
-        );
+        double available;
+        try (var connection = com.auction.server.database.DatabaseConnection.getConnection()) {
+            available = walletService.getAvailableBalanceForBid(connection, bidderId, auctionId);
+        } catch (Exception e) {
+            assumeTrue(false, "DB fixture không đủ để tính available balance: " + e.getMessage());
+            return;
+        }
 
         double amount = available + 1.0;
         if (amount <= 0) amount = 1.0;

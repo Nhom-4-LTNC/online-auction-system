@@ -252,15 +252,22 @@ public class ClientHandler implements Runnable {
         );
     }
 
+    /**
+     * Sends a normal request/response message to this client.
+     *
+     * <p>The method is synchronized because realtime push and request handling
+     * can both write to the same ObjectOutputStream.</p>
+     */
     public synchronized void sendResponse(Response<?> response) {
         sendObject(response);
     }
 
     /**
-     * Dùng cho cả response thường và server-push realtime.
-     * Ví dụ: Response<>(ActionType.AUCTION_UPDATED, payload)
+     * Sends either a normal response or a server-push realtime payload.
+     *
+     * <p>ObjectOutputStream is not safe for concurrent writes, so this method is
+     * synchronized. Example server push: Response(AUCTION_UPDATED, event).</p>
      */
-
     public synchronized void sendObject(Object object) {
         if (object == null) {
             return;

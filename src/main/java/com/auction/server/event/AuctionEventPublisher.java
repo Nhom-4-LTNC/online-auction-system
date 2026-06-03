@@ -9,6 +9,14 @@ import com.auction.shared.protocol.AuctionUpdateType;
 import com.auction.shared.protocol.Response;
 import com.auction.shared.protocol.event.AuctionUpdatedEvent;
 
+/**
+ * Publishes server-side auction changes as socket push events.
+ *
+ * <p>The server wraps {@link AuctionUpdatedEvent} in a normal
+ * {@link Response} with action {@link ActionType#AUCTION_UPDATED} and
+ * broadcasts it to logged-in clients. Clients filter by auctionId; no client
+ * polling or server model transfer is required.</p>
+ */
 public class AuctionEventPublisher {
 
     private static final AuctionEventPublisher instance = new AuctionEventPublisher();
@@ -19,6 +27,9 @@ public class AuctionEventPublisher {
         return instance;
     }
 
+    /**
+     * Broadcasts an auction update to every currently logged-in client.
+     */
     public void publishAuctionUpdated(AuctionUpdatedEvent event) {
         if (event == null) return;
 
@@ -31,6 +42,9 @@ public class AuctionEventPublisher {
         Server.broadcastToLoggedIn(response);
     }
 
+    /**
+     * Broadcasts an auction update to logged-in clients except the requester.
+     */
     public void publishAuctionUpdatedExcept(AuctionUpdatedEvent event, ClientHandler excludedClient) {
         if (event == null) return;
 

@@ -10,6 +10,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
+/**
+ * JavaFX-side dispatcher for socket server-push responses.
+ *
+ * <p>The socket listener thread forwards unmatched responses here. Dispatching
+ * is moved to the JavaFX Application Thread, and listener exceptions are caught
+ * so one broken screen listener cannot kill realtime updates for the client.</p>
+ */
 public class ClientEventDispatcher {
     private static final ClientEventDispatcher INSTANCE = new ClientEventDispatcher();
 
@@ -21,6 +28,9 @@ public class ClientEventDispatcher {
         return INSTANCE;
     }
 
+    /**
+     * Registers one listener per action. Duplicate listener instances are ignored.
+     */
     public void addListener(ActionType actionType, Consumer<Response<?>> listener) {
         if (actionType == null || listener == null) {
             return;
@@ -33,6 +43,9 @@ public class ClientEventDispatcher {
         }
     }
 
+    /**
+     * Removes a listener during controller cleanup to avoid duplicate updates.
+     */
     public void removeListener(ActionType actionType, Consumer<Response<?>> listener) {
         if (actionType == null || listener == null) {
             return;
@@ -49,6 +62,9 @@ public class ClientEventDispatcher {
         }
     }
 
+    /**
+     * Delivers a server-push response to all registered listeners on the FX thread.
+     */
     public void dispatch(Response<?> response) {
         if (response == null || response.getAction() == null) {
             return;
