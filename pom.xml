@@ -88,6 +88,10 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
+                    <!-- Exclude manual/e2e tests from CI -->
+                    <excludes>
+                        <exclude>**/com/auction/manual/**</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

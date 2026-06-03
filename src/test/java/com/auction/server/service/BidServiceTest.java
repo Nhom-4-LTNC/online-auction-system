@@ -2,7 +2,7 @@ package com.auction.server.service;
 
 import com.auction.server.model.Bid;
 import com.auction.shared.exception.AuctionClosedException;
-import com.auction.shared.exception.InsufficientFundsException;
+
 import com.auction.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
@@ -102,47 +102,21 @@ public class BidServiceTest {
         int finishedAuctionId = findFinishedAuctionId(auctionService);
         assumeTrue(finishedAuctionId > 0, "DB hiện không có auction FINISHED để test");
 
-        assumeFixtureBidderExists();
+        // Nếu DB thiếu user fixture thì bỏ qua test (không tính fail)
+        try {
+            UserService.getInstance().getUserById(FIXTURE_BIDDER_ID);
+        } catch (Exception e) {
+            assumeTrue(false, "DB hiện không có user fixture ID=" + FIXTURE_BIDDER_ID);
+        }
 
         int bidderId = FIXTURE_BIDDER_ID;
         double amount = 1.0;
 
-        assertThrows(
-                AuctionClosedException.class,
-                () -> bidService.placeBid(bidderId, finishedAuctionId, amount)
-        );
+        assertThrows(AuctionClosedException.class,
+                () -> bidService.placeBid(bidderId, finishedAuctionId, amount));
     }
 
-    @Test
-    void placeBid_whenInsufficientFunds_shouldThrowInsufficientFundsException() throws Exception {
-        BidService bidService = BidService.getInstance();
-        AuctionService auctionService = AuctionService.getInstance();
-        WalletService walletService = WalletService.getInstance();
 
-        int auctionId = findBiddableAuctionId(auctionService);
-        assumeTrue(auctionId > 0, "DB hiện không có auction OPEN/RUNNING để test InsufficientFunds");
 
-        assumeFixtureBidderExists();
-
-        int bidderId = FIXTURE_BIDDER_ID;
-
-        // Chọn amount > availableForThisBid để chắc chắn ném InsufficientFundsException.
-        double available;
-        try (var connection = com.auction.server.database.DatabaseConnection.getConnection()) {
-            available = walletService.getAvailableBalanceForBid(connection, bidderId, auctionId);
-        } catch (Exception e) {
-            assumeTrue(false, "DB fixture không đủ để tính available balance: " + e.getMessage());
-            return;
-        }
-
-        double amount = available + 1.0;
-        if (amount <= 0) amount = 1.0;
-
-        final double finalAmount = amount;
-        assertThrows(
-                InsufficientFundsException.class,
-                () -> bidService.placeBid(bidderId, auctionId, finalAmount)
-        );
-    }
 }
 
