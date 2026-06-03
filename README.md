@@ -291,5 +291,5 @@ Run com.auction.client.Launcher
 
 ## 9. Báo cáo và video demo
 
-* Báo cáo PDF: [Link báo cáo PDF](file:///C:/Users/Admin/Downloads/Nhom2_bao_cao_btl.pdf)
+* Báo cáo PDF: [Link báo cáo PDF](https://drive.google.com/file/d/1EbnBQGF_Qv9er8CHUDLrT2Syg98vnS0Q/view?usp=sharing)
   * Video demo: [Link video demo](https://drive.google.com/drive/folders/1kPpT0J4_fyH20FVcQmOyPB0lZkVCCkmB?fbclid=IwY2xjawSNO1RleHRuA2FlbQIxMABicmlkETFhTnI5Q1BMZk1ocVh5a2dPc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHrGehBOYLAW8q4QE1LpDWUkQNIoeGfH2xwcpQhLG7bufg5rYucI1PVMU4BWm_aem_bnpynT-NJFVIYYblaDRi1Q)
