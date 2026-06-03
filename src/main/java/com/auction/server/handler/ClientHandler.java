@@ -1,23 +1,25 @@
 package com.auction.server.handler;
 
-import com.auction.server.Server;
-import com.auction.shared.dto.UserDTO;
-import com.auction.shared.protocol.ActionType;
-import com.auction.shared.protocol.Request;
-import com.auction.shared.protocol.Response;
-import com.auction.shared.protocol.auth.AuthResponse;
-import com.auction.server.controller.AuctionController;
-import com.auction.server.controller.AuthController;
-import com.auction.server.controller.BidController;
-import com.auction.server.controller.WalletController;
-import com.auction.server.controller.AdminController;
-import com.auction.server.model.user.User;
-import com.auction.server.service.UserService;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.time.format.DateTimeFormatter;
+
+import com.auction.server.Server;
+import com.auction.server.controller.AdminController;
+import com.auction.server.controller.AuctionController;
+import com.auction.server.controller.AuthController;
+import com.auction.server.controller.BidController;
+import com.auction.server.controller.WalletController;
+import com.auction.server.model.user.User;
+import com.auction.server.service.UserService;
+import com.auction.shared.dto.UserDTO;
+import com.auction.shared.protocol.ActionType;
+import com.auction.shared.protocol.Request;
+import com.auction.shared.protocol.Response;
+import com.auction.shared.protocol.auth.AuthResponse;
 
 /**
  * Quản lý một kết nối socket từ client.
@@ -34,6 +36,19 @@ import java.net.Socket;
  * Business logic nằm ở Service, được gọi thông qua Server Controller.</p>
  */
 public class ClientHandler implements Runnable {
+
+    private static String formatBanEndTime(long banEndTimeMillis) {
+        if (banEndTimeMillis <= 0) {
+            return "không xác định";
+        }
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
+                        .withZone(java.time.ZoneId.systemDefault());
+        return formatter.format(java.time.Instant.ofEpochMilli(banEndTimeMillis));
+    }
+
+
+
 
     private volatile boolean closed = false;
     private final Socket socket;
@@ -232,8 +247,9 @@ public class ClientHandler implements Runnable {
             currentUser = null;
             return Response.error(
                     action,
-                    "Tai khoan cua ban da bi khoa den thoi diem: " + banEndTime
+                    "Tai khoan cua ban da bi khoa den thoi diem: " + formatBanEndTime(banEndTime)
             );
+
         } catch (Exception e) {
             currentUser = null;
             return Response.error(
